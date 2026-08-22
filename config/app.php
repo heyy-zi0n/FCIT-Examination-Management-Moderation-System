@@ -13,10 +13,10 @@ return [
     'full_name' => APP_FULL_NAME,
     'short_name' => APP_SHORT_NAME,
     'version' => APP_VERSION,
-    'base_url' => '/FOCITECMS',
+    'base_url' => $_ENV['APP_URL'] ?? '/FOCITECMS',
     'timezone' => APP_TIMEZONE,
-    'encryption_key' => 'lasu_fcit_secret_key_2026_exam_security_master_hash_v1', // Master encryption key for blind lockdown
-    'debug' => false,
+    'encryption_key' => $_ENV['ENCRYPTION_KEY'] ?? 'lasu_fcit_secret_key_2026_exam_security_master_hash_v1', // Master encryption key for blind lockdown
+    'debug' => ($_ENV['APP_DEBUG'] ?? 'false') === 'true',
     'session' => [
         'name' => 'LASU_FCIT_SESSID',
         'lifetime' => SESSION_LIFETIME_SECONDS,

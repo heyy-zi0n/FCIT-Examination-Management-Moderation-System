@@ -7,19 +7,26 @@
 class Database {
     private static ?PDO $pdo = null;
 
-    private static array $config = [
-        'host' => '127.0.0.1',
-        'port' => 3306,
-        'dbname' => 'lasu_fcit_exam_db',
-        'username' => 'root',
-        'password' => '',
-        'charset' => 'utf8mb4'
-    ];
+    private static array $config = [];
+
+    private static function initConfig(): void {
+        if (empty(self::$config)) {
+            self::$config = [
+                'host' => $_ENV['DB_HOST'] ?? '127.0.0.1',
+                'port' => (int)($_ENV['DB_PORT'] ?? 3306),
+                'dbname' => $_ENV['DB_DATABASE'] ?? 'lasu_fcit_exam_db',
+                'username' => $_ENV['DB_USERNAME'] ?? 'root',
+                'password' => $_ENV['DB_PASSWORD'] ?? '',
+                'charset' => 'utf8mb4'
+            ];
+        }
+    }
 
     /**
      * Set custom connection parameters if needed
      */
     public static function setConfig(array $config): void {
+        self::initConfig();
         self::$config = array_merge(self::$config, $config);
         self::$pdo = null; // reset connection
     }
@@ -28,6 +35,7 @@ class Database {
      * Get active database configuration
      */
     public static function getConfig(): array {
+        self::initConfig();
         return self::$config;
     }
 
@@ -35,6 +43,7 @@ class Database {
      * Get singleton PDO database connection
      */
     public static function getConnection(): PDO {
+        self::initConfig();
         if (self::$pdo === null) {
             $dsn = sprintf(
                 'mysql:host=%s;port=%d;dbname=%s;charset=%s',
@@ -67,6 +76,7 @@ class Database {
      * Helper to get connection without specifying dbname (for migrations/db creation)
      */
     public static function getRawConnection(): PDO {
+        self::initConfig();
         $dsn = sprintf(
             'mysql:host=%s;port=%d;charset=%s',
             self::$config['host'],

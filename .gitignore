@@ -1,0 +1,23 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Examination documents and generated files
+/storage/examinations/
+/storage/previews/
+/storage/profile_pictures/
+
+# Runtime / generated files
+/storage/*.log
+/storage/**/*.log
+
+# Temporary / development files
+/scratch/
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

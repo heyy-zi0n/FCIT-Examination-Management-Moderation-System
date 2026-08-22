@@ -11,6 +11,13 @@ if (defined('APP_BOOTSTRAPPED')) {
 define('APP_BOOTSTRAPPED', true);
 
 // 1. Load Configurations & Constants
+require_once __DIR__ . '/config/env.php';
+try {
+    loadEnv(__DIR__ . '/.env');
+} catch (Exception $e) {
+    die("Configuration Error: " . $e->getMessage());
+}
+
 require_once __DIR__ . '/config/constants.php';
 $appConfig = require_once __DIR__ . '/config/app.php';
 require_once __DIR__ . '/config/database.php';
