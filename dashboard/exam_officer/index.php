@@ -11,8 +11,10 @@ $userId = (int)$user['id'];
 
 // Faculty-wide statistics
 $totalActiveSchedules = (int)$pdo->query("SELECT COUNT(*) FROM exam_schedules")->fetchColumn();
-$pendingEoCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status = 'Moderated' AND eo_status = 'pending'")->fetchColumn();
-$approvedLockedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status IN ('Approved', 'Locked')")->fetchColumn();
+$pendingEoCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status IN ('Moderated', 'Approved') AND eo_status = 'pending'")->fetchColumn();
+$readyForLockdownCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status = 'Approved'")->fetchColumn();
+$lockedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status = 'Locked'")->fetchColumn();
+$readyForPrintingCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status = 'Queued'")->fetchColumn();
 $totalPrintedCount = (int)$pdo->query("SELECT COUNT(*) FROM print_logs WHERE print_status = 'successful'")->fetchColumn();
 
 // Fetch Pending EO Approvals
@@ -62,9 +64,9 @@ include __DIR__ . '/../../includes/navbar.php';
         <!-- Welcome Banner -->
         <div class="bg-gradient-to-r from-emerald-950 via-slate-900 to-lasu-navy rounded-2xl p-6 text-white shadow-lg mb-8 border border-slate-800 flex flex-col md:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <div class="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">Faculty Examination Office</div>
+                <div class="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">Faculty Examination Office Pipeline</div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold"><?= formatUserName($user) ?></h1>
-                <p class="text-xs text-slate-300 mt-1">Supervise faculty examination approvals, enforce calendar-day printing windows, and manage secure production.</p>
+                <p class="text-xs text-slate-300 mt-1">Manage the complete examination pipeline: Approvals → Lockdown → Production.</p>
             </div>
             <div class="flex items-center gap-3">
                 <a href="/FOCITECMS/dashboard/exam_officer/print_queue.php" class="px-5 py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
@@ -75,22 +77,30 @@ include __DIR__ . '/../../includes/navbar.php';
         </div>
 
         <!-- Metrics Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="text-xs font-semibold text-slate-500 uppercase">Faculty Schedules</div>
-                <div class="text-3xl font-black text-slate-900 dark:text-white mt-1"><?= $totalActiveSchedules ?></div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="text-xs font-semibold text-slate-500 uppercase">Upcoming Exams</div>
+                <div class="text-2xl font-black text-slate-900 dark:text-white mt-1"><?= $totalActiveSchedules ?></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-amber-200 dark:border-amber-900/50 shadow-sm bg-amber-50/20">
-                <div class="text-xs font-semibold text-amber-600 uppercase">Awaiting EO Sign-off</div>
-                <div class="text-3xl font-black text-amber-600 mt-1"><?= $pendingEoCount ?></div>
+            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-900/50 shadow-sm">
+                <div class="text-xs font-semibold text-amber-600 uppercase">Awaiting EO Approval</div>
+                <div class="text-2xl font-black text-amber-600 mt-1"><?= $pendingEoCount ?></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-purple-200 dark:border-purple-900/50 shadow-sm bg-purple-50/20">
-                <div class="text-xs font-semibold text-purple-600 uppercase">Sealed in Blind Lockdown</div>
-                <div class="text-3xl font-black text-purple-600 mt-1"><?= $approvedLockedCount ?></div>
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-900/50 shadow-sm">
+                <div class="text-xs font-semibold text-blue-600 uppercase">Ready for Lockdown</div>
+                <div class="text-2xl font-black text-blue-600 mt-1"><?= $readyForLockdownCount ?></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-teal-200 dark:border-teal-900/50 shadow-sm bg-teal-50/20">
-                <div class="text-xs font-semibold text-teal-600 uppercase">Controlled Prints Executed</div>
-                <div class="text-3xl font-black text-teal-600 mt-1"><?= $totalPrintedCount ?></div>
+            <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-900/50 shadow-sm">
+                <div class="text-xs font-semibold text-purple-600 uppercase">Locked Papers</div>
+                <div class="text-2xl font-black text-purple-600 mt-1"><?= $lockedCount ?></div>
+            </div>
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
+                <div class="text-xs font-semibold text-emerald-600 uppercase">Ready for Printing</div>
+                <div class="text-2xl font-black text-emerald-600 mt-1"><?= $readyForPrintingCount ?></div>
+            </div>
+            <div class="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 border border-slate-300 dark:border-slate-700 shadow-sm">
+                <div class="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase">Printed Papers</div>
+                <div class="text-2xl font-black text-slate-700 dark:text-slate-200 mt-1"><?= $totalPrintedCount ?></div>
             </div>
         </div>
 

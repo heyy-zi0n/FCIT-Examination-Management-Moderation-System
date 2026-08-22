@@ -39,3 +39,5 @@ function evaluateFinalApproval(int $paperId, int $actorId): bool {
 function emergencyUnlockPaper(int $paperId, int $hodId, string $reason): bool {
     return WorkflowService::emergencyUnlock($paperId, $hodId, $reason);
 }
+  
+

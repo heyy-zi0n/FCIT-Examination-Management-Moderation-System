@@ -12,16 +12,14 @@ $deptId = (int)$user['department_id'];
 // Departmental Metrics
 $totalCourses = (int)$pdo->query("SELECT COUNT(*) FROM courses WHERE department_id = {$deptId}")->fetchColumn();
 $totalSchedules = (int)$pdo->query("SELECT COUNT(*) FROM exam_schedules es JOIN courses c ON es.course_id = c.id WHERE c.department_id = {$deptId}")->fetchColumn();
-$pendingHodCount = (int)$pdo->query("
-    SELECT COUNT(*) FROM examination_papers ep
-    JOIN courses c ON ep.course_id = c.id
-    WHERE c.department_id = {$deptId} AND ep.status = 'Moderated' AND ep.hod_status = 'pending'
-")->fetchColumn();
-$fullyApprovedCount = (int)$pdo->query("
-    SELECT COUNT(*) FROM examination_papers ep
-    JOIN courses c ON ep.course_id = c.id
-    WHERE c.department_id = {$deptId} AND ep.status IN ('Approved', 'Locked', 'Queued', 'Printed')
-")->fetchColumn();
+$awaitingModerationCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Submitted'")->fetchColumn();
+$revisionRequiredCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Returned'")->fetchColumn();
+$pendingHodCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Moderated' AND ep.hod_status = 'pending'")->fetchColumn();
+$pendingEoCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.eo_status = 'pending' AND ep.status IN ('Moderated', 'Approved')")->fetchColumn();
+$readyForLockdownCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Approved'")->fetchColumn();
+$lockedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Locked'")->fetchColumn();
+$readyForPrintingCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Queued'")->fetchColumn();
+$printedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Printed'")->fetchColumn();
 
 // Fetch Pending Approvals
 $stmtPending = $pdo->prepare("
@@ -55,7 +53,7 @@ include __DIR__ . '/../../includes/navbar.php';
         <!-- Welcome Banner -->
         <div class="bg-gradient-to-r from-indigo-950 via-slate-900 to-lasu-navy rounded-2xl p-6 text-white shadow-lg mb-8 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-                <div class="text-xs font-semibold text-lasu-gold uppercase tracking-wider mb-1">Departmental Executive Portal</div>
+                <div class="text-xs font-semibold text-lasu-gold uppercase tracking-wider mb-1">Departmental Examination Readiness Portal</div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold"><?= formatUserName($user) ?></h1>
                 <p class="text-xs text-slate-300 mt-1">Department: <span class="font-semibold text-white"><?= htmlspecialchars($user['department_name'] ?? 'Computing') ?></span></p>
             </div>
@@ -73,17 +71,33 @@ include __DIR__ . '/../../includes/navbar.php';
                 <div class="text-xs font-semibold text-slate-500 uppercase">Department Courses</div>
                 <div class="text-3xl font-black text-slate-900 dark:text-white mt-1"><?= $totalCourses ?></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-blue-200 dark:border-blue-900/50 shadow-sm bg-blue-50/20">
-                <div class="text-xs font-semibold text-blue-600 uppercase">Exam Schedules Set</div>
-                <div class="text-3xl font-black text-blue-600 mt-1"><?= $totalSchedules ?></div>
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-900/50 shadow-sm">
+                <div class="text-xs font-semibold text-blue-600 uppercase">Awaiting Moderation</div>
+                <div class="text-3xl font-black text-blue-600 mt-1"><?= $awaitingModerationCount ?></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-amber-200 dark:border-amber-900/50 shadow-sm bg-amber-50/20">
+            <div class="bg-rose-50 dark:bg-rose-900/20 rounded-xl p-5 border border-rose-200 dark:border-rose-900/50 shadow-sm">
+                <div class="text-xs font-semibold text-rose-600 uppercase">Revision Required</div>
+                <div class="text-3xl font-black text-rose-600 mt-1"><?= $revisionRequiredCount ?></div>
+            </div>
+            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-5 border border-amber-200 dark:border-amber-900/50 shadow-sm">
                 <div class="text-xs font-semibold text-amber-600 uppercase">Pending HOD Sign-Off</div>
                 <div class="text-3xl font-black text-amber-600 mt-1"><?= $pendingHodCount ?></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-emerald-200 dark:border-emerald-900/50 shadow-sm bg-emerald-50/20">
-                <div class="text-xs font-semibold text-emerald-600 uppercase">Fully Approved & Sealed</div>
-                <div class="text-3xl font-black text-emerald-600 mt-1"><?= $fullyApprovedCount ?></div>
+            <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-5 border border-indigo-200 dark:border-indigo-900/50 shadow-sm">
+                <div class="text-xs font-semibold text-indigo-600 uppercase">Pending EO Sign-Off</div>
+                <div class="text-3xl font-black text-indigo-600 mt-1"><?= $pendingEoCount ?></div>
+            </div>
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-5 border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
+                <div class="text-xs font-semibold text-emerald-600 uppercase">Ready for Lockdown</div>
+                <div class="text-3xl font-black text-emerald-600 mt-1"><?= $readyForLockdownCount ?></div>
+            </div>
+            <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-5 border border-purple-200 dark:border-purple-900/50 shadow-sm">
+                <div class="text-xs font-semibold text-purple-600 uppercase">Locked / Ready to Print</div>
+                <div class="text-3xl font-black text-purple-600 mt-1"><?= $lockedCount + $readyForPrintingCount ?></div>
+            </div>
+            <div class="bg-slate-100 dark:bg-slate-800 rounded-xl p-5 border border-slate-300 dark:border-slate-700 shadow-sm">
+                <div class="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase">Printed Papers</div>
+                <div class="text-3xl font-black text-slate-700 dark:text-slate-200 mt-1"><?= $printedCount ?></div>
             </div>
         </div>
 

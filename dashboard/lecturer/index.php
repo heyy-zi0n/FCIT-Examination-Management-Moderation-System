@@ -12,10 +12,23 @@ $userId = (int)$user['id'];
 // Statistics
 $totalAssignedCourses = (int)$pdo->query("SELECT COUNT(*) FROM lecturer_course_assignments WHERE lecturer_id = {$userId}")->fetchColumn();
 $draftCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status = 'Draft'")->fetchColumn();
-$submittedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status = 'Submitted'")->fetchColumn();
+$awaitingModerationCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status = 'Submitted'")->fetchColumn();
 $returnedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status = 'Returned'")->fetchColumn();
-$moderatedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status = 'Moderated'")->fetchColumn();
-$approvedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status IN ('Approved', 'Locked', 'Queued', 'Printed')")->fetchColumn();
+$approvedLockdownCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status IN ('Moderated', 'Approved')")->fetchColumn();
+$lockedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status IN ('Locked', 'Queued')")->fetchColumn();
+$printedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status = 'Printed'")->fetchColumn();
+
+// Fetch Action Required Papers
+$stmtAction = $pdo->prepare("
+    SELECT ep.*, c.course_code, c.course_title, pv.version_number
+    FROM examination_papers ep
+    JOIN courses c ON ep.course_id = c.id
+    LEFT JOIN paper_versions pv ON ep.current_version_id = pv.id
+    WHERE ep.lecturer_id = :user_id AND ep.status = 'Returned'
+    ORDER BY ep.updated_at DESC
+");
+$stmtAction->execute(['user_id' => $userId]);
+$actionPapers = $stmtAction->fetchAll();
 
 // Fetch Assigned Courses
 $stmtCourses = $pdo->prepare("
@@ -61,7 +74,7 @@ include __DIR__ . '/../../includes/navbar.php';
             <div>
                 <div class="text-xs font-semibold text-lasu-gold uppercase tracking-wider mb-1">Academic Staff Portal</div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold">Welcome, <?= formatUserName($user) ?></h1>
-                <p class="text-xs text-slate-300 mt-1">Manage examination submissions, view moderation comments, and track approval states.</p>
+                <p class="text-xs text-slate-300 mt-1">Manage examination lifecycle, view moderation comments, and track paper progress.</p>
             </div>
             <a href="/FOCITECMS/dashboard/lecturer/create_paper.php" class="px-5 py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl shadow-lg transition text-xs flex items-center gap-2 flex-shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -72,30 +85,54 @@ include __DIR__ . '/../../includes/navbar.php';
         <!-- Metrics Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="text-xs font-semibold text-slate-500 uppercase">Assigned Courses</div>
-                <div class="text-2xl font-black text-slate-900 dark:text-white mt-1"><?= $totalAssignedCourses ?></div>
-            </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div class="text-xs font-semibold text-slate-500 uppercase">Drafts</div>
                 <div class="text-2xl font-black text-slate-700 dark:text-slate-300 mt-1"><?= $draftCount ?></div>
             </div>
             <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-blue-200 dark:border-blue-900/50 shadow-sm bg-blue-50/20">
-                <div class="text-xs font-semibold text-blue-600 uppercase">Submitted</div>
-                <div class="text-2xl font-black text-blue-600 mt-1"><?= $submittedCount ?></div>
+                <div class="text-xs font-semibold text-blue-600 uppercase">Awaiting Moderation</div>
+                <div class="text-2xl font-black text-blue-600 mt-1"><?= $awaitingModerationCount ?></div>
             </div>
             <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-rose-200 dark:border-rose-900/50 shadow-sm bg-rose-50/20">
-                <div class="text-xs font-semibold text-rose-600 uppercase">Returned / Revisions</div>
+                <div class="text-xs font-semibold text-rose-600 uppercase">Returned for Correction</div>
                 <div class="text-2xl font-black text-rose-600 mt-1"><?= $returnedCount ?></div>
             </div>
             <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-amber-200 dark:border-amber-900/50 shadow-sm bg-amber-50/20">
-                <div class="text-xs font-semibold text-amber-600 uppercase">Moderated</div>
-                <div class="text-2xl font-black text-amber-600 mt-1"><?= $moderatedCount ?></div>
+                <div class="text-xs font-semibold text-amber-600 uppercase">Approved for Lockdown</div>
+                <div class="text-2xl font-black text-amber-600 mt-1"><?= $approvedLockdownCount ?></div>
             </div>
             <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-emerald-200 dark:border-emerald-900/50 shadow-sm bg-emerald-50/20">
-                <div class="text-xs font-semibold text-emerald-600 uppercase">Fully Approved</div>
-                <div class="text-2xl font-black text-emerald-600 mt-1"><?= $approvedCount ?></div>
+                <div class="text-xs font-semibold text-emerald-600 uppercase">Locked Papers</div>
+                <div class="text-2xl font-black text-emerald-600 mt-1"><?= $lockedCount ?></div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-indigo-200 dark:border-indigo-900/50 shadow-sm bg-indigo-50/20">
+                <div class="text-xs font-semibold text-indigo-600 uppercase">Printed Papers</div>
+                <div class="text-2xl font-black text-indigo-600 mt-1"><?= $printedCount ?></div>
             </div>
         </div>
+
+        <?php if (!empty($actionPapers)): ?>
+        <!-- Action Required Section -->
+        <div class="mb-8 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-900/50 rounded-xl p-5 shadow-sm">
+            <h2 class="text-sm font-bold text-rose-900 dark:text-rose-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Action Required: Papers Returned for Correction
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <?php foreach ($actionPapers as $p): ?>
+                    <div class="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 rounded-lg p-4 shadow-sm">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="font-bold text-rose-900 dark:text-rose-400 font-mono text-sm"><?= htmlspecialchars($p['course_code']) ?></span>
+                            <span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-900/50 font-mono text-[10px] text-rose-700 dark:text-rose-300 font-bold">V<?= $p['version_number'] ?: 1 ?></span>
+                        </div>
+                        <div class="text-xs font-medium text-slate-800 dark:text-slate-200 mb-3 line-clamp-1"><?= htmlspecialchars($p['course_title']) ?></div>
+                        <a href="/FOCITECMS/dashboard/lecturer/view_paper.php?id=<?= $p['id'] ?>" class="block w-full text-center px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition text-xs">
+                            View Comments & Revise
+                        </a>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
@@ -131,7 +168,7 @@ include __DIR__ . '/../../includes/navbar.php';
             <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                        My Examination Submissions
+                        Recent Paper Lifecycle Activity
                     </h2>
                     <a href="/FOCITECMS/dashboard/lecturer/papers.php" class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">View All Papers</a>
                 </div>

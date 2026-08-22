@@ -5,8 +5,8 @@
  */
 
 // Application Info
-define('APP_NAME', 'LASU FCIT Secure Exam System');
-define('APP_FULL_NAME', 'Design and Implementation of a Secure Examination Question Management, Approval and Controlled Printing System for LASU FCIT');
+define('APP_NAME', 'LASU FCIT Examination Lifecycle System');
+define('APP_FULL_NAME', 'Design and Implementation of a Secure Examination Question Lifecycle Management System with Moderation, Approval, Audit and Controlled Printing for LASU FCIT');
 define('APP_SHORT_NAME', 'LASU FCIT CMS');
 define('APP_VERSION', '1.0.0');
 define('APP_TIMEZONE', 'Africa/Lagos');

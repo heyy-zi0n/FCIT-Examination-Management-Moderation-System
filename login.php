@@ -1,6 +1,6 @@
 <?php
 /**
- * LASU FCIT Secure Examination Question Management System
+ * LASU FCIT Examination Question Lifecycle Management System
  * Staff Authentication & Login Portal
  */
 
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$pageTitle = 'Sign In — LASU FCIT Secure Exam System';
+$pageTitle = 'Sign In — ' . APP_NAME;
 include __DIR__ . '/includes/header.php';
 ?>
 
@@ -57,7 +57,7 @@ include __DIR__ . '/includes/header.php';
             Staff Portal Sign In
         </h2>
         <p class="mt-1 text-xs text-slate-400">
-            Secure Examination Question Management & Controlled Printing
+            Examination Question Lifecycle Management & Moderation Workflow
         </p>
     </div>
 

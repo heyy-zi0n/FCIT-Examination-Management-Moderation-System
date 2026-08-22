@@ -23,10 +23,10 @@ $userNotifs = $currentUser ? getUserNotifications((int)$currentUser['id'], 5) : 
                     <div class="hidden sm:block">
                         <div class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
                             <span>LASU FCIT</span>
-                            <span class="text-xs bg-lasu-gold/20 text-lasu-gold px-1.5 py-0.5 rounded font-mono uppercase tracking-wider">CMS</span>
+                            <span class="text-xs bg-lasu-gold/20 text-lasu-gold px-1.5 py-0.5 rounded font-mono uppercase tracking-wider">EMMS</span>
                         </div>
                         <div class="text-xs text-slate-300 font-light truncate max-w-xs md:max-w-md">
-                            Secure Examination Question Management System
+                            Examination Management & Moderation System
                         </div>
                     </div>
                 </a>

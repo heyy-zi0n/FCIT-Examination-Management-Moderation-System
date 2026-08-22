@@ -5,7 +5,7 @@
 require_once __DIR__ . '/../bootstrap.php';
 require_once __DIR__ . '/alerts.php';
 
-$pageTitle = $pageTitle ?? 'LASU FCIT Secure Examination Question Management System';
+$pageTitle = $pageTitle ?? 'LASU FCIT Examination Question Lifecycle Management System';
 $user = currentUser();
 ?>
 <!DOCTYPE html>
@@ -13,7 +13,7 @@ $user = currentUser();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="LASU FCIT Secure Examination Question Management, Dual Approval and Controlled Printing System">
+    <meta name="description" content="Design and Implementation of a Secure Examination Question Lifecycle Management System with Moderation, Approval, Audit and Controlled Printing for LASU FCIT">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
     <link rel="icon" href="/FOCITECMS/assets/img/lasu-logo.png" type="image/png">
     

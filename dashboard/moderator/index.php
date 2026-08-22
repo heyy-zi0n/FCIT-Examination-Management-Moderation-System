@@ -46,10 +46,15 @@ $stmtQueue->execute([
 ]);
 $pendingPapers = $stmtQueue->fetchAll();
 
-// Count reviewed papers
-$reviewedCount = (int)$pdo->query("
+// Moderation Metrics
+$pendingReviewCount = count($pendingPapers);
+$revisionsRequestedCount = (int)$pdo->query("
     SELECT COUNT(DISTINCT paper_id) FROM paper_approvals 
-    WHERE approver_id = {$userId} AND stage = 'moderator'
+    WHERE approver_id = {$userId} AND stage = 'moderator' AND decision = 'returned'
+")->fetchColumn();
+$recentlyApprovedCount = (int)$pdo->query("
+    SELECT COUNT(DISTINCT paper_id) FROM paper_approvals 
+    WHERE approver_id = {$userId} AND stage = 'moderator' AND decision = 'approved'
 ")->fetchColumn();
 
 $pageTitle = 'Moderation Queue — LASU FCIT CMS';
@@ -68,7 +73,7 @@ include __DIR__ . '/../../includes/navbar.php';
             <div>
                 <div class="text-xs font-semibold text-lasu-gold uppercase tracking-wider mb-1">Academic Quality & Moderation Panel</div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold">Welcome, <?= formatUserName($user) ?></h1>
-                <p class="text-xs text-slate-300 mt-1">Review examination submissions, verify rubric alignment, provide line annotations, and approve questions.</p>
+                <p class="text-xs text-slate-300 mt-1">Manage examination question lifecycle, review submissions, and track moderation progress.</p>
             </div>
             <div class="px-4 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-semibold">
                 <?= count($pendingPapers) ?> Paper(s) Awaiting Your Review
@@ -90,6 +95,22 @@ include __DIR__ . '/../../includes/navbar.php';
                         </span>
                     <?php endforeach; ?>
                 <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-800 shadow-sm">
+                <div class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Pending Reviews</div>
+                <div class="text-3xl font-black text-blue-700 dark:text-blue-400 mt-2"><?= $pendingReviewCount ?></div>
+            </div>
+            <div class="bg-rose-50 dark:bg-rose-900/20 rounded-xl p-5 border border-rose-200 dark:border-rose-800 shadow-sm">
+                <div class="text-xs font-semibold text-rose-600 uppercase tracking-wider">Revisions Requested</div>
+                <div class="text-3xl font-black text-rose-700 dark:text-rose-400 mt-2"><?= $revisionsRequestedCount ?></div>
+            </div>
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-5 border border-emerald-200 dark:border-emerald-800 shadow-sm">
+                <div class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Recently Approved</div>
+                <div class="text-3xl font-black text-emerald-700 dark:text-emerald-400 mt-2"><?= $recentlyApprovedCount ?></div>
             </div>
         </div>
 

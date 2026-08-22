@@ -38,7 +38,7 @@ function isSidebarActive(string $path, string $currentUri): bool {
     <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         
         <?php if ($role === ROLE_LECTURER): ?>
-            <div class="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Lecturer Workspace</div>
+            <div class="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Lecturer Workflow</div>
             
             <a href="/FOCITECMS/dashboard/lecturer/index.php" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition <?= isSidebarActive('/dashboard/lecturer/index.php', $currentUri) ? 'bg-lasu-navy text-lasu-gold border border-slate-700' : 'hover:bg-slate-800/60 text-slate-300 hover:text-white' ?>">
                 <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
@@ -47,16 +47,16 @@ function isSidebarActive(string $path, string $currentUri): bool {
 
             <a href="/FOCITECMS/dashboard/lecturer/create_paper.php" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition <?= isSidebarActive('create_paper.php', $currentUri) ? 'bg-lasu-navy text-lasu-gold border border-slate-700' : 'hover:bg-slate-800/60 text-slate-300 hover:text-white' ?>">
                 <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>Create Exam Paper</span>
+                <span>Submit Exam Paper</span>
             </a>
 
             <a href="/FOCITECMS/dashboard/lecturer/papers.php" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition <?= isSidebarActive('papers.php', $currentUri) ? 'bg-lasu-navy text-lasu-gold border border-slate-700' : 'hover:bg-slate-800/60 text-slate-300 hover:text-white' ?>">
                 <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <span>My Exam Papers</span>
+                <span>My Paper Lifecycle</span>
             </a>
 
         <?php elseif ($role === ROLE_MODERATOR): ?>
-            <div class="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Moderation Portal</div>
+            <div class="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Moderation Workflow</div>
 
             <a href="/FOCITECMS/dashboard/moderator/index.php" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition <?= isSidebarActive('/dashboard/moderator/index.php', $currentUri) ? 'bg-lasu-navy text-lasu-gold border border-slate-700' : 'hover:bg-slate-800/60 text-slate-300 hover:text-white' ?>">
                 <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
@@ -69,7 +69,7 @@ function isSidebarActive(string $path, string $currentUri): bool {
             </a>
 
         <?php elseif ($role === ROLE_HOD): ?>
-            <div class="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">HOD Governance</div>
+            <div class="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Department Readiness</div>
 
             <a href="/FOCITECMS/dashboard/hod/index.php" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition <?= isSidebarActive('/dashboard/hod/index.php', $currentUri) ? 'bg-lasu-navy text-lasu-gold border border-slate-700' : 'hover:bg-slate-800/60 text-slate-300 hover:text-white' ?>">
                 <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -107,7 +107,7 @@ function isSidebarActive(string $path, string $currentUri): bool {
             </a>
 
         <?php elseif ($role === ROLE_EXAM_OFFICER): ?>
-            <div class="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Exam Office Portal</div>
+            <div class="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Examination Pipeline</div>
 
             <a href="/FOCITECMS/dashboard/exam_officer/index.php" class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition <?= isSidebarActive('/dashboard/exam_officer/index.php', $currentUri) ? 'bg-lasu-navy text-lasu-gold border border-slate-700' : 'hover:bg-slate-800/60 text-slate-300 hover:text-white' ?>">
                 <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>

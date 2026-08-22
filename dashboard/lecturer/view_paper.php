@@ -47,6 +47,11 @@ $stmtComments = $pdo->prepare("
 $stmtComments->execute(['paper_id' => $paperId]);
 $comments = $stmtComments->fetchAll();
 
+$commentsByVersion = [];
+foreach ($comments as $c) {
+    $commentsByVersion[$c['version_id']][] = $c;
+}
+
 // Fetch approvals history
 $stmtAppr = $pdo->prepare("
     SELECT pa.*, u.first_name, u.last_name, u.title, u.role
@@ -64,6 +69,49 @@ if (!empty($paper['exam_schedule_id'])) {
     $stmtSched = $pdo->prepare("SELECT * FROM exam_schedules WHERE id = :id");
     $stmtSched->execute(['id' => (int)$paper['exam_schedule_id']]);
     $schedule = $stmtSched->fetch();
+}
+
+// Determine next action
+$nextActionText = '';
+$nextActionActor = '';
+switch ($paper['status']) {
+    case STATUS_DRAFT:
+        $nextActionText = "Upload question document and submit for moderation.";
+        $nextActionActor = "Lecturer";
+        break;
+    case STATUS_SUBMITTED:
+        $nextActionText = "Review and moderate the submitted paper.";
+        $nextActionActor = "Moderator";
+        break;
+    case STATUS_RETURNED:
+        $nextActionText = "Address moderator comments and upload a new revision.";
+        $nextActionActor = "Lecturer";
+        break;
+    case STATUS_MODERATED:
+        if ($paper['hod_status'] === 'pending') {
+            $nextActionText = "Review and sign-off on the moderated paper.";
+            $nextActionActor = "Head of Department (HOD)";
+        } else if ($paper['eo_status'] === 'pending') {
+            $nextActionText = "Review and sign-off on the moderated paper.";
+            $nextActionActor = "Exam Officer";
+        }
+        break;
+    case STATUS_APPROVED:
+        $nextActionText = "Paper is approved and ready for blind lockdown.";
+        $nextActionActor = "System / Exam Officer";
+        break;
+    case STATUS_LOCKED:
+        $nextActionText = "Paper is locked securely. Awaiting print eligibility window.";
+        $nextActionActor = "Exam Officer";
+        break;
+    case STATUS_QUEUED:
+        $nextActionText = "Execute controlled printing of the paper.";
+        $nextActionActor = "Exam Officer";
+        break;
+    case STATUS_PRINTED:
+        $nextActionText = "Lifecycle complete. Paper has been printed successfully.";
+        $nextActionActor = "None";
+        break;
 }
 
 $pageTitle = "Examination Paper: {$paper['paper_code']} — LASU FCIT CMS";
@@ -120,49 +168,96 @@ include __DIR__ . '/../../includes/navbar.php';
             </div>
         </div>
 
-        <!-- Multi-Tier Dual Approval Status Tracker -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 mb-8">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Examination Governance & Approval Pipeline</h2>
+        <!-- Next Required Action Banner -->
+        <div class="mb-6 p-4 rounded-xl border <?= $nextActionActor === 'Lecturer' ? 'bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200' : 'bg-slate-50 border-slate-200 text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300' ?>">
+            <div class="flex items-start sm:items-center gap-3">
+                <div class="p-2 bg-white dark:bg-slate-900 rounded-lg shadow-sm">
+                    <svg class="w-5 h-5 <?= $nextActionActor === 'Lecturer' ? 'text-amber-600' : 'text-slate-500' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider <?= $nextActionActor === 'Lecturer' ? 'text-amber-700 dark:text-amber-500' : 'text-slate-500' ?>">
+                        Next Action Required By: <?= htmlspecialchars($nextActionActor) ?>
+                    </div>
+                    <div class="text-sm font-medium mt-0.5">
+                        <?= htmlspecialchars($nextActionText) ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canonical Lifecycle Timeline -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 mb-8 overflow-hidden">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-6">Examination Lifecycle Progress</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="relative flex flex-col md:flex-row justify-between w-full">
+                <!-- Line background -->
+                <div class="absolute top-4 left-4 md:left-0 md:right-0 bottom-4 md:bottom-auto md:top-4 w-1 md:w-full md:h-1 bg-slate-100 dark:bg-slate-800 rounded"></div>
                 
-                <!-- Stage 1: Submission -->
-                <div class="p-4 rounded-xl border <?= in_array($paper['status'], [STATUS_SUBMITTED, STATUS_MODERATED, STATUS_APPROVED, STATUS_LOCKED, STATUS_PRINTED]) ? 'bg-blue-50/60 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900/50' : 'bg-slate-50 border-slate-200 dark:bg-slate-800/40 dark:border-slate-800' ?>">
-                    <div class="text-xs font-semibold text-slate-500 uppercase">Stage 1: Lecturer</div>
-                    <div class="text-sm font-bold text-slate-900 dark:text-white mt-1">Submission</div>
-                    <div class="text-[11px] text-blue-600 dark:text-blue-400 mt-2 font-medium">
-                        <?= $paper['status'] === STATUS_DRAFT ? 'Draft in Progress' : 'Submitted V' . ($paper['version_number'] ?? 1) ?>
-                    </div>
-                </div>
+                <?php
+                $stages = [
+                    ['label' => 'Draft', 'status' => STATUS_DRAFT, 'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'],
+                    ['label' => 'Submitted', 'status' => STATUS_SUBMITTED, 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+                    ['label' => 'Moderated', 'status' => STATUS_MODERATED, 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
+                    ['label' => 'HOD Appr.', 'status' => 'hod_approved', 'icon' => 'M5 13l4 4L19 7'],
+                    ['label' => 'EO Appr.', 'status' => 'eo_approved', 'icon' => 'M5 13l4 4L19 7'],
+                    ['label' => 'Locked', 'status' => STATUS_LOCKED, 'icon' => 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'],
+                    ['label' => 'Ready to Print', 'status' => STATUS_QUEUED, 'icon' => 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z'],
+                    ['label' => 'Printed', 'status' => STATUS_PRINTED, 'icon' => 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z']
+                ];
 
-                <!-- Stage 2: Moderation -->
-                <div class="p-4 rounded-xl border <?= in_array($paper['status'], [STATUS_MODERATED, STATUS_APPROVED, STATUS_LOCKED, STATUS_PRINTED]) ? 'bg-amber-50/60 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/50' : ($paper['status'] === STATUS_RETURNED ? 'bg-rose-50 border-rose-200 dark:bg-rose-950/20' : 'bg-slate-50 border-slate-200 dark:bg-slate-800/40 dark:border-slate-800') ?>">
-                    <div class="text-xs font-semibold text-slate-500 uppercase">Stage 2: Moderator</div>
-                    <div class="text-sm font-bold text-slate-900 dark:text-white mt-1">Review & Vetting</div>
-                    <div class="text-[11px] mt-2 font-medium <?= $paper['moderator_decision'] === 'approved' ? 'text-emerald-600' : ($paper['moderator_decision'] === 'returned' ? 'text-rose-600' : 'text-slate-500') ?>">
-                        Decision: <?= ucfirst($paper['moderator_decision']) ?>
-                    </div>
-                </div>
+                $currentStatus = $paper['status'];
+                $hodStatus = $paper['hod_status'];
+                $eoStatus = $paper['eo_status'];
+                
+                $statusScores = [
+                    STATUS_DRAFT => 0,
+                    STATUS_SUBMITTED => 1,
+                    STATUS_RETURNED => 1, // Logically returned goes back to draft/submitted state loop
+                    STATUS_MODERATED => 2,
+                    'hod_approved' => 3,
+                    'eo_approved' => 4,
+                    STATUS_APPROVED => 4,
+                    STATUS_LOCKED => 5,
+                    STATUS_QUEUED => 6,
+                    STATUS_PRINTED => 7
+                ];
 
-                <!-- Stage 3: Dual Approval (HOD + EO) -->
-                <div class="p-4 rounded-xl border <?= in_array($paper['status'], [STATUS_APPROVED, STATUS_LOCKED, STATUS_PRINTED]) ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900/50' : 'bg-slate-50 border-slate-200 dark:bg-slate-800/40 dark:border-slate-800' ?>">
-                    <div class="text-xs font-semibold text-slate-500 uppercase">Stage 3: Dual Sign-Off</div>
-                    <div class="text-sm font-bold text-slate-900 dark:text-white mt-1">HOD + Exam Officer</div>
-                    <div class="text-[11px] text-slate-600 dark:text-slate-300 mt-2 space-y-0.5">
-                        <div>HOD: <span class="font-bold <?= $paper['hod_status'] === 'approved' ? 'text-emerald-600' : 'text-amber-600' ?>"><?= ucfirst($paper['hod_status']) ?></span></div>
-                        <div>EO: <span class="font-bold <?= $paper['eo_status'] === 'approved' ? 'text-emerald-600' : 'text-amber-600' ?>"><?= ucfirst($paper['eo_status']) ?></span></div>
-                    </div>
-                </div>
+                $currentScore = $statusScores[$currentStatus] ?? 0;
+                if ($currentStatus === STATUS_MODERATED) {
+                    if ($hodStatus === 'approved') $currentScore = 3;
+                    if ($eoStatus === 'approved') $currentScore = 4;
+                }
 
-                <!-- Stage 4: Blind Lockdown & Print -->
-                <div class="p-4 rounded-xl border <?= in_array($paper['status'], [STATUS_APPROVED, STATUS_LOCKED, STATUS_PRINTED]) ? 'bg-purple-50/60 border-purple-200 dark:bg-purple-950/20 dark:border-purple-900/50' : 'bg-slate-50 border-slate-200 dark:bg-slate-800/40 dark:border-slate-800' ?>">
-                    <div class="text-xs font-semibold text-slate-500 uppercase">Stage 4: Lockdown & Print</div>
-                    <div class="text-sm font-bold text-slate-900 dark:text-white mt-1">AES-256 Lockdown</div>
-                    <div class="text-[11px] text-purple-600 dark:text-purple-400 mt-2 font-medium">
-                        <?= in_array($paper['status'], [STATUS_APPROVED, STATUS_LOCKED, STATUS_PRINTED]) ? 'Sealed & Ready for Queue' : 'Locked upon Dual Approval' ?>
-                    </div>
-                </div>
+                foreach ($stages as $idx => $stage):
+                    $stageScore = $statusScores[$stage['status']];
+                    
+                    $isCompleted = $currentScore > $stageScore;
+                    $isActive = $currentScore === $stageScore;
+                    
+                    // Specific logic for HOD/EO intermediate states
+                    if ($stage['status'] === 'hod_approved' && $hodStatus === 'approved') {
+                        $isCompleted = true;
+                    }
+                    if ($stage['status'] === 'eo_approved' && $eoStatus === 'approved') {
+                        $isCompleted = true;
+                    }
 
+                    $bgColor = $isCompleted ? 'bg-emerald-500' : ($isActive ? 'bg-blue-500 ring-4 ring-blue-500/20' : 'bg-slate-200 dark:bg-slate-700');
+                    $textColor = $isCompleted ? 'text-white' : ($isActive ? 'text-white' : 'text-slate-400');
+                    $labelColor = $isCompleted ? 'text-emerald-600 dark:text-emerald-400 font-bold' : ($isActive ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-400 font-medium');
+                ?>
+                    <div class="relative z-10 flex md:flex-col items-center gap-4 md:gap-2 mb-6 md:mb-0">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors <?= $bgColor ?> <?= $textColor ?>">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $stage['icon'] ?>"/></svg>
+                        </div>
+                        <div class="text-[10px] uppercase tracking-wider text-left md:text-center <?= $labelColor ?> w-24">
+                            <?= $stage['label'] ?>
+                            <?php if ($isActive && $currentStatus === STATUS_RETURNED && $stage['status'] === STATUS_SUBMITTED): ?>
+                                <br><span class="text-rose-500">(Returned)</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
         </div>
 
@@ -208,7 +303,9 @@ include __DIR__ . '/../../includes/navbar.php';
                 </h3>
 
                 <div class="space-y-4">
-                    <?php foreach ($versions as $v): ?>
+                    <?php foreach ($versions as $v): 
+                        $vComments = $commentsByVersion[$v['id']] ?? [];
+                    ?>
                         <div class="p-4 rounded-xl border <?= (int)$v['id'] === (int)$paper['current_version_id'] ? 'bg-blue-50/30 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900/50' : 'bg-slate-50/50 border-slate-200 dark:bg-slate-800/30 dark:border-slate-800' ?>">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-2">
@@ -240,6 +337,30 @@ include __DIR__ . '/../../includes/navbar.php';
                                 </div>
                             <?php endif; ?>
 
+                            <!-- Inline Moderation Comments for this version -->
+                            <?php if (!empty($vComments)): ?>
+                                <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                                    <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Moderator Feedback on V<?= $v['version_number'] ?></h4>
+                                    <div class="space-y-2">
+                                        <?php foreach ($vComments as $c): ?>
+                                            <div class="bg-white dark:bg-slate-900 rounded border border-rose-100 dark:border-rose-900/30 p-2 text-xs">
+                                                <div class="flex justify-between items-start mb-1">
+                                                    <span class="font-bold text-slate-800 dark:text-slate-200">
+                                                        <?= htmlspecialchars(($c['title'] ? $c['title'] . ' ' : '') . $c['first_name'] . ' ' . $c['last_name']) ?>
+                                                    </span>
+                                                    <?php if (!empty($c['line_reference'])): ?>
+                                                        <span class="px-1.5 py-0.5 bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 rounded text-[9px] font-mono font-bold">Line: <?= htmlspecialchars($c['line_reference']) ?></span>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div class="text-slate-600 dark:text-slate-400 leading-snug">
+                                                    <?= htmlspecialchars($c['comment_text']) ?>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
                             <div class="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-end gap-2">
                                 <button type="button" onclick="openPreviewModal(<?= $paperId ?>, <?= $v['id'] ?>)" class="px-3 py-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 rounded text-xs font-medium transition">
                                     Preview V<?= $v['version_number'] ?>
@@ -253,38 +374,6 @@ include __DIR__ . '/../../includes/navbar.php';
                 </div>
             </div>
 
-        </div>
-
-        <!-- Moderation Comments & Annotation Feedback -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 mb-8">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-100 dark:border-slate-800 pb-2 mb-4 flex items-center justify-between">
-                <span>Moderation Annotations & Correction Comments</span>
-                <span class="text-xs text-slate-400 font-normal"><?= count($comments) ?> Comment(s)</span>
-            </h3>
-
-            <?php if (empty($comments)): ?>
-                <div class="py-8 text-center text-xs text-slate-400">
-                    No moderation comments or line annotations have been posted yet.
-                </div>
-            <?php else: ?>
-                <div class="space-y-3">
-                    <?php foreach ($comments as $c): ?>
-                        <div class="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                            <div class="flex items-center justify-between mb-1.5">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-bold text-xs text-slate-900 dark:text-white"><?= htmlspecialchars(($c['title'] ? $c['title'] . ' ' : '') . $c['first_name'] . ' ' . $c['last_name']) ?></span>
-                                    <?= renderRoleBadge($c['role']) ?>
-                                    <?php if (!empty($c['line_reference'])): ?>
-                                        <span class="text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-mono text-slate-600 dark:text-slate-300"><?= htmlspecialchars($c['line_reference']) ?></span>
-                                    <?php endif; ?>
-                                </div>
-                                <span class="text-[10px] text-slate-400"><?= formatDate($c['created_at']) ?></span>
-                            </div>
-                            <div class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed"><?= htmlspecialchars($c['comment_text']) ?></div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
         </div>
 
     </main>

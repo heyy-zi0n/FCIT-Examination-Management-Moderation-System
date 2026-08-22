@@ -1,6 +1,6 @@
 <?php
 /**
- * LASU FCIT Secure Examination Question Management System
+ * LASU FCIT Examination Question Lifecycle Management System
  * Public Portal & Landing Page
  */
 
@@ -12,7 +12,7 @@ if ($currentUser) {
     exit;
 }
 
-$pageTitle = 'LASU FCIT — Secure Examination Question Management System';
+$pageTitle = 'LASU FCIT — Examination Question Lifecycle Management System';
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/navbar.php';
 
@@ -42,7 +42,7 @@ $departments = $pdo->query("SELECT code, name, description FROM departments ORDE
         </div>
 
         <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-tight mb-6">
-            Secure Examination Question Management & <span class="text-transparent bg-clip-text bg-gradient-to-r from-lasu-gold via-amber-300 to-yellow-200">Controlled Printing</span>
+            Examination Question Lifecycle Management & <span class="text-transparent bg-clip-text bg-gradient-to-r from-lasu-gold via-amber-300 to-yellow-200">Moderation Workflow</span>
         </h1>
 
         <p class="max-w-3xl mx-auto text-lg sm:text-xl text-slate-300 font-medium mb-10 leading-relaxed">
