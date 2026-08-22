@@ -46,17 +46,6 @@ The system ensures academic integrity through a rigorous multi-tier moderation w
    ```
    *(Note: This script will drop and recreate the `lasu_fcit_exam_db` database. Do not run this on a production environment where data must be preserved.)*
 
-## Test Accounts
-
-Following a successful database migration, the following accounts will be available for end-to-end testing (Password for all accounts is `Password123!`):
-
-- **Admin:** `admin@lasu.edu.ng`
-- **Exam Officer:** `exam.officer@lasu.edu.ng`
-- **HOD (Computer Science):** `hod.csc@lasu.edu.ng`
-- **HOD (Cyber Security):** `hod.cyb@lasu.edu.ng`
-- **Moderator (Computer Science):** `moderator.csc@lasu.edu.ng`
-- **Lecturer (Computer Science):** `lecturer.csc@lasu.edu.ng`
-- **Lecturer (Cyber Security):** `lecturer.cyb@lasu.edu.ng`
 
 ## Security Considerations
 
