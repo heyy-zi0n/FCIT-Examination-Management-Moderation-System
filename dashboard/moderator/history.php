@@ -83,7 +83,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                         <?= formatDate($h['decided_at']) ?>
                                     </td>
                                     <td class="py-4 px-4 text-right">
-                                        <a href="/FOCITECMS/dashboard/moderator/review_paper.php?id=<?= $h['id'] ?>" class="px-3 py-1.5 bg-lasu-navy text-white hover:bg-lasu-navy-light rounded-lg text-xs font-medium transition">
+                                        <a href="<?= url('dashboard/moderator/review_paper.php?id=' . $h['id']) ?>" class="px-3 py-1.5 bg-lasu-navy text-white hover:bg-lasu-navy-light rounded-lg text-xs font-medium transition">
                                             View Paper
                                         </a>
                                     </td>

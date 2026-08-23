@@ -45,7 +45,7 @@ include __DIR__ . '/../../includes/navbar.php';
             </div>
             
             <div class="flex items-center gap-2">
-                <a href="/FOCITECMS/dashboard/exam_officer/print_history.php" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold border border-slate-300 dark:border-slate-700 transition flex items-center gap-2">
+                <a href="<?= url('dashboard/exam_officer/print_history.php') ?>" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold border border-slate-300 dark:border-slate-700 transition flex items-center gap-2">
                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     <span>Print Logs & Reprints</span>
                 </a>
@@ -156,7 +156,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                     </td>
                                     <td class="py-4 px-4 text-right">
                                         <?php if ($elig['eligible'] || $qp['status'] === STATUS_PRINTED): ?>
-                                            <a href="/FOCITECMS/dashboard/exam_officer/controlled_print.php?id=<?= $qp['id'] ?>" class="px-4 py-2 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow transition inline-flex items-center gap-1.5">
+                                            <a href="<?= url('dashboard/exam_officer/controlled_print.php?id=' . $qp['id']) ?>" class="px-4 py-2 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow transition inline-flex items-center gap-1.5">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                                 <span><?= $qp['status'] === STATUS_PRINTED ? 'Reprint Paper' : 'Execute Print' ?></span>
                                             </a>
@@ -165,7 +165,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                                 Awaiting HOD
                                             </button>
                                         <?php else: ?>
-                                            <a href="/FOCITECMS/dashboard/exam_officer/request_emergency_print.php?id=<?= $qp['id'] ?>" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold border border-rose-200 transition">
+                                            <a href="<?= url('dashboard/exam_officer/request_emergency_print.php?id=' . $qp['id']) ?>" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-bold border border-rose-200 transition">
                                                 Request Emergency Print
                                             </a>
                                         <?php endif; ?>

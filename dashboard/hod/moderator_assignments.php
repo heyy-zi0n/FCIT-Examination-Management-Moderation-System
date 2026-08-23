@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_assign_moderat
         ]);
 
         setFlash('success', "Moderator assigned successfully to the selected academic level.");
-        header("Location: /FOCITECMS/dashboard/hod/moderator_assignments.php");
+        redirect('dashboard/hod/moderator_assignments.php');
         exit;
 
     } catch (Exception $e) {
@@ -149,7 +149,7 @@ include __DIR__ . '/../../includes/navbar.php';
             <h3 class="text-sm font-bold">Allocate Departmental Moderator</h3>
             <button type="button" onclick="closeModal('assign-modal')" class="text-slate-300 hover:text-white">&times;</button>
         </div>
-        <form method="POST" action="/FOCITECMS/dashboard/hod/moderator_assignments.php" class="p-6 space-y-4">
+        <form method="POST" action="<?= url('dashboard/hod/moderator_assignments.php') ?>" class="p-6 space-y-4">
             <?= csrfField() ?>
             <input type="hidden" name="action_assign_moderator" value="1">
 

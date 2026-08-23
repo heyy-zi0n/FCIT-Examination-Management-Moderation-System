@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('success', "Examination paper {$res['paper_code']} saved as Draft. You can review and submit when ready.");
         }
 
-        header("Location: /FOCITECMS/dashboard/lecturer/view_paper.php?id={$paperId}");
+        redirect("dashboard/lecturer/view_paper.php?id={$paperId}");
         exit;
 
     } catch (Exception $e) {
@@ -94,7 +94,7 @@ include __DIR__ . '/../../includes/navbar.php';
         <?= renderAlerts() ?>
 
         <div class="mb-6">
-            <a href="/FOCITECMS/dashboard/lecturer/index.php" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 mb-2">
+            <a href="<?= url('dashboard/lecturer/index.php') ?>" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 mb-2">
                 &larr; Back to Dashboard
             </a>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Create Examination Question Paper</h1>
@@ -103,7 +103,7 @@ include __DIR__ . '/../../includes/navbar.php';
 
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 sm:p-8">
             
-            <form method="POST" action="/FOCITECMS/dashboard/lecturer/create_paper.php" enctype="multipart/form-data" class="space-y-6">
+            <form method="POST" action="<?= url('dashboard/lecturer/create_paper.php') ?>" enctype="multipart/form-data" class="space-y-6">
                 <?= csrfField() ?>
 
                 <!-- Step 1: Course Selection -->

@@ -89,7 +89,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                         </span>
                                     </td>
                                     <td class="py-4 px-4 text-right">
-                                        <a href="/FOCITECMS/dashboard/exam_officer/review_paper.php?id=<?= $p['id'] ?>" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition text-xs inline-flex items-center gap-1.5">
+                                        <a href="<?= url('dashboard/exam_officer/review_paper.php?id=' . $p['id']) ?>" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition text-xs inline-flex items-center gap-1.5">
                                             <span>Inspect & Sign-off</span>
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                                         </a>

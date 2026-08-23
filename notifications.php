@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     requireCsrf();
     markAllNotificationsRead((int)$user['id']);
     setFlash('success', 'All notifications marked as read.');
-    header('Location: /FOCITECMS/notifications.php');
+    redirect('notifications.php');
     exit;
 }
 
@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if (isset($_GET['mark_read'])) {
     $notifId = (int)$_GET['mark_read'];
     markNotificationRead($notifId, (int)$user['id']);
-    header('Location: /FOCITECMS/notifications.php');
+    redirect('notifications.php');
     exit;
 }
 
@@ -42,7 +42,7 @@ include __DIR__ . '/includes/navbar.php';
                 <p class="text-xs text-slate-500">System alerts, submission updates, and workflow reviews</p>
             </div>
             
-            <form method="POST" action="/FOCITECMS/notifications.php">
+            <form method="POST" action="<?= url('notifications.php') ?>">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="mark_all_read">
                 <button type="submit" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-lg transition border border-slate-300 dark:border-slate-700 flex items-center gap-2">
@@ -91,7 +91,7 @@ include __DIR__ . '/includes/navbar.php';
                                 </a>
                             <?php endif; ?>
                             <?php if (!$n['is_read']): ?>
-                                <a href="/FOCITECMS/notifications.php?mark_read=<?= $n['id'] ?>" class="px-2.5 py-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 text-xs border border-slate-200 dark:border-slate-700 rounded transition" title="Mark Read">
+                                <a href="<?= url('notifications.php?mark_read=' . $n['id']) ?>" class="px-2.5 py-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 text-xs border border-slate-200 dark:border-slate-700 rounded transition" title="Mark Read">
                                     &check;
                                 </a>
                             <?php endif; ?>

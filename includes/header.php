@@ -15,7 +15,7 @@ $user = currentUser();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Design and Implementation of a Secure Examination Question Lifecycle Management System with Moderation, Approval, Audit and Controlled Printing for LASU FCIT">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?></title>
-    <link rel="icon" href="/FOCITECMS/assets/img/lasu-logo.png" type="image/png">
+    <link rel="icon" href="<?= url('assets/img/lasu-logo.png') ?>" type="image/png">
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,6 +46,6 @@ $user = currentUser();
         }
     </script>
     
-    <link rel="stylesheet" href="/FOCITECMS/assets/css/custom.css">
+    <link rel="stylesheet" href="<?= url('assets/css/custom.css') ?>">
 </head>
 <body class="h-full font-sans antialiased text-slate-800 dark:text-slate-100 flex flex-col">

@@ -9,7 +9,7 @@ $pdo = getDb();
 
 $paperId = $_GET['id'] ?? null;
 if (!$paperId) {
-    header("Location: /FOCITECMS/dashboard/exam_officer/print_queue.php");
+    redirect('dashboard/exam_officer/print_queue.php');
     exit;
 }
 
@@ -19,7 +19,7 @@ $paper = $stmt->fetch();
 
 if (!$paper || !in_array($paper['status'], [STATUS_APPROVED, STATUS_LOCKED, STATUS_QUEUED])) {
     setFlash('error', 'Paper not found or not eligible for emergency print.');
-    header("Location: /FOCITECMS/dashboard/exam_officer/print_queue.php");
+    redirect('dashboard/exam_officer/print_queue.php');
     exit;
 }
 
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_request'])) {
     try {
         PrintingService::requestEmergencyPrint((int)$paperId, (int)$paper['current_version_id'], $userId, $reason);
         setFlash('success', 'Emergency print request submitted successfully to the HOD.');
-        header("Location: /FOCITECMS/dashboard/exam_officer/print_queue.php");
+        redirect('dashboard/exam_officer/print_queue.php');
         exit;
     } catch (Exception $e) {
         $error = $e->getMessage();
@@ -67,7 +67,7 @@ include __DIR__ . '/../../includes/navbar.php';
 
                 <div class="flex items-center gap-3">
                     <button type="submit" class="px-6 py-2.5 bg-lasu-navy text-white hover:bg-lasu-navy/90 rounded-xl font-bold text-sm transition shadow-sm">Submit Request to HOD</button>
-                    <a href="/FOCITECMS/dashboard/exam_officer/print_queue.php" class="px-6 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-sm transition">Cancel</a>
+                    <a href="<?= url('dashboard/exam_officer/print_queue.php') ?>" class="px-6 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-sm transition">Cancel</a>
                 </div>
             </form>
         </div>

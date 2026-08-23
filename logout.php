@@ -7,5 +7,5 @@ require_once __DIR__ . '/bootstrap.php';
 
 logoutUser();
 setFlash('info', 'You have been successfully logged out of the examination system.');
-header("Location: /FOCITECMS/login.php");
+redirect('login.php');
 exit;

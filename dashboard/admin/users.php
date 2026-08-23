@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setFlash('success', "New user account {$email} created successfully.");
             }
 
-            header("Location: /FOCITECMS/dashboard/admin/users.php");
+            redirect('dashboard/admin/users.php');
             exit;
 
         } catch (Exception $e) {
@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logAudit((int)$user['id'], 'toggle_user_status', 'user', $targetId, ['status' => $newStatus]);
             setFlash('success', "User status updated to {$newStatus}.");
         }
-        header("Location: /FOCITECMS/dashboard/admin/users.php");
+        redirect('dashboard/admin/users.php');
         exit;
     }
 }
@@ -193,7 +193,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                             Edit
                                         </button>
                                         <?php if ((int)$u['id'] !== (int)$user['id']): ?>
-                                            <form method="POST" action="/FOCITECMS/dashboard/admin/users.php" class="inline">
+                                            <form method="POST" action="<?= url('dashboard/admin/users.php') ?>" class="inline">
                                                 <?= csrfField() ?>
                                                 <input type="hidden" name="action_toggle_status" value="1">
                                                 <input type="hidden" name="target_user_id" value="<?= $u['id'] ?>">
@@ -222,7 +222,7 @@ include __DIR__ . '/../../includes/navbar.php';
             <h3 class="text-sm font-bold" id="user-modal-title">Create User Account</h3>
             <button type="button" onclick="closeModal('user-modal')" class="text-slate-300 hover:text-white">&times;</button>
         </div>
-        <form method="POST" action="/FOCITECMS/dashboard/admin/users.php" class="p-6 space-y-4 overflow-y-auto flex-1">
+        <form method="POST" action="<?= url('dashboard/admin/users.php') ?>" class="p-6 space-y-4 overflow-y-auto flex-1">
             <?= csrfField() ?>
             <input type="hidden" name="action_save_user" value="1">
             <input type="hidden" name="user_id" id="form-user-id" value="0">

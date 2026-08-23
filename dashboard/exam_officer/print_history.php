@@ -48,7 +48,7 @@ include __DIR__ . '/../../includes/navbar.php';
             </div>
 
             <!-- Search by Verification Code -->
-            <form method="GET" action="/FOCITECMS/dashboard/exam_officer/print_history.php" class="flex items-center gap-2">
+            <form method="GET" action="<?= url('dashboard/exam_officer/print_history.php') ?>" class="flex items-center gap-2">
                 <input type="text" name="verification_code" placeholder="Search Serial / Code..." value="<?= htmlspecialchars($codeSearch) ?>" class="px-3.5 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-lasu-navy focus:outline-none">
                 <button type="submit" class="px-4 py-2 bg-lasu-navy text-lasu-gold font-bold rounded-xl text-xs shadow transition">Search</button>
             </form>

@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_course'])
             setFlash('success', "New course {$courseCode} registered successfully.");
         }
 
-        header("Location: /FOCITECMS/dashboard/admin/academic_structure.php");
+        redirect('dashboard/admin/academic_structure.php');
         exit;
     } catch (Exception $e) {
         setFlash('error', $e->getMessage());
@@ -230,7 +230,7 @@ include __DIR__ . '/../../includes/navbar.php';
             <h3 class="text-sm font-bold" id="course-modal-title">Register Course</h3>
             <button type="button" onclick="closeModal('course-modal')" class="text-slate-300 hover:text-white">&times;</button>
         </div>
-        <form method="POST" action="/FOCITECMS/dashboard/admin/academic_structure.php" class="p-6 space-y-4">
+        <form method="POST" action="<?= url('dashboard/admin/academic_structure.php') ?>" class="p-6 space-y-4">
             <?= csrfField() ?>
             <input type="hidden" name="action_save_course" value="1">
             <input type="hidden" name="course_id" id="form-course-id" value="0">

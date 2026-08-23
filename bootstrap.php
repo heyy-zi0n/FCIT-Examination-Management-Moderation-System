@@ -52,6 +52,7 @@ require_once __DIR__ . '/helpers/audit_helper.php';
 require_once __DIR__ . '/helpers/notification_helper.php';
 require_once __DIR__ . '/helpers/document_helper.php';
 require_once __DIR__ . '/helpers/workflow_helper.php';
+require_once __DIR__ . '/helpers/url_helper.php';
 require_once __DIR__ . '/helpers/view_helper.php';
 require_once __DIR__ . '/includes/alerts.php';
 

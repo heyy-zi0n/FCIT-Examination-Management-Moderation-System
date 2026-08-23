@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_schedule'
             setFlash('success', "Examination schedule for {$course['course_code']} saved successfully.");
         }
 
-        header("Location: /FOCITECMS/dashboard/hod/schedules.php");
+        redirect('dashboard/hod/schedules.php');
         exit;
 
     } catch (Exception $e) {
@@ -203,7 +203,7 @@ include __DIR__ . '/../../includes/navbar.php';
             <h3 class="text-sm font-bold">Set Course Examination Schedule</h3>
             <button type="button" onclick="closeModal('schedule-modal')" class="text-slate-300 hover:text-white">&times;</button>
         </div>
-        <form method="POST" action="/FOCITECMS/dashboard/hod/schedules.php" class="p-6 space-y-4">
+        <form method="POST" action="<?= url('dashboard/hod/schedules.php') ?>" class="p-6 space-y-4">
             <?= csrfField() ?>
             <input type="hidden" name="action_save_schedule" value="1">
 

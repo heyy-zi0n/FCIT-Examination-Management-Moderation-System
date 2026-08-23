@@ -69,7 +69,7 @@ include __DIR__ . '/../../includes/navbar.php';
                 <p class="text-xs text-slate-300 mt-1">Manage the complete examination pipeline: Approvals → Lockdown → Production.</p>
             </div>
             <div class="flex items-center gap-3">
-                <a href="/FOCITECMS/dashboard/exam_officer/print_queue.php" class="px-5 py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
+                <a href="<?= url('dashboard/exam_officer/print_queue.php') ?>" class="px-5 py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     <span>Controlled Print Queue</span>
                 </a>
@@ -151,7 +151,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                         </span>
                                     </td>
                                     <td class="py-4 px-4 text-right">
-                                        <a href="/FOCITECMS/dashboard/exam_officer/review_paper.php?id=<?= $p['id'] ?>" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition text-xs inline-flex items-center gap-1.5">
+                                        <a href="<?= url('dashboard/exam_officer/review_paper.php?id=' . $p['id']) ?>" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition text-xs inline-flex items-center gap-1.5">
                                             <span>Inspect & Sign-off</span>
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                                         </a>
@@ -171,7 +171,7 @@ include __DIR__ . '/../../includes/navbar.php';
                     <h2 class="text-base font-bold text-slate-900 dark:text-white">Controlled Printing Status & Date Gates</h2>
                     <p class="text-xs text-slate-500">Live eligibility calculated against Africa/Lagos calendar day (Exam Date - 1 day)</p>
                 </div>
-                <a href="/FOCITECMS/dashboard/exam_officer/print_queue.php" class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Full Print Queue &rarr;</a>
+                <a href="<?= url('dashboard/exam_officer/print_queue.php') ?>" class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Full Print Queue &rarr;</a>
             </div>
 
             <div class="overflow-x-auto">
@@ -220,7 +220,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                     </td>
                                     <td class="py-4 px-4 text-right">
                                         <?php if ($elig['eligible'] || $qp['status'] === STATUS_PRINTED): ?>
-                                            <a href="/FOCITECMS/dashboard/exam_officer/controlled_print.php?id=<?= $qp['id'] ?>" class="px-3 py-1.5 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-lg text-xs shadow transition">
+                                            <a href="<?= url('dashboard/exam_officer/controlled_print.php?id=' . $qp['id']) ?>" class="px-3 py-1.5 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-lg text-xs shadow transition">
                                                 <?= $qp['status'] === STATUS_PRINTED ? 'Reprint Paper' : 'Execute Print' ?>
                                             </a>
                                         <?php else: ?>

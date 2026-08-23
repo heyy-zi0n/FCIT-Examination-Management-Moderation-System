@@ -58,7 +58,7 @@ include __DIR__ . '/../../includes/navbar.php';
                 <p class="text-xs text-slate-300 mt-1">Department: <span class="font-semibold text-white"><?= htmlspecialchars($user['department_name'] ?? 'Computing') ?></span></p>
             </div>
             <div class="flex items-center gap-3">
-                <a href="/FOCITECMS/dashboard/hod/pending_approvals.php" class="px-4 py-2.5 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow transition flex items-center gap-2">
+                <a href="<?= url('dashboard/hod/pending_approvals.php') ?>" class="px-4 py-2.5 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow transition flex items-center gap-2">
                     <span>Pending Approvals</span>
                     <span class="w-5 h-5 bg-lasu-navy text-white rounded-full flex items-center justify-center text-[10px]"><?= $pendingHodCount ?></span>
                 </a>
@@ -108,7 +108,7 @@ include __DIR__ . '/../../includes/navbar.php';
                     <h2 class="text-base font-bold text-slate-900 dark:text-white">Moderated Papers Awaiting HOD Approval</h2>
                     <p class="text-xs text-slate-500">Papers vetted by departmental moderators requiring your official approval</p>
                 </div>
-                <a href="/FOCITECMS/dashboard/hod/pending_approvals.php" class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">View All &rarr;</a>
+                <a href="<?= url('dashboard/hod/pending_approvals.php') ?>" class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">View All &rarr;</a>
             </div>
 
             <div class="overflow-x-auto">
@@ -154,7 +154,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                         </span>
                                     </td>
                                     <td class="py-4 px-4 text-right">
-                                        <a href="/FOCITECMS/dashboard/hod/review_paper.php?id=<?= $p['id'] ?>" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow transition text-xs inline-flex items-center gap-1.5">
+                                        <a href="<?= url('dashboard/hod/review_paper.php?id=' . $p['id']) ?>" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow transition text-xs inline-flex items-center gap-1.5">
                                             <span>Inspect & Sign-off</span>
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                                         </a>

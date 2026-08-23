@@ -52,7 +52,7 @@ include __DIR__ . '/../../includes/navbar.php';
                 <p class="text-xs text-slate-500">Repository of all examination questions and version history created by you</p>
             </div>
             
-            <a href="/FOCITECMS/dashboard/lecturer/create_paper.php" class="px-4 py-2.5 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow transition flex items-center gap-2">
+            <a href="<?= url('dashboard/lecturer/create_paper.php') ?>" class="px-4 py-2.5 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow transition flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>New Paper</span>
             </a>
@@ -61,12 +61,12 @@ include __DIR__ . '/../../includes/navbar.php';
         <!-- Filter Bar -->
         <div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-200 dark:border-slate-800 mb-6 flex flex-wrap items-center gap-2 text-xs">
             <span class="font-semibold text-slate-500 mr-2">Filter by Status:</span>
-            <a href="/FOCITECMS/dashboard/lecturer/papers.php" class="px-3 py-1 rounded-full border transition <?= empty($statusFilter) ? 'bg-lasu-navy text-white border-lasu-navy' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700' ?>">All Papers</a>
-            <a href="/FOCITECMS/dashboard/lecturer/papers.php?status=Draft" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Draft' ? 'bg-slate-800 text-white' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 border-slate-200 dark:border-slate-700' ?>">Drafts</a>
-            <a href="/FOCITECMS/dashboard/lecturer/papers.php?status=Submitted" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Submitted' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 border-blue-200' ?>">Submitted</a>
-            <a href="/FOCITECMS/dashboard/lecturer/papers.php?status=Returned" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Returned' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700 border-rose-200' ?>">Returned</a>
-            <a href="/FOCITECMS/dashboard/lecturer/papers.php?status=Moderated" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Moderated' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700 border-amber-200' ?>">Moderated</a>
-            <a href="/FOCITECMS/dashboard/lecturer/papers.php?status=Approved" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Approved' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 border-emerald-200' ?>">Approved</a>
+            <a href="<?= url('dashboard/lecturer/papers.php') ?>" class="px-3 py-1 rounded-full border transition <?= empty($statusFilter) ? 'bg-lasu-navy text-white border-lasu-navy' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700' ?>">All Papers</a>
+            <a href="<?= url('dashboard/lecturer/papers.php?status=Draft') ?>" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Draft' ? 'bg-slate-800 text-white' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 border-slate-200 dark:border-slate-700' ?>">Drafts</a>
+            <a href="<?= url('dashboard/lecturer/papers.php?status=Submitted') ?>" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Submitted' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 border-blue-200' ?>">Submitted</a>
+            <a href="<?= url('dashboard/lecturer/papers.php?status=Returned') ?>" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Returned' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700 border-rose-200' ?>">Returned</a>
+            <a href="<?= url('dashboard/lecturer/papers.php?status=Moderated') ?>" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Moderated' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700 border-amber-200' ?>">Moderated</a>
+            <a href="<?= url('dashboard/lecturer/papers.php?status=Approved') ?>" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Approved' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 border-emerald-200' ?>">Approved</a>
         </div>
 
         <!-- Papers Table -->
@@ -121,7 +121,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                         <?= formatDate($p['updated_at']) ?>
                                     </td>
                                     <td class="py-4 px-4 text-right">
-                                        <a href="/FOCITECMS/dashboard/lecturer/view_paper.php?id=<?= $p['id'] ?>" class="px-3 py-1.5 bg-lasu-navy hover:bg-lasu-navy-light text-white rounded-lg font-medium transition text-xs">
+                                        <a href="<?= url('dashboard/lecturer/view_paper.php?id=' . $p['id']) ?>" class="px-3 py-1.5 bg-lasu-navy hover:bg-lasu-navy-light text-white rounded-lg font-medium transition text-xs">
                                             Inspect &rarr;
                                         </a>
                                     </td>

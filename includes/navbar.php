@@ -18,8 +18,8 @@ $userNotifs = $currentUser ? getUserNotifications((int)$currentUser['id'], 5) : 
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-                <a href="/FOCITECMS/" class="flex items-center gap-3 group">
-                    <img src="/FOCITECMS/assets/img/lasu-logo.png" alt="LASU Logo" class="h-12 w-auto object-contain group-hover:scale-105 transition-transform drop-shadow-md">
+                <a href="<?= url('') ?>" class="flex items-center gap-3 group">
+                    <img src="<?= url('assets/img/lasu-logo.png') ?>" alt="LASU Logo" class="h-12 w-auto object-contain group-hover:scale-105 transition-transform drop-shadow-md">
                     <div class="hidden sm:block">
                         <div class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
                             <span>LASU FCIT</span>
@@ -76,7 +76,7 @@ $userNotifs = $currentUser ? getUserNotifications((int)$currentUser['id'], 5) : 
                                 <?php endif; ?>
                             </div>
                             <div class="px-4 py-2 border-t border-slate-100 dark:border-slate-800 text-center">
-                                <a href="/FOCITECMS/notifications.php" class="text-xs text-lasu-navy dark:text-blue-400 font-medium hover:underline">View All Notifications</a>
+                                <a href="<?= url('notifications.php') ?>" class="text-xs text-lasu-navy dark:text-blue-400 font-medium hover:underline">View All Notifications</a>
                             </div>
                         </div>
                     </div>
@@ -106,20 +106,20 @@ $userNotifs = $currentUser ? getUserNotifications((int)$currentUser['id'], 5) : 
                                     <div class="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-0.5"><?= htmlspecialchars($currentUser['department_name']) ?></div>
                                 <?php endif; ?>
                             </div>
-                            <a href="/FOCITECMS/dashboard/<?= $currentUser['role'] ?>/" class="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <a href="<?= url('dashboard/' . $currentUser['role'] . '/') ?>" class="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
                                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                 </svg>
                                 <span>My Dashboard</span>
                             </a>
-                            <a href="/FOCITECMS/profile.php" class="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
+                            <a href="<?= url('profile.php') ?>" class="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
                                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                                 <span>Security & Profile</span>
                             </a>
                             <div class="border-t border-slate-100 dark:border-slate-800 my-1"></div>
-                            <a href="/FOCITECMS/logout.php" class="flex items-center gap-2 px-4 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                            <a href="<?= url('logout.php') ?>" class="flex items-center gap-2 px-4 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
                                 <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                 </svg>
@@ -128,7 +128,7 @@ $userNotifs = $currentUser ? getUserNotifications((int)$currentUser['id'], 5) : 
                         </div>
                     </div>
                 <?php else: ?>
-                    <a href="/FOCITECMS/login.php" class="px-4 py-2 bg-lasu-gold text-lasu-navy text-xs font-bold rounded-lg hover:bg-lasu-gold-hover transition shadow">
+                    <a href="<?= url('login.php') ?>" class="px-4 py-2 bg-lasu-gold text-lasu-navy text-xs font-bold rounded-lg hover:bg-lasu-gold-hover transition shadow">
                         Sign In
                     </a>
                 <?php endif; ?>

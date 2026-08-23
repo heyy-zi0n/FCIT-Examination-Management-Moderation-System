@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             setFlash('success', 'Your password has been successfully updated.');
         }
     }
-    header('Location: /FOCITECMS/profile.php');
+    redirect('profile.php');
     exit;
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_profile_picture') {
     requireCsrf();
@@ -50,13 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } catch (Exception $e) {
         setFlash('error', $e->getMessage());
     }
-    header('Location: /FOCITECMS/profile.php');
+    redirect('profile.php');
     exit;
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'remove_profile_picture') {
     requireCsrf();
     ProfileService::removeProfilePicture((int)$user['id']);
     setFlash('success', 'Profile picture removed successfully.');
-    header('Location: /FOCITECMS/profile.php');
+    redirect('profile.php');
     exit;
 }
 
@@ -100,7 +100,7 @@ $userLogs = $stmtAudit->fetchAll();
                     <div class="mt-4 flex items-center justify-center gap-2">
                         <button type="button" onclick="document.getElementById('profile-pic-modal').classList.remove('hidden')" class="px-3 py-1.5 text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition">Change Photo</button>
                         <?php if (!empty($user['profile_picture'])): ?>
-                            <form method="POST" action="/FOCITECMS/profile.php" class="inline" onsubmit="return confirm('Are you sure you want to remove your profile picture?');">
+                            <form method="POST" action="<?= url('profile.php') ?>" class="inline" onsubmit="return confirm('Are you sure you want to remove your profile picture?');">
                                 <?= csrfField() ?>
                                 <input type="hidden" name="action" value="remove_profile_picture">
                                 <button type="submit" class="px-3 py-1.5 text-[10px] font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 rounded-lg transition">Remove</button>
@@ -139,7 +139,7 @@ $userLogs = $stmtAudit->fetchAll();
                         <span>Change Password</span>
                     </h3>
 
-                    <form method="POST" action="/FOCITECMS/profile.php" class="space-y-4">
+                    <form method="POST" action="<?= url('profile.php') ?>" class="space-y-4">
                         <?= csrfField() ?>
                         <input type="hidden" name="action" value="change_password">
 
@@ -217,7 +217,7 @@ $userLogs = $stmtAudit->fetchAll();
         <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Update Profile Picture</h3>
         <p class="text-xs text-slate-500 mb-5">Select a square or wide image. It will automatically be cropped and optimized. (Max 5MB)</p>
         
-        <form method="POST" action="/FOCITECMS/profile.php" enctype="multipart/form-data">
+        <form method="POST" action="<?= url('profile.php') ?>" enctype="multipart/form-data">
             <?= csrfField() ?>
             <input type="hidden" name="action" value="upload_profile_picture">
             

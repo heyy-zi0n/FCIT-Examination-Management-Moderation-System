@@ -30,7 +30,7 @@ $paper = $stmtPaper->fetch();
 
 if (!$paper) {
     setFlash('error', 'Examination paper not found or not eligible for printing.');
-    header("Location: /FOCITECMS/dashboard/exam_officer/print_queue.php");
+    redirect('dashboard/exam_officer/print_queue.php');
     exit;
 }
 
@@ -87,7 +87,7 @@ include __DIR__ . '/../../includes/navbar.php';
         <?= renderAlerts() ?>
 
         <div class="mb-6 no-print">
-            <a href="/FOCITECMS/dashboard/exam_officer/print_queue.php" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 mb-2">
+            <a href="<?= url('dashboard/exam_officer/print_queue.php') ?>" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 mb-2">
                 &larr; Back to Controlled Print Queue
             </a>
             <div class="flex items-center gap-3">
@@ -112,7 +112,7 @@ include __DIR__ . '/../../includes/navbar.php';
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                         <span>Send to Physical Printer</span>
                     </button>
-                    <a href="/FOCITECMS/dashboard/exam_officer/print_queue.php" class="px-4 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition">
+                    <a href="<?= url('dashboard/exam_officer/print_queue.php') ?>" class="px-4 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition">
                         Return to Queue
                     </a>
                 </div>
@@ -138,7 +138,7 @@ include __DIR__ . '/../../includes/navbar.php';
 
                 <!-- Live Document Viewer Frame -->
                 <div class="h-[750px] w-full border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden mb-6">
-                    <iframe src="/FOCITECMS/preview.php?paper_id=<?= $paperId ?>&version_id=<?= $paper['current_version_id'] ?>&type=question" class="w-full h-full border-0" title="Printable Question Document"></iframe>
+                    <iframe src="<?= url('preview.php?paper_id=' . $paperId . '&version_id=' . $paper['current_version_id'] . '&type=question') ?>" class="w-full h-full border-0" title="Printable Question Document"></iframe>
                 </div>
 
                 <!-- Security Verification Footer Stamp -->
@@ -166,7 +166,7 @@ include __DIR__ . '/../../includes/navbar.php';
                         <span>Controlled Print Authorization</span>
                     </h2>
 
-                    <form method="POST" action="/FOCITECMS/dashboard/exam_officer/controlled_print.php?id=<?= $paperId ?>" class="space-y-4">
+                    <form method="POST" action="<?= url('dashboard/exam_officer/controlled_print.php?id=' . $paperId) ?>" class="space-y-4">
                         <?= csrfField() ?>
                         <input type="hidden" name="action_confirm_print" value="1">
 
@@ -223,7 +223,7 @@ include __DIR__ . '/../../includes/navbar.php';
                         </div>
 
                         <div class="border border-slate-200 dark:border-slate-800 rounded-xl h-[480px] overflow-hidden">
-                            <iframe src="/FOCITECMS/preview.php?paper_id=<?= $paperId ?>&version_id=<?= $paper['current_version_id'] ?>&type=question" class="w-full h-full border-0" title="Document Preview"></iframe>
+                            <iframe src="<?= url('preview.php?paper_id=' . $paperId . '&version_id=' . $paper['current_version_id'] . '&type=question') ?>" class="w-full h-full border-0" title="Document Preview"></iframe>
                         </div>
                     </div>
                 </div>

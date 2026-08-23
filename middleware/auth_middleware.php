@@ -10,8 +10,8 @@
 function requireAuth(): array {
     $user = currentUser();
     if (!$user) {
-        $returnUrl = urlencode($_SERVER['REQUEST_URI'] ?? '/FOCITECMS/index.php');
-        header("Location: /FOCITECMS/login.php?redirect={$returnUrl}");
+        $returnUrl = urlencode($_SERVER['REQUEST_URI'] ?? url('index.php'));
+        redirect("login.php?redirect={$returnUrl}");
         exit;
     }
     return $user;
@@ -64,7 +64,7 @@ function requireRole(string|array $allowedRoles): array {
             </div>
             <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Access Forbidden (403)</h2>
             <p class="text-slate-600 dark:text-slate-400 mb-6">You do not have the required role permissions to access this page.</p>
-            <a href="/FOCITECMS/dashboard/' . $user['role'] . '/" class="px-6 py-2.5 bg-blue-900 text-white rounded-lg font-medium hover:bg-blue-800 transition">Return to My Dashboard</a>
+            <a href="' . url('dashboard/' . $user['role'] . '/') . '" class="px-6 py-2.5 bg-blue-900 text-white rounded-lg font-medium hover:bg-blue-800 transition">Return to My Dashboard</a>
           </div>';
     include __DIR__ . '/../includes/footer.php';
     exit;
@@ -77,7 +77,7 @@ function requireGuest(): void {
     $user = currentUser();
     if ($user) {
         $role = $user['role'];
-        header("Location: /FOCITECMS/dashboard/{$role}/index.php");
+        redirect("dashboard/{$role}/index.php");
         exit;
     }
 }

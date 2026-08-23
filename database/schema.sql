@@ -97,6 +97,7 @@ CREATE TABLE `courses` (
     `level_id` INT NOT NULL,
     `semester_id` INT NOT NULL,
     `credit_units` INT NOT NULL DEFAULT 3,
+    `is_active` TINYINT(1) NOT NULL DEFAULT 1,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT `fk_courses_dept` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_courses_level` FOREIGN KEY (`level_id`) REFERENCES `academic_levels` (`id`) ON DELETE RESTRICT,

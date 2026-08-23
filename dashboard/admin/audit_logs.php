@@ -62,7 +62,7 @@ include __DIR__ . '/../../includes/navbar.php';
 
         <!-- Filter Bar -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 mb-6">
-            <form method="GET" action="/FOCITECMS/dashboard/admin/audit_logs.php" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end text-xs">
+            <form method="GET" action="<?= url('dashboard/admin/audit_logs.php') ?>" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end text-xs">
                 <div>
                     <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Filter by Action Event</label>
                     <select name="action_name" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl">
@@ -90,7 +90,7 @@ include __DIR__ . '/../../includes/navbar.php';
 
                 <div class="flex items-center gap-2">
                     <button type="submit" class="w-full py-2 bg-lasu-navy text-lasu-gold font-bold rounded-xl shadow transition">Apply Filter</button>
-                    <a href="/FOCITECMS/dashboard/admin/audit_logs.php" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-xl border border-slate-300 dark:border-slate-700 text-center">Reset</a>
+                    <a href="<?= url('dashboard/admin/audit_logs.php') ?>" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-xl border border-slate-300 dark:border-slate-700 text-center">Reset</a>
                 </div>
             </form>
         </div>

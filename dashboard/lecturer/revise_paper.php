@@ -11,7 +11,7 @@ $paper = requirePaperAccess($paperId, 'edit');
 
 if ($paper['status'] !== STATUS_RETURNED) {
     setFlash('error', "Only papers in 'Returned' status can have revisions submitted (current status: {$paper['status']}).");
-    header("Location: /FOCITECMS/dashboard/lecturer/view_paper.php?id={$paperId}");
+    redirect("dashboard/lecturer/view_paper.php?id={$paperId}");
     exit;
 }
 
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('success', "Revision V{$rev['version_number']} saved. You can submit when ready.");
         }
 
-        header("Location: /FOCITECMS/dashboard/lecturer/view_paper.php?id={$paperId}");
+        redirect("dashboard/lecturer/view_paper.php?id={$paperId}");
         exit;
 
     } catch (Exception $e) {
@@ -83,7 +83,7 @@ include __DIR__ . '/../../includes/navbar.php';
         <?= renderAlerts() ?>
 
         <div class="mb-6">
-            <a href="/FOCITECMS/dashboard/lecturer/view_paper.php?id=<?= $paperId ?>" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 mb-2">
+            <a href="<?= url('dashboard/lecturer/view_paper.php?id=' . $paperId) ?>" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 mb-2">
                 &larr; Back to Paper Timeline
             </a>
             <div class="flex items-center gap-3">
@@ -119,7 +119,7 @@ include __DIR__ . '/../../includes/navbar.php';
 
         <!-- Revision Upload Form -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 sm:p-8">
-            <form method="POST" action="/FOCITECMS/dashboard/lecturer/revise_paper.php?id=<?= $paperId ?>" enctype="multipart/form-data" class="space-y-6">
+            <form method="POST" action="<?= url('dashboard/lecturer/revise_paper.php?id=' . $paperId) ?>" enctype="multipart/form-data" class="space-y-6">
                 <?= csrfField() ?>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">

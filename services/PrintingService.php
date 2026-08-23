@@ -182,7 +182,7 @@ class PrintingService {
             ]);
 
             // Notifications
-            createNotification((int)$paper['lecturer_id'], 'Examination Paper Printed', "Controlled printing for {$paper['paper_code']} ({$paper['course_code']}) has been completed by Exam Officer.", "/FOCITECMS/dashboard/lecturer/view_paper.php?id={$paperId}");
+            createNotification((int)$paper['lecturer_id'], 'Examination Paper Printed', "Controlled printing for {$paper['paper_code']} ({$paper['course_code']}) has been completed by Exam Officer.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             $pdo->commit();
 
@@ -254,7 +254,7 @@ class PrintingService {
         $stmtPaper->execute(['id' => $paperId]);
         $paper = $stmtPaper->fetch();
         if ($paper) {
-            notifyRoleInDepartment(ROLE_HOD, (int)$paper['department_id'], 'Emergency Print Request', "An emergency print was requested for {$paper['paper_code']}: {$reason}", "/FOCITECMS/dashboard/hod/emergency_printing.php");
+            notifyRoleInDepartment(ROLE_HOD, (int)$paper['department_id'], 'Emergency Print Request', "An emergency print was requested for {$paper['paper_code']}: {$reason}", url('dashboard/hod/emergency_printing.php'));
         }
         
         logAudit($eoId, 'emergency_print_request', 'emergency_print_requests', $reqId, ['paper_id' => $paperId, 'reason' => $reason]);
@@ -303,7 +303,7 @@ class PrintingService {
 
             logAudit($hodId, 'emergency_print_decision', 'emergency_print_requests', $requestId, ['decision' => $decision]);
             
-            createNotification((int)$req['exam_officer_id'], 'Emergency Print ' . ucfirst($decision), "Your emergency print request for {$paper['paper_code']} was {$decision} by the HOD.", "/FOCITECMS/dashboard/exam_officer/print_queue.php");
+            createNotification((int)$req['exam_officer_id'], 'Emergency Print ' . ucfirst($decision), "Your emergency print request for {$paper['paper_code']} was {$decision} by the HOD.", url('dashboard/exam_officer/print_queue.php'));
 
             $pdo->commit();
             return true;

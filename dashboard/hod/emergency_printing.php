@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_decision'])) {
     } catch (Exception $e) {
         setFlash('error', $e->getMessage());
     }
-    header("Location: /FOCITECMS/dashboard/hod/emergency_printing.php");
+    redirect('dashboard/hod/emergency_printing.php');
     exit;
 }
 

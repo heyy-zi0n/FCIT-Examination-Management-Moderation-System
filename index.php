@@ -8,7 +8,7 @@ require_once __DIR__ . '/bootstrap.php';
 
 $currentUser = currentUser();
 if ($currentUser) {
-    header("Location: /FOCITECMS/dashboard/{$currentUser['role']}/index.php");
+    redirect("dashboard/{$currentUser['role']}/index.php");
     exit;
 }
 
@@ -50,7 +50,7 @@ $departments = $pdo->query("SELECT code, name, description FROM departments ORDE
         </p>
 
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <a href="/FOCITECMS/login.php" class="w-full sm:w-auto px-8 py-3.5 bg-lasu-gold text-lasu-navy font-black rounded-xl hover:bg-lasu-gold-hover transition-all shadow-xl hover:shadow-lasu-gold/20 flex items-center justify-center gap-2 text-base tracking-wide">
+            <a href="<?= url('login.php') ?>" class="w-full sm:w-auto px-8 py-3.5 bg-lasu-gold text-lasu-navy font-black rounded-xl hover:bg-lasu-gold-hover transition-all shadow-xl hover:shadow-lasu-gold/20 flex items-center justify-center gap-2 text-base tracking-wide">
                 <span>Access Staff Portal</span>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </a>

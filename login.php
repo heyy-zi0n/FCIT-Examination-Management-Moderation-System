@@ -28,10 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = AuthService::authenticate($email, $password);
             
             // Redirect based on role or requested target
-            if (!empty($redirectUrl) && strpos($redirectUrl, '/FOCITECMS/') === 0) {
+            if (!empty($redirectUrl) && strpos($redirectUrl, url('/')) === 0) {
                 header("Location: {$redirectUrl}");
             } else {
-                header("Location: /FOCITECMS/dashboard/{$user['role']}/index.php");
+                redirect("dashboard/{$user['role']}/index.php");
             }
             exit;
         } catch (Exception $e) {
@@ -50,8 +50,8 @@ include __DIR__ . '/includes/header.php';
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/30 via-slate-900 to-slate-950 pointer-events-none"></div>
 
     <div class="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
-        <a href="/FOCITECMS/" class="inline-flex items-center justify-center gap-3 group mb-4">
-            <img src="/FOCITECMS/assets/img/lasu-logo.png" alt="LASU Logo" class="h-24 w-auto object-contain drop-shadow-xl group-hover:scale-105 transition">
+        <a href="<?= url('') ?>" class="inline-flex items-center justify-center gap-3 group mb-4">
+            <img src="<?= url('assets/img/lasu-logo.png') ?>" alt="LASU Logo" class="h-24 w-auto object-contain drop-shadow-xl group-hover:scale-105 transition">
         </a>
         <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
             Staff Portal Sign In
@@ -71,7 +71,7 @@ include __DIR__ . '/includes/header.php';
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="/FOCITECMS/login.php<?= !empty($redirectUrl) ? '?redirect=' . urlencode($redirectUrl) : '' ?>" class="space-y-5">
+            <form method="POST" action="<?= url('login.php') ?><?= !empty($redirectUrl) ? '?redirect=' . urlencode($redirectUrl) : '' ?>" class="space-y-5">
                 <?= csrfField() ?>
 
                 <div>

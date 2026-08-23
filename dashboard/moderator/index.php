@@ -166,7 +166,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                         <?= formatDate($p['version_created_at'] ?? $p['updated_at']) ?>
                                     </td>
                                     <td class="py-4 px-4 text-right">
-                                        <a href="/FOCITECMS/dashboard/moderator/review_paper.php?id=<?= $p['id'] ?>" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow transition text-xs inline-flex items-center gap-1.5">
+                                        <a href="<?= url('dashboard/moderator/review_paper.php?id=' . $p['id']) ?>" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow transition text-xs inline-flex items-center gap-1.5">
                                             <span>Review & Moderate</span>
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                                         </a>

@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setFlash('success', "HOD Sign-Off Recorded! Paper is currently awaiting Exam Officer sign-off to complete dual approval.");
             }
             
-            header("Location: /FOCITECMS/dashboard/hod/pending_approvals.php");
+            redirect('dashboard/hod/pending_approvals.php');
             exit;
         } catch (Exception $e) {
             setFlash('error', $e->getMessage());
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             WorkflowService::hodReturnPaper($paperId, $userId, $feedback);
             setFlash('info', "Examination paper {$paper['paper_code']} has been returned to the lecturer for revision.");
-            header("Location: /FOCITECMS/dashboard/hod/pending_approvals.php");
+            redirect('dashboard/hod/pending_approvals.php');
             exit;
         } catch (Exception $e) {
             setFlash('error', $e->getMessage());
@@ -99,7 +99,7 @@ include __DIR__ . '/../../includes/navbar.php';
 
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div>
-                <a href="/FOCITECMS/dashboard/hod/pending_approvals.php" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 mb-1">
+                <a href="<?= url('dashboard/hod/pending_approvals.php') ?>" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 mb-1">
                     &larr; Back to Pending Approvals
                 </a>
                 <div class="flex items-center gap-3">
@@ -110,7 +110,7 @@ include __DIR__ . '/../../includes/navbar.php';
             </div>
 
             <div class="flex items-center gap-2">
-                <a href="/FOCITECMS/download.php?paper_id=<?= $paperId ?>&version_id=<?= $paper['current_version_id'] ?>" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold border border-slate-300 dark:border-slate-700 transition flex items-center gap-2">
+                <a href="<?= url('download.php?paper_id=' . $paperId . '&version_id=' . $paper['current_version_id']) ?>" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold border border-slate-300 dark:border-slate-700 transition flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     <span>Download DOCX</span>
                 </a>
@@ -133,7 +133,7 @@ include __DIR__ . '/../../includes/navbar.php';
                     </div>
 
                     <div class="flex-1 bg-slate-950">
-                        <iframe src="/FOCITECMS/preview.php?paper_id=<?= $paperId ?>&version_id=<?= $paper['current_version_id'] ?>&type=question" class="w-full h-full border-0" title="Question Document Preview"></iframe>
+                        <iframe src="<?= url('preview.php?paper_id=' . $paperId . '&version_id=' . $paper['current_version_id'] . '&type=question') ?>" class="w-full h-full border-0" title="Question Document Preview"></iframe>
                     </div>
                 </div>
 
@@ -206,7 +206,7 @@ include __DIR__ . '/../../includes/navbar.php';
                         </h2>
 
                         <!-- Action Form 1: HOD Approve -->
-                        <form method="POST" action="/FOCITECMS/dashboard/hod/review_paper.php?id=<?= $paperId ?>" class="space-y-4 mb-6">
+                        <form method="POST" action="<?= url('dashboard/hod/review_paper.php?id=' . $paperId) ?>" class="space-y-4 mb-6">
                             <?= csrfField() ?>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Official HOD Comments / Endorsement</label>
@@ -221,7 +221,7 @@ include __DIR__ . '/../../includes/navbar.php';
                         <div class="border-t border-slate-200 dark:border-slate-800 my-4"></div>
 
                         <!-- Action Form 2: HOD Return -->
-                        <form method="POST" action="/FOCITECMS/dashboard/hod/review_paper.php?id=<?= $paperId ?>" class="space-y-4">
+                        <form method="POST" action="<?= url('dashboard/hod/review_paper.php?id=' . $paperId) ?>" class="space-y-4">
                             <?= csrfField() ?>
                             <div>
                                 <label class="block text-xs font-semibold text-rose-700 dark:text-rose-400 mb-1">Return Reason / Required Revisions</label>

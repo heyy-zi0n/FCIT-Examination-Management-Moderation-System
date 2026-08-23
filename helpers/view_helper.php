@@ -68,12 +68,9 @@ function formatUserName(array $user): string {
  * Render user profile picture or fallback initials
  */
 function renderUserAvatar(array $user, string $sizeClasses = 'w-10 h-10', string $textClasses = 'text-lg'): string {
-    global $appConfig;
-    $baseUri = $appConfig['base_uri'] ?? '/FOCITECMS'; // Use configured base_uri or fallback
-    
     if (!empty($user['profile_picture'])) {
         $safeId = (int)$user['id'];
-        $url = rtrim($baseUri, '/') . '/avatar.php?id=' . $safeId;
+        $url = url('avatar.php?id=' . $safeId);
         return sprintf(
             '<img src="%s" alt="Profile Picture" class="%s rounded-full object-cover border-2 border-lasu-gold shadow-sm">',
             htmlspecialchars($url, ENT_QUOTES, 'UTF-8'),

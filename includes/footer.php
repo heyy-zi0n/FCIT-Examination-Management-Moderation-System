@@ -19,6 +19,6 @@
     </div>
 </footer>
 
-<script src="/FOCITECMS/assets/js/app.js"></script>
+<script src="<?= url('assets/js/app.js') ?>"></script>
 </body>
 </html>

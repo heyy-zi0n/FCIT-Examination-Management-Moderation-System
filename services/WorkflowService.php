@@ -186,11 +186,11 @@ class WorkflowService {
             ]);
 
             // Notification to Lecturer
-            createNotification($lecturerId, 'Paper Submitted Successfully', "Your examination paper {$paper['paper_code']} for {$paper['course_code']} has been submitted for moderation.", "/FOCITECMS/dashboard/lecturer/view_paper.php?id={$paperId}");
+            createNotification($lecturerId, 'Paper Submitted Successfully', "Your examination paper {$paper['paper_code']} for {$paper['course_code']} has been submitted for moderation.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             // Notification to Moderator
             if ($moderatorId) {
-                createNotification($moderatorId, 'New Examination Paper for Moderation', "Examination paper {$paper['paper_code']} ({$paper['course_code']}) is waiting for your review.", "/FOCITECMS/dashboard/moderator/review_paper.php?id={$paperId}");
+                createNotification($moderatorId, 'New Examination Paper for Moderation', "Examination paper {$paper['paper_code']} ({$paper['course_code']}) is waiting for your review.", url("dashboard/moderator/review_paper.php?id={$paperId}"));
             }
 
             $pdo->commit();
@@ -274,13 +274,13 @@ class WorkflowService {
             ]);
 
             // Notify Lecturer
-            createNotification((int)$paper['lecturer_id'], 'Moderation Approved', "Your examination paper {$paper['paper_code']} ({$paper['course_code']}) was approved by the moderator and is now pending HOD and Exam Officer approval.", "/FOCITECMS/dashboard/lecturer/view_paper.php?id={$paperId}");
+            createNotification((int)$paper['lecturer_id'], 'Moderation Approved', "Your examination paper {$paper['paper_code']} ({$paper['course_code']}) was approved by the moderator and is now pending HOD and Exam Officer approval.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             // Notify HOD
-            notifyRoleInDepartment(ROLE_HOD, (int)$paper['department_id'], 'Paper Awaiting HOD Approval', "Moderated paper {$paper['paper_code']} ({$paper['course_code']}) is awaiting your final HOD sign-off.", "/FOCITECMS/dashboard/hod/pending_approvals.php");
+            notifyRoleInDepartment(ROLE_HOD, (int)$paper['department_id'], 'Paper Awaiting HOD Approval', "Moderated paper {$paper['paper_code']} ({$paper['course_code']}) is awaiting your final HOD sign-off.", url('dashboard/hod/pending_approvals.php'));
 
             // Notify Exam Officers
-            notifyAllExamOfficers('Paper Awaiting Exam Officer Approval', "Moderated paper {$paper['paper_code']} ({$paper['course_code']}) is awaiting your Exam Officer review.", "/FOCITECMS/dashboard/exam_officer/pending_approvals.php");
+            notifyAllExamOfficers('Paper Awaiting Exam Officer Approval', "Moderated paper {$paper['paper_code']} ({$paper['course_code']}) is awaiting your Exam Officer review.", url('dashboard/exam_officer/pending_approvals.php'));
 
             $pdo->commit();
             return true;
@@ -362,7 +362,7 @@ class WorkflowService {
             ]);
 
             // Notify Lecturer
-            createNotification((int)$paper['lecturer_id'], 'Paper Returned for Revision', "Your examination paper {$paper['paper_code']} was returned by the moderator with feedback: {$feedback}", "/FOCITECMS/dashboard/lecturer/view_paper.php?id={$paperId}");
+            createNotification((int)$paper['lecturer_id'], 'Paper Returned for Revision', "Your examination paper {$paper['paper_code']} was returned by the moderator with feedback: {$feedback}", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             $pdo->commit();
             return true;
@@ -517,7 +517,7 @@ class WorkflowService {
             ]);
 
             // Notify Lecturer
-            createNotification((int)$paper['lecturer_id'], 'Paper Returned by HOD', "Your paper {$paper['paper_code']} was returned by the HOD for correction: {$feedback}", "/FOCITECMS/dashboard/lecturer/view_paper.php?id={$paperId}");
+            createNotification((int)$paper['lecturer_id'], 'Paper Returned by HOD', "Your paper {$paper['paper_code']} was returned by the HOD for correction: {$feedback}", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             $pdo->commit();
             return true;
@@ -671,7 +671,7 @@ class WorkflowService {
             ]);
 
             // Notify Lecturer & HOD
-            createNotification((int)$paper['lecturer_id'], 'Paper Returned by Exam Officer', "Your paper {$paper['paper_code']} was returned by the Exam Officer: {$feedback}", "/FOCITECMS/dashboard/lecturer/view_paper.php?id={$paperId}");
+            createNotification((int)$paper['lecturer_id'], 'Paper Returned by Exam Officer', "Your paper {$paper['paper_code']} was returned by the Exam Officer: {$feedback}", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             $pdo->commit();
             return true;
@@ -725,10 +725,10 @@ class WorkflowService {
             ]);
 
             // Notify Lecturer
-            createNotification((int)$paper['lecturer_id'], 'Examination Paper Fully Approved & Locked', "Your examination paper {$paper['paper_code']} ({$paper['course_code']}) has received final HOD + Exam Officer approval and is securely locked.", "/FOCITECMS/dashboard/lecturer/view_paper.php?id={$paperId}");
+            createNotification((int)$paper['lecturer_id'], 'Examination Paper Fully Approved & Locked', "Your examination paper {$paper['paper_code']} ({$paper['course_code']}) has received final HOD + Exam Officer approval and is securely locked.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             // Notify Exam Officers that paper is ready for print queue
-            notifyAllExamOfficers('Paper Ready for Print Queue', "Paper {$paper['paper_code']} ({$paper['course_code']}) is fully approved and locked under Blind Lockdown.", "/FOCITECMS/dashboard/exam_officer/print_queue.php");
+            notifyAllExamOfficers('Paper Ready for Print Queue', "Paper {$paper['paper_code']} ({$paper['course_code']}) is fully approved and locked under Blind Lockdown.", url('dashboard/exam_officer/print_queue.php'));
 
             return true;
         }

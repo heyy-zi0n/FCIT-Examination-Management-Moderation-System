@@ -76,7 +76,7 @@ include __DIR__ . '/../../includes/navbar.php';
                 <h1 class="text-2xl sm:text-3xl font-extrabold">Welcome, <?= formatUserName($user) ?></h1>
                 <p class="text-xs text-slate-300 mt-1">Manage examination lifecycle, view moderation comments, and track paper progress.</p>
             </div>
-            <a href="/FOCITECMS/dashboard/lecturer/create_paper.php" class="px-5 py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl shadow-lg transition text-xs flex items-center gap-2 flex-shrink-0">
+            <a href="<?= url('dashboard/lecturer/create_paper.php') ?>" class="px-5 py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl shadow-lg transition text-xs flex items-center gap-2 flex-shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>Upload New Exam Paper</span>
             </a>
@@ -125,7 +125,7 @@ include __DIR__ . '/../../includes/navbar.php';
                             <span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-900/50 font-mono text-[10px] text-rose-700 dark:text-rose-300 font-bold">V<?= $p['version_number'] ?: 1 ?></span>
                         </div>
                         <div class="text-xs font-medium text-slate-800 dark:text-slate-200 mb-3 line-clamp-1"><?= htmlspecialchars($p['course_title']) ?></div>
-                        <a href="/FOCITECMS/dashboard/lecturer/view_paper.php?id=<?= $p['id'] ?>" class="block w-full text-center px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition text-xs">
+                        <a href="<?= url('dashboard/lecturer/view_paper.php?id=' . $p['id']) ?>" class="block w-full text-center px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition text-xs">
                             View Comments & Revise
                         </a>
                     </div>
@@ -156,7 +156,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                 <div class="text-xs font-medium text-slate-800 dark:text-slate-200 line-clamp-1 mb-2"><?= htmlspecialchars($course['course_title']) ?></div>
                                 <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
                                     <span><?= $course['credit_units'] ?> Units • <?= htmlspecialchars($course['dept_code']) ?></span>
-                                    <a href="/FOCITECMS/dashboard/lecturer/create_paper.php?course_id=<?= $course['id'] ?>" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Submit Paper &rarr;</a>
+                                    <a href="<?= url('dashboard/lecturer/create_paper.php?course_id=' . $course['id']) ?>" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Submit Paper &rarr;</a>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -170,7 +170,7 @@ include __DIR__ . '/../../includes/navbar.php';
                     <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                         Recent Paper Lifecycle Activity
                     </h2>
-                    <a href="/FOCITECMS/dashboard/lecturer/papers.php" class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">View All Papers</a>
+                    <a href="<?= url('dashboard/lecturer/papers.php') ?>" class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">View All Papers</a>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -208,7 +208,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                             <?= formatDate($p['updated_at'], 'd M Y') ?>
                                         </td>
                                         <td class="py-3 text-right">
-                                            <a href="/FOCITECMS/dashboard/lecturer/view_paper.php?id=<?= $p['id'] ?>" class="px-3 py-1.5 bg-lasu-navy text-white hover:bg-lasu-navy-light rounded-lg font-medium transition text-[11px]">
+                                            <a href="<?= url('dashboard/lecturer/view_paper.php?id=' . $p['id']) ?>" class="px-3 py-1.5 bg-lasu-navy text-white hover:bg-lasu-navy-light rounded-lg font-medium transition text-[11px]">
                                                 View & Timeline
                                             </a>
                                         </td>

@@ -120,7 +120,7 @@ function checkSessionInactivity(): void {
         if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > SESSION_LIFETIME_SECONDS)) {
             $expiredUserId = $_SESSION['user_id'];
             logoutUser();
-            header('Location: /FOCITECMS/login.php?error=session_expired');
+            redirect('login.php?error=session_expired');
             exit;
         }
         $_SESSION['last_activity'] = time();

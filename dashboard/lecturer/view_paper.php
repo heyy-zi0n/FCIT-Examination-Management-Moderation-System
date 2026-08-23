@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_submit_paper']
     try {
         WorkflowService::submitPaper($paperId, $userId);
         setFlash('success', "Examination paper {$paper['paper_code']} has been submitted for moderation.");
-        header("Location: /FOCITECMS/dashboard/lecturer/view_paper.php?id={$paperId}");
+        redirect("dashboard/lecturer/view_paper.php?id={$paperId}");
         exit;
     } catch (Exception $e) {
         setFlash('error', $e->getMessage());
@@ -128,7 +128,7 @@ include __DIR__ . '/../../includes/navbar.php';
         <!-- Breadcrumb & Top Bar -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div>
-                <a href="/FOCITECMS/dashboard/lecturer/papers.php" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 mb-1">
+                <a href="<?= url('dashboard/lecturer/papers.php') ?>" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 mb-1">
                     &larr; Back to Examination Repository
                 </a>
                 <div class="flex items-center gap-3">
@@ -141,7 +141,7 @@ include __DIR__ . '/../../includes/navbar.php';
             <!-- Action Buttons -->
             <div class="flex items-center gap-3 flex-wrap">
                 <?php if ($paper['status'] === STATUS_DRAFT): ?>
-                    <form method="POST" action="/FOCITECMS/dashboard/lecturer/view_paper.php?id=<?= $paperId ?>">
+                    <form method="POST" action="<?= url('dashboard/lecturer/view_paper.php?id=' . $paperId) ?>">
                         <?= csrfField() ?>
                         <input type="hidden" name="action_submit_paper" value="1">
                         <button type="submit" onclick="return confirm('Are you sure you want to submit this examination paper for moderation?')" class="px-5 py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
@@ -150,7 +150,7 @@ include __DIR__ . '/../../includes/navbar.php';
                         </button>
                     </form>
                 <?php elseif ($paper['status'] === STATUS_RETURNED): ?>
-                    <a href="/FOCITECMS/dashboard/lecturer/revise_paper.php?id=<?= $paperId ?>" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
+                    <a href="<?= url('dashboard/lecturer/revise_paper.php?id=' . $paperId) ?>" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         <span>Create Revision (Upload V<?= ($versions[0]['version_number'] ?? 1) + 1 ?>)</span>
                     </a>
@@ -161,7 +161,7 @@ include __DIR__ . '/../../includes/navbar.php';
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         <span>Preview Question Paper</span>
                     </button>
-                    <a href="/FOCITECMS/download.php?paper_id=<?= $paperId ?>&version_id=<?= $paper['current_version_id'] ?>" class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-semibold rounded-xl text-xs transition border border-slate-300 dark:border-slate-700" title="Download Document">
+                    <a href="<?= url('download.php?paper_id=' . $paperId . '&version_id=' . $paper['current_version_id']) ?>" class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-semibold rounded-xl text-xs transition border border-slate-300 dark:border-slate-700" title="Download Document">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     </a>
                 <?php endif; ?>
@@ -365,7 +365,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                 <button type="button" onclick="openPreviewModal(<?= $paperId ?>, <?= $v['id'] ?>)" class="px-3 py-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 rounded text-xs font-medium transition">
                                     Preview V<?= $v['version_number'] ?>
                                 </button>
-                                <a href="/FOCITECMS/download.php?paper_id=<?= $paperId ?>&version_id=<?= $v['id'] ?>" class="px-3 py-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 rounded text-xs font-medium transition">
+                                <a href="<?= url('download.php?paper_id=' . $paperId . '&version_id=' . $v['id']) ?>" class="px-3 py-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 rounded text-xs font-medium transition">
                                     Download V<?= $v['version_number'] ?>
                                 </a>
                             </div>
