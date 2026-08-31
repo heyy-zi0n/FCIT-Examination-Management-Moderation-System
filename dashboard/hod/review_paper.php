@@ -86,6 +86,11 @@ if (!empty($paper['exam_schedule_id'])) {
     $schedule = $stmtSched->fetch();
 }
 
+// Fetch canonical event timeline
+$timeline = getPaperTimeline($paperId, $pdo);
+
+
+
 $pageTitle = "HOD Review: {$paper['paper_code']} — LASU FCIT CMS";
 include __DIR__ . '/../../includes/header.php';
 include __DIR__ . '/../../includes/navbar.php';
@@ -116,6 +121,10 @@ include __DIR__ . '/../../includes/navbar.php';
                 </a>
             </div>
         </div>
+
+        <!-- Paper Lifecycle Tracking -->
+        <?php require __DIR__ . '/../../includes/components/paper_tracking.php'; ?>
+
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
@@ -257,6 +266,8 @@ include __DIR__ . '/../../includes/navbar.php';
             </div>
 
         </div>
+
+
 
     </main>
 </div>

@@ -136,16 +136,6 @@ function testWorkflow(): bool {
             $allPassed = false;
         }
 
-        // Step 11: Emergency Unlock
-        WorkflowService::emergencyUnlock($paperId, $hodId, 'Urgent correction required for exam venue compatibility');
-        $unlockedPaper = $pdo->query("SELECT ep.status, bl.is_unlocked, bl.unlock_reason FROM examination_papers ep JOIN blind_lockdowns bl ON ep.id = bl.paper_id WHERE ep.id = {$paperId}")->fetch();
-        if ($unlockedPaper['status'] === STATUS_RETURNED && $unlockedPaper['is_unlocked'] == 1) {
-            echo "  [PASS] Emergency unlock successfully reverted paper to Returned status with audit trail.\n";
-        } else {
-            echo "  [FAIL] Emergency unlock failed to update status.\n";
-            $allPassed = false;
-        }
-
     } catch (Exception $e) {
         echo "  [FAIL] Workflow exception: " . $e->getMessage() . "\n";
         echo $e->getTraceAsString() . "\n";

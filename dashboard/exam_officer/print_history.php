@@ -21,8 +21,10 @@ $sql = "
 ";
 $params = [];
 if (!empty($codeSearch)) {
-    $sql .= " WHERE pl.verification_code LIKE :code";
+    $sql .= " WHERE pl.verification_code LIKE :code AND c.department_id = {$user['department_id']}";
     $params['code'] = "%{$codeSearch}%";
+} else {
+    $sql .= " WHERE c.department_id = {$user['department_id']}";
 }
 $sql .= " ORDER BY pl.printed_at DESC";
 

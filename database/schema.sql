@@ -15,6 +15,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS `audit_logs`;
 DROP TABLE IF EXISTS `notifications`;
+DROP TABLE IF EXISTS `emergency_print_requests`;
 DROP TABLE IF EXISTS `print_logs`;
 DROP TABLE IF EXISTS `blind_lockdowns`;
 DROP TABLE IF EXISTS `moderation_comments`;

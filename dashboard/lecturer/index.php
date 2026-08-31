@@ -83,7 +83,7 @@ include __DIR__ . '/../../includes/navbar.php';
         </div>
 
         <!-- Metrics Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
             <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div class="text-xs font-semibold text-slate-500 uppercase">Drafts</div>
                 <div class="text-2xl font-black text-slate-700 dark:text-slate-300 mt-1"><?= $draftCount ?></div>
@@ -119,12 +119,18 @@ include __DIR__ . '/../../includes/navbar.php';
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <?php foreach ($actionPapers as $p): ?>
-                    <div class="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 rounded-lg p-4 shadow-sm">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="font-bold text-rose-900 dark:text-rose-400 font-mono text-sm"><?= htmlspecialchars($p['course_code']) ?></span>
-                            <span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-900/50 font-mono text-[10px] text-rose-700 dark:text-rose-300 font-bold">V<?= $p['version_number'] ?: 1 ?></span>
+                    <div class="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 rounded-lg p-4 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-rose-900 dark:text-rose-400 font-mono text-sm"><?= htmlspecialchars($p['course_code']) ?></span>
+                                <span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-900/50 font-mono text-[10px] text-rose-700 dark:text-slate-300 font-bold">V<?= $p['version_number'] ?: 1 ?></span>
+                            </div>
+                            <div class="text-xs font-medium text-slate-800 dark:text-slate-200 mb-3 line-clamp-1"><?= htmlspecialchars($p['course_title']) ?></div>
+                            <div class="flex items-center gap-1.5 text-[10px] text-rose-600 dark:text-rose-400 mb-4 font-semibold uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Returned <?= getPaperTimeInStage($p['updated_at']) ?> ago
+                            </div>
                         </div>
-                        <div class="text-xs font-medium text-slate-800 dark:text-slate-200 mb-3 line-clamp-1"><?= htmlspecialchars($p['course_title']) ?></div>
                         <a href="<?= url('dashboard/lecturer/view_paper.php?id=' . $p['id']) ?>" class="block w-full text-center px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition text-xs">
                             View Comments & Revise
                         </a>

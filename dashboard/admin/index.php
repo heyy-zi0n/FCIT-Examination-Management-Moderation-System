@@ -52,7 +52,7 @@ include __DIR__ . '/../../includes/navbar.php';
         </div>
 
         <!-- Metrics Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
             <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div class="text-xs font-semibold text-slate-500 uppercase">System Users</div>
                 <div class="text-2xl font-black text-slate-900 dark:text-white mt-1"><?= $totalUsers ?></div>
@@ -166,26 +166,27 @@ include __DIR__ . '/../../includes/navbar.php';
                     <table class="w-full text-left text-xs">
                         <thead>
                             <tr class="text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                                <th class="pb-3 font-semibold">Event</th>
-                                <th class="pb-3 font-semibold">User</th>
-                                <th class="pb-3 font-semibold">Entity</th>
-                                <th class="pb-3 font-semibold">Timestamp</th>
+                                <th class="pb-3 font-semibold">WHEN (Time)</th>
+                                <th class="pb-3 font-semibold">WHO (User)</th>
+                                <th class="pb-3 font-semibold">WHAT (Event)</th>
+                                <th class="pb-3 font-semibold">WHICH (Entity)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                             <?php foreach ($recentAudits as $ra): ?>
                                 <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
-                                    <td class="py-3 font-mono font-bold text-blue-600 dark:text-blue-400">
+                                    <td class="py-3 text-slate-500 text-[11px] whitespace-nowrap">
+                                        <?= formatDate($ra['created_at'], 'd M Y H:i') ?>
+                                    </td>
+                                    <td class="py-3 font-medium text-[11px]">
+                                        <?= htmlspecialchars(($ra['first_name'] ? $ra['first_name'] . ' ' . $ra['last_name'] : 'System')) ?>
+                                        <div class="text-[9px] text-slate-400 uppercase"><?= htmlspecialchars($ra['role'] ?? 'SYSTEM') ?></div>
+                                    </td>
+                                    <td class="py-3 font-mono font-bold text-blue-600 dark:text-blue-400 text-[10px]">
                                         <?= htmlspecialchars($ra['action']) ?>
                                     </td>
-                                    <td class="py-3 font-medium">
-                                        <?= htmlspecialchars(($ra['first_name'] ? $ra['first_name'] . ' ' . $ra['last_name'] : 'System')) ?>
-                                    </td>
-                                    <td class="py-3 font-mono text-[11px] text-slate-500">
+                                    <td class="py-3 font-mono text-[10px] text-slate-500">
                                         <?= htmlspecialchars($ra['entity_type']) ?> #<?= $ra['entity_id'] ?: '—' ?>
-                                    </td>
-                                    <td class="py-3 text-slate-500 text-[11px]">
-                                        <?= formatDate($ra['created_at']) ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

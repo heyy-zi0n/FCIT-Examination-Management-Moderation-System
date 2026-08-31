@@ -73,8 +73,8 @@ try {
 
     // Semesters
     $semesters = [
-        ['name' => 'Harmattan / First Semester', 'code' => 'first'],
-        ['name' => 'Rain / Second Semester', 'code' => 'second']
+        ['name' => 'First Semester', 'code' => 'first'],
+        ['name' => 'Second Semester', 'code' => 'second']
     ];
     $stmtSem = $pdo->prepare("INSERT INTO `semesters` (`name`, `code`) VALUES (:name, :code)");
     $semMap = [];
@@ -220,8 +220,8 @@ try {
         ['course_code' => 'CYB 301', 'course_title' => 'Cryptography & Network Security Protocols', 'department_id' => $deptMap['CYB'], 'level_id' => $lvlMap[300], 'semester_id' => $firstSemesterId, 'credit_units' => 3],
         ['course_code' => 'CYB 405', 'course_title' => 'Digital Forensics & Incident Investigation', 'department_id' => $deptMap['CYB'], 'level_id' => $lvlMap[400], 'semester_id' => $firstSemesterId, 'credit_units' => 3],
         ['course_code' => 'SEN 301', 'course_title' => 'Software Architecture & System Design', 'department_id' => $deptMap['SEN'], 'level_id' => $lvlMap[300], 'semester_id' => $firstSemesterId, 'credit_units' => 3],
-        ['course_code' => 'AID 301', 'course_title' => 'Foundations of Machine Learning & Neural Networks', 'department_id' => $deptMap['AID'], 'level_id' => $lvlMap[300], 'semester_id' => $firstSemesterId, 'credit_units' => 3],
-        ['course_code' => 'IST 301', 'course_title' => 'Enterprise Cloud Infrastructure & Management', 'department_id' => $deptMap['IST'], 'level_id' => $lvlMap[300], 'semester_id' => $firstSemesterId, 'credit_units' => 3]
+        ['course_code' => 'DSC 302', 'course_title' => 'Foundations of Machine Learning & Neural Networks', 'department_id' => $deptMap['DSC'], 'level_id' => $lvlMap[300], 'semester_id' => $firstSemesterId, 'credit_units' => 3],
+        ['course_code' => 'ICT 302', 'course_title' => 'Enterprise Cloud Infrastructure & Management', 'department_id' => $deptMap['ICT'], 'level_id' => $lvlMap[300], 'semester_id' => $firstSemesterId, 'credit_units' => 3]
     ];
     $stmtCourse = $pdo->prepare("INSERT INTO `courses` (`course_code`, `course_title`, `department_id`, `level_id`, `semester_id`, `credit_units`) 
                                 VALUES (:course_code, :course_title, :department_id, :level_id, :semester_id, :credit_units)");

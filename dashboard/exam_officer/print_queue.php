@@ -22,7 +22,7 @@ $stmt = $pdo->query("
     JOIN exam_schedules es ON ep.exam_schedule_id = es.id
     JOIN blind_lockdowns bl ON ep.id = bl.paper_id
     LEFT JOIN paper_versions pv ON ep.current_version_id = pv.id
-    WHERE ep.status IN ('Approved', 'Locked', 'Queued', 'Printed')
+    WHERE c.department_id = {$user['department_id']} AND ep.status IN ('Approved', 'Locked', 'Queued', 'Printed')
     ORDER BY es.exam_date ASC, ep.id ASC
 ");
 $queue = $stmt->fetchAll();

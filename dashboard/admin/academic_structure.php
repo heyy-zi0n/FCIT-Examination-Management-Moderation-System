@@ -203,7 +203,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                 </td>
                                 <td class="py-4 px-4">
                                     <div><?= htmlspecialchars($c['level_name']) ?></div>
-                                    <div class="text-[10px] text-slate-400"><?= htmlspecialchars($c['semester_name']) ?></div>
+                                    <div class="text-[10px] text-slate-400"><?= formatSemester($c['semester_name']) ?></div>
                                 </td>
                                 <td class="py-4 px-4 font-mono font-bold">
                                     <?= $c['credit_units'] ?>

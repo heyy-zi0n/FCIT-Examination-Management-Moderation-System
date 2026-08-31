@@ -101,46 +101,51 @@ include __DIR__ . '/../../includes/navbar.php';
                 <table class="w-full text-left text-xs">
                     <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
                         <tr>
-                            <th class="py-3.5 px-4 font-semibold">Action / Event</th>
-                            <th class="py-3.5 px-4 font-semibold">User & Role</th>
-                            <th class="py-3.5 px-4 font-semibold">Entity Type</th>
-                            <th class="py-3.5 px-4 font-semibold">Details & Parameters</th>
-                            <th class="py-3.5 px-4 font-semibold">IP Address</th>
-                            <th class="py-3.5 px-4 font-semibold">Timestamp</th>
+                            <th class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300">WHEN (Timestamp)</th>
+                            <th class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300">WHO (Actor)</th>
+                            <th class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300">WHAT (Action)</th>
+                            <th class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300">WHICH (Target Entity)</th>
+                            <th class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300">RESULT (Context / IP)</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                         <?php if (empty($logs)): ?>
                             <tr>
-                                <td colspan="6" class="py-12 text-center text-slate-400">
+                                <td colspan="5" class="py-12 text-center text-slate-400">
                                     No audit logs matching this filter criteria.
                                 </td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($logs as $l): ?>
                                 <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
-                                    <td class="py-3.5 px-4 font-mono font-bold text-blue-600 dark:text-blue-400">
-                                        <?= htmlspecialchars($l['action']) ?>
+                                    <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400 font-mono text-[11px] whitespace-nowrap">
+                                        <?= formatDate($l['created_at'], 'd M Y H:i:s') ?>
                                     </td>
                                     <td class="py-3.5 px-4 font-medium">
                                         <?php if (!empty($l['first_name'])): ?>
-                                            <div><?= htmlspecialchars(($l['title'] ? $l['title'] . ' ' : '') . $l['first_name'] . ' ' . $l['last_name']) ?></div>
-                                            <div class="text-[10px] text-slate-400"><?= ucfirst($l['role']) ?> • <?= htmlspecialchars($l['email']) ?></div>
+                                            <div class="text-slate-900 dark:text-white"><?= htmlspecialchars(($l['title'] ? $l['title'] . ' ' : '') . $l['first_name'] . ' ' . $l['last_name']) ?></div>
+                                            <div class="text-[10px] text-slate-500 font-bold tracking-wide uppercase"><?= htmlspecialchars($l['role']) ?></div>
                                         <?php else: ?>
-                                            <span class="text-slate-400">System / Anonymous</span>
+                                            <span class="text-slate-500 italic">System Auto-Process</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="py-3.5 px-4 text-slate-500 font-mono text-[11px]">
-                                        <?= htmlspecialchars($l['entity_type']) ?> #<?= $l['entity_id'] ?: '—' ?>
+                                    <td class="py-3.5 px-4">
+                                        <span class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-bold font-mono text-[10px] border border-blue-100 dark:border-blue-800">
+                                            <?= htmlspecialchars($l['action']) ?>
+                                        </span>
                                     </td>
-                                    <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400 max-w-sm truncate text-[11px]" title="<?= htmlspecialchars($l['details'] ?? '') ?>">
-                                        <?= htmlspecialchars($l['details'] ?: '—') ?>
+                                    <td class="py-3.5 px-4">
+                                        <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"><?= htmlspecialchars(str_replace('_', ' ', $l['entity_type'])) ?></div>
+                                        <div class="text-[10px] text-slate-500 font-mono mt-0.5">ID: <?= $l['entity_id'] ?: 'System-Wide' ?></div>
                                     </td>
-                                    <td class="py-3.5 px-4 font-mono text-[11px] text-slate-500">
-                                        <?= htmlspecialchars($l['ip_address']) ?>
-                                    </td>
-                                    <td class="py-3.5 px-4 text-slate-500 text-[11px]">
-                                        <?= formatDate($l['created_at']) ?>
+                                    <td class="py-3.5 px-4">
+                                        <div class="text-slate-700 dark:text-slate-300 text-[11px] max-w-sm truncate" title="<?= htmlspecialchars($l['details'] ?? '') ?>">
+                                            <?= htmlspecialchars($l['details'] ?: 'Routine operation completed.') ?>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 font-mono mt-1 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                                            <?= htmlspecialchars($l['ip_address']) ?>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

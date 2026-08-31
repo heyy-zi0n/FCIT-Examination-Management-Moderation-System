@@ -57,7 +57,7 @@ $userNotifs = $currentUser ? getUserNotifications((int)$currentUser['id'], 5) : 
                             <?php endif; ?>
                         </button>
 
-                        <div id="notifications-dropdown" class="dropdown-menu hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
+                        <div id="notifications-dropdown" class="dropdown-menu hidden absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-sm origin-top-right bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
                             <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                                 <span class="font-semibold text-sm text-slate-900 dark:text-white">Notifications</span>
                                 <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-medium"><?= $unreadCount ?> new</span>
@@ -98,7 +98,7 @@ $userNotifs = $currentUser ? getUserNotifications((int)$currentUser['id'], 5) : 
                             </svg>
                         </button>
 
-                        <div id="profile-dropdown" class="dropdown-menu hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
+                        <div id="profile-dropdown" class="dropdown-menu hidden absolute right-0 mt-2 w-56 max-w-[calc(100vw-2rem)] origin-top-right bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50">
                             <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
                                 <div class="text-xs font-semibold text-slate-900 dark:text-white"><?= formatUserName($currentUser) ?></div>
                                 <div class="text-[11px] text-slate-500 truncate"><?= htmlspecialchars($currentUser['email']) ?></div>

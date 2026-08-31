@@ -162,8 +162,13 @@ include __DIR__ . '/../../includes/navbar.php';
                                             V<?= $p['version_number'] ?: 1 ?>
                                         </span>
                                     </td>
-                                    <td class="py-4 px-4 text-slate-500 text-[11px]">
-                                        <?= formatDate($p['version_created_at'] ?? $p['updated_at']) ?>
+                                    <td class="py-4 px-4">
+                                        <div class="text-[11px] text-slate-500 mb-0.5">
+                                            <?= formatDate($p['version_created_at'] ?? $p['updated_at']) ?>
+                                        </div>
+                                        <div class="text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                                            Pending for <?= getPaperTimeInStage($p['updated_at']) ?>
+                                        </div>
                                     </td>
                                     <td class="py-4 px-4 text-right">
                                         <a href="<?= url('dashboard/moderator/review_paper.php?id=' . $p['id']) ?>" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow transition text-xs inline-flex items-center gap-1.5">

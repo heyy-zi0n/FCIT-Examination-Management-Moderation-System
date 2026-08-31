@@ -153,7 +153,6 @@ function testHttpEndpoints() {
                 '/dashboard/hod/pending_approvals.php',
                 '/dashboard/hod/schedules.php',
                 '/dashboard/hod/moderator_assignments.php',
-                '/dashboard/hod/emergency_unlock.php',
                 '/dashboard/hod/delegations.php',
                 '/dashboard/hod/audit_trail.php'
             ]

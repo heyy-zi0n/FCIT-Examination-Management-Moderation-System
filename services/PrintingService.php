@@ -63,34 +63,17 @@ class PrintingService {
         $pdo->beginTransaction();
 
         try {
-            // Verify Exam Officer role
-            $stmtUser = $pdo->prepare("SELECT role, title, first_name, last_name FROM users WHERE id = :id");
-            $stmtUser->execute(['id' => $examOfficerId]);
-            $user = $stmtUser->fetch();
-
-            $stmtDel = $pdo->prepare("
-                SELECT id FROM delegations
-                WHERE delegate_id = :id AND role_delegated = 'exam_officer'
-                  AND is_active = 1 AND CURRENT_DATE BETWEEN start_date AND end_date
-            ");
-            $stmtDel->execute(['id' => $examOfficerId]);
-            $isDelegate = (bool)$stmtDel->fetch();
-
-            if (!$isDelegate && (!$user || $user['role'] !== ROLE_EXAM_OFFICER)) {
-                throw new RuntimeException("Unauthorized: Only an Exam Officer may execute controlled printing.");
-            }
-
             // Fetch paper details with lockdown and schedule
             $stmtPaper = $pdo->prepare("
                 SELECT ep.*, es.exam_date, es.exam_time, es.venue, es.expected_students,
-                       c.course_code, c.course_title,
+                       c.course_code, c.course_title, c.department_id,
                        bl.id AS lockdown_id, bl.encrypted_file_path, bl.checksum_sha256,
                        bl.encryption_iv, bl.encryption_tag, bl.is_unlocked,
                        pv.version_number, pv.question_file_path, pv.question_file_hash
                 FROM examination_papers ep
                 JOIN courses c ON ep.course_id = c.id
                 LEFT JOIN exam_schedules es ON ep.exam_schedule_id = es.id
-                LEFT JOIN blind_lockdowns bl ON ep.id = bl.paper_id
+                JOIN blind_lockdowns bl ON ep.id = bl.paper_id
                 LEFT JOIN paper_versions pv ON ep.current_version_id = pv.id
                 WHERE ep.id = :id
                 FOR UPDATE
@@ -99,7 +82,24 @@ class PrintingService {
             $paper = $stmtPaper->fetch();
 
             if (!$paper) {
-                throw new RuntimeException("Examination paper not found.");
+                throw new RuntimeException("Paper not found or lockdown record missing.");
+            }
+
+            // Verify Exam Officer role and department
+            $stmtUser = $pdo->prepare("SELECT role, title, first_name, last_name, department_id FROM users WHERE id = :id");
+            $stmtUser->execute(['id' => $examOfficerId]);
+            $user = $stmtUser->fetch();
+
+            $stmtDel = $pdo->prepare("
+                SELECT id FROM delegations
+                WHERE delegate_id = :id AND role_delegated = 'exam_officer' AND department_id = :dept_id
+                  AND is_active = 1 AND CURRENT_DATE BETWEEN start_date AND end_date
+            ");
+            $stmtDel->execute(['id' => $examOfficerId, 'dept_id' => $paper['department_id']]);
+            $isDelegate = (bool)$stmtDel->fetch();
+
+            if (!$isDelegate && (!$user || $user['role'] !== ROLE_EXAM_OFFICER || (int)$user['department_id'] !== (int)$paper['department_id'])) {
+                throw new RuntimeException("Unauthorized: Only an Exam Officer for this department may execute controlled printing.");
             }
 
             // Validate status

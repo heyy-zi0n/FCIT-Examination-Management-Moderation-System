@@ -5,7 +5,7 @@
 require_once __DIR__ . '/../bootstrap.php';
 require_once __DIR__ . '/alerts.php';
 
-$pageTitle = $pageTitle ?? 'LASU FCIT Examination Question Lifecycle Management System';
+$pageTitle = $pageTitle ?? APP_NAME;
 $user = currentUser();
 ?>
 <!DOCTYPE html>
@@ -47,5 +47,8 @@ $user = currentUser();
     </script>
     
     <link rel="stylesheet" href="<?= url('assets/css/custom.css') ?>">
+    <?php if (isset($isLandingPage) && $isLandingPage): ?>
+    <link rel="stylesheet" href="<?= url('assets/css/landing.css') ?>">
+    <?php endif; ?>
 </head>
 <body class="h-full font-sans antialiased text-slate-800 dark:text-slate-100 flex flex-col">

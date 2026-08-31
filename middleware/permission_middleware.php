@@ -78,8 +78,8 @@ function requirePaperAccess(int $paperId, string $action = 'view'): array {
         return $paper;
     }
 
-    // 5. Exam Officer: Faculty-wide examination workflow
-    if ($user['role'] === ROLE_EXAM_OFFICER) {
+    // 5. Exam Officer: Department-wide examination workflow
+    if ($user['role'] === ROLE_EXAM_OFFICER && (int)$user['department_id'] === (int)$paper['department_id']) {
         return $paper;
     }
 
@@ -112,7 +112,7 @@ function requirePaperAccess(int $paperId, string $action = 'view'): array {
 function requireDepartmentAccess(int $departmentId): void {
     $user = requireAuth();
 
-    if ($user['role'] === ROLE_ADMIN || $user['role'] === ROLE_EXAM_OFFICER) {
+    if ($user['role'] === ROLE_ADMIN) {
         return;
     }
 

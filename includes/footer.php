@@ -11,10 +11,10 @@
         <div class="flex items-center gap-4">
             <span class="inline-flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>System Security Active</span>
+                <span>Workflow Governance Active</span>
             </span>
             <span class="text-slate-300 dark:text-slate-700">|</span>
-            <span>AES-256 Blind Lockdown</span>
+            <span>Moderation • Approval • Audit • Controlled Printing</span>
         </div>
     </div>
 </footer>

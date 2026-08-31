@@ -13,8 +13,8 @@ if (!$paperId) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT ep.*, pv.version_number FROM examination_papers ep LEFT JOIN paper_versions pv ON ep.current_version_id = pv.id WHERE ep.id = ?");
-$stmt->execute([$paperId]);
+$stmt = $pdo->prepare("SELECT ep.*, pv.version_number FROM examination_papers ep LEFT JOIN paper_versions pv ON ep.current_version_id = pv.id JOIN courses c ON ep.course_id = c.id WHERE ep.id = ? AND c.department_id = ?");
+$stmt->execute([$paperId, $user['department_id']]);
 $paper = $stmt->fetch();
 
 if (!$paper || !in_array($paper['status'], [STATUS_APPROVED, STATUS_LOCKED, STATUS_QUEUED])) {

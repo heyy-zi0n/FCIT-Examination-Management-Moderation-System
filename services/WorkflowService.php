@@ -53,6 +53,8 @@ class WorkflowService {
             // Generate unique Paper Code
             $paperCode = sprintf('LASU-%s-%s-SEM%d-%04d', $course['course_code'], str_replace('/', '-', $sessionId), $semesterId, rand(1000, 9999));
 
+            $scheduleId = empty($scheduleId) ? null : $scheduleId;
+
             // Insert Examination Paper row
             $stmtPaper = $pdo->prepare("
                 INSERT INTO examination_papers (
@@ -148,6 +150,10 @@ class WorkflowService {
                 throw new RuntimeException("Paper cannot be submitted from status: '{$paper['status']}'. Must be Draft or Returned.");
             }
 
+            if (empty($paper['exam_schedule_id'])) {
+                throw new RuntimeException("Paper cannot be submitted without an assigned Exam Schedule.");
+            }
+
             if (empty($paper['current_version_id'])) {
                 throw new RuntimeException("No valid document version associated with this paper.");
             }
@@ -186,11 +192,11 @@ class WorkflowService {
             ]);
 
             // Notification to Lecturer
-            createNotification($lecturerId, 'Paper Submitted Successfully', "Your examination paper {$paper['paper_code']} for {$paper['course_code']} has been submitted for moderation.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
+            createNotification($lecturerId, 'Action Complete: Paper Submitted', "Your examination paper {$paper['paper_code']} for {$paper['course_code']} has been successfully submitted and is now locked for moderation.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             // Notification to Moderator
             if ($moderatorId) {
-                createNotification($moderatorId, 'New Examination Paper for Moderation', "Examination paper {$paper['paper_code']} ({$paper['course_code']}) is waiting for your review.", url("dashboard/moderator/review_paper.php?id={$paperId}"));
+                createNotification($moderatorId, 'Action Required: Moderation Pending', "Examination paper {$paper['paper_code']} ({$paper['course_code']}) requires your moderation review.", url("dashboard/moderator/review_paper.php?id={$paperId}"));
             }
 
             $pdo->commit();
@@ -274,13 +280,13 @@ class WorkflowService {
             ]);
 
             // Notify Lecturer
-            createNotification((int)$paper['lecturer_id'], 'Moderation Approved', "Your examination paper {$paper['paper_code']} ({$paper['course_code']}) was approved by the moderator and is now pending HOD and Exam Officer approval.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
+            createNotification((int)$paper['lecturer_id'], 'Workflow Update: Moderation Passed', "Your examination paper {$paper['paper_code']} ({$paper['course_code']}) was approved by the moderator. It has now moved to the Dual Approval stage (HOD & EO).", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             // Notify HOD
-            notifyRoleInDepartment(ROLE_HOD, (int)$paper['department_id'], 'Paper Awaiting HOD Approval', "Moderated paper {$paper['paper_code']} ({$paper['course_code']}) is awaiting your final HOD sign-off.", url('dashboard/hod/pending_approvals.php'));
+            notifyRoleInDepartment(ROLE_HOD, (int)$paper['department_id'], 'Action Required: HOD Approval Pending', "Moderated paper {$paper['paper_code']} ({$paper['course_code']}) requires your HOD sign-off.", url('dashboard/hod/pending_approvals.php'));
 
             // Notify Exam Officers
-            notifyAllExamOfficers('Paper Awaiting Exam Officer Approval', "Moderated paper {$paper['paper_code']} ({$paper['course_code']}) is awaiting your Exam Officer review.", url('dashboard/exam_officer/pending_approvals.php'));
+            notifyAllExamOfficers('Action Required: Exam Officer Approval Pending', "Moderated paper {$paper['paper_code']} ({$paper['course_code']}) requires your Exam Officer sign-off.", url('dashboard/exam_officer/pending_approvals.php'));
 
             $pdo->commit();
             return true;
@@ -362,7 +368,7 @@ class WorkflowService {
             ]);
 
             // Notify Lecturer
-            createNotification((int)$paper['lecturer_id'], 'Paper Returned for Revision', "Your examination paper {$paper['paper_code']} was returned by the moderator with feedback: {$feedback}", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
+            createNotification((int)$paper['lecturer_id'], 'Action Required: Paper Returned for Revision', "Your examination paper {$paper['paper_code']} was returned by the moderator. Feedback provided: {$feedback}. Please revise and resubmit.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             $pdo->commit();
             return true;
@@ -517,7 +523,7 @@ class WorkflowService {
             ]);
 
             // Notify Lecturer
-            createNotification((int)$paper['lecturer_id'], 'Paper Returned by HOD', "Your paper {$paper['paper_code']} was returned by the HOD for correction: {$feedback}", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
+            createNotification((int)$paper['lecturer_id'], 'Action Required: Paper Returned by HOD', "Your paper {$paper['paper_code']} was returned by the HOD for correction. Feedback: {$feedback}. Please revise and resubmit.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             $pdo->commit();
             return true;
@@ -537,7 +543,7 @@ class WorkflowService {
 
         try {
             $stmt = $pdo->prepare("
-                SELECT ep.*, c.course_code
+                SELECT ep.*, c.course_code, c.department_id
                 FROM examination_papers ep
                 JOIN courses c ON ep.course_id = c.id
                 WHERE ep.id = :id
@@ -555,20 +561,20 @@ class WorkflowService {
             }
 
             // Verify EO role or delegation
-            $stmtEo = $pdo->prepare("SELECT role FROM users WHERE id = :id");
+            $stmtEo = $pdo->prepare("SELECT role, department_id FROM users WHERE id = :id");
             $stmtEo->execute(['id' => $eoId]);
             $eoUser = $stmtEo->fetch();
 
             $stmtDel = $pdo->prepare("
                 SELECT id FROM delegations
-                WHERE delegate_id = :id AND role_delegated = 'exam_officer'
+                WHERE delegate_id = :id AND role_delegated = 'exam_officer' AND department_id = :dept_id
                   AND is_active = 1 AND CURRENT_DATE BETWEEN start_date AND end_date
             ");
-            $stmtDel->execute(['id' => $eoId]);
+            $stmtDel->execute(['id' => $eoId, 'dept_id' => $paper['department_id']]);
             $isDelegate = (bool)$stmtDel->fetch();
 
-            if (!$isDelegate && (!$eoUser || $eoUser['role'] !== ROLE_EXAM_OFFICER)) {
-                throw new RuntimeException("You are not authorized as an Exam Officer.");
+            if (!$isDelegate && (!$eoUser || $eoUser['role'] !== ROLE_EXAM_OFFICER || (int)$eoUser['department_id'] !== (int)$paper['department_id'])) {
+                throw new RuntimeException("You are not authorized as an Exam Officer for this department.");
             }
 
             // Update EO status
@@ -624,7 +630,7 @@ class WorkflowService {
 
         try {
             $stmt = $pdo->prepare("
-                SELECT ep.*, c.course_code
+                SELECT ep.*, c.course_code, c.department_id
                 FROM examination_papers ep
                 JOIN courses c ON ep.course_id = c.id
                 WHERE ep.id = :id
@@ -639,6 +645,23 @@ class WorkflowService {
 
             if ($paper['status'] !== STATUS_MODERATED) {
                 throw new RuntimeException("Paper must be in 'Moderated' status to be returned by Exam Officer.");
+            }
+
+            // Verify EO role or delegation
+            $stmtEo = $pdo->prepare("SELECT role, department_id FROM users WHERE id = :id");
+            $stmtEo->execute(['id' => $eoId]);
+            $eoUser = $stmtEo->fetch();
+
+            $stmtDel = $pdo->prepare("
+                SELECT id FROM delegations
+                WHERE delegate_id = :id AND role_delegated = 'exam_officer' AND department_id = :dept_id
+                  AND is_active = 1 AND CURRENT_DATE BETWEEN start_date AND end_date
+            ");
+            $stmtDel->execute(['id' => $eoId, 'dept_id' => $paper['department_id']]);
+            $isDelegate = (bool)$stmtDel->fetch();
+
+            if (!$isDelegate && (!$eoUser || $eoUser['role'] !== ROLE_EXAM_OFFICER || (int)$eoUser['department_id'] !== (int)$paper['department_id'])) {
+                throw new RuntimeException("You are not authorized as an Exam Officer for this department.");
             }
 
             // Update to Returned and reset dual approvals
@@ -671,7 +694,7 @@ class WorkflowService {
             ]);
 
             // Notify Lecturer & HOD
-            createNotification((int)$paper['lecturer_id'], 'Paper Returned by Exam Officer', "Your paper {$paper['paper_code']} was returned by the Exam Officer: {$feedback}", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
+            createNotification((int)$paper['lecturer_id'], 'Action Required: Paper Returned by Exam Officer', "Your paper {$paper['paper_code']} was returned by the Exam Officer. Feedback: {$feedback}. Please revise and resubmit.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             $pdo->commit();
             return true;
@@ -725,10 +748,10 @@ class WorkflowService {
             ]);
 
             // Notify Lecturer
-            createNotification((int)$paper['lecturer_id'], 'Examination Paper Fully Approved & Locked', "Your examination paper {$paper['paper_code']} ({$paper['course_code']}) has received final HOD + Exam Officer approval and is securely locked.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
+            createNotification((int)$paper['lecturer_id'], 'Workflow Complete: Paper Approved & Locked', "Your examination paper {$paper['paper_code']} ({$paper['course_code']}) has received all necessary approvals and is now securely locked.", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
 
             // Notify Exam Officers that paper is ready for print queue
-            notifyAllExamOfficers('Paper Ready for Print Queue', "Paper {$paper['paper_code']} ({$paper['course_code']}) is fully approved and locked under Blind Lockdown.", url('dashboard/exam_officer/print_queue.php'));
+            notifyAllExamOfficers('Workflow Update: Paper Ready for Print Queue', "Paper {$paper['paper_code']} ({$paper['course_code']}) is fully approved, securely locked, and added to the Controlled Print Queue.", url('dashboard/exam_officer/print_queue.php'));
 
             return true;
         }
@@ -892,6 +915,93 @@ class WorkflowService {
 
             $pdo->commit();
             return ['version_id' => $newVersionId, 'version_number' => $newVersionNumber];
+
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Emergency Unlock a paper by HOD
+     * Allows HOD to forcefully unlock a blind-locked paper in emergency scenarios.
+     */
+    public static function emergencyUnlock(int $paperId, int $hodId, string $reason): bool {
+        if (empty(trim($reason))) {
+            throw new InvalidArgumentException("Reason is mandatory for emergency unlock.");
+        }
+
+        $pdo = getDb();
+        $pdo->beginTransaction();
+
+        try {
+            $stmt = $pdo->prepare("
+                SELECT ep.*, c.department_id, c.course_code 
+                FROM examination_papers ep
+                JOIN courses c ON ep.course_id = c.id
+                WHERE ep.id = :id
+                FOR UPDATE
+            ");
+            $stmt->execute(['id' => $paperId]);
+            $paper = $stmt->fetch();
+
+            if (!$paper) {
+                throw new RuntimeException("Paper not found.");
+            }
+
+            // Verify HOD department access
+            $stmtHod = $pdo->prepare("SELECT department_id FROM users WHERE id = :id AND role = 'hod'");
+            $stmtHod->execute(['id' => $hodId]);
+            $hodUser = $stmtHod->fetch();
+
+            $stmtDel = $pdo->prepare("
+                SELECT id FROM delegations
+                WHERE delegate_id = :id AND role_delegated = 'hod' AND department_id = :dept_id
+                  AND is_active = 1 AND CURRENT_DATE BETWEEN start_date AND end_date
+            ");
+            $stmtDel->execute(['id' => $hodId, 'dept_id' => $paper['department_id']]);
+            $isDelegate = (bool)$stmtDel->fetch();
+
+            if (!$isDelegate && (!$hodUser || (int)$hodUser['department_id'] !== (int)$paper['department_id'])) {
+                throw new RuntimeException("You are not authorized as HOD for this department.");
+            }
+
+            // Check if paper is locked
+            $stmtCheckLock = $pdo->prepare("
+                SELECT * FROM blind_lockdowns 
+                WHERE paper_id = :paper_id AND is_unlocked = 0 
+                FOR UPDATE
+            ");
+            $stmtCheckLock->execute(['paper_id' => $paperId]);
+            $lock = $stmtCheckLock->fetch();
+
+            if (!$lock) {
+                throw new RuntimeException("Paper is not currently locked.");
+            }
+
+            // Update blind_lockdowns
+            $stmtUnlock = $pdo->prepare("
+                UPDATE blind_lockdowns
+                SET is_unlocked = 1, unlock_reason = :reason, unlocked_by = :hod_id, unlocked_at = NOW()
+                WHERE paper_id = :paper_id AND is_unlocked = 0
+            ");
+            $stmtUnlock->execute([
+                'reason' => $reason,
+                'hod_id' => $hodId,
+                'paper_id' => $paperId
+            ]);
+
+            // Audit
+            logAudit($hodId, 'emergency_unlock', 'blind_lockdown', $paperId, [
+                'paper_code' => $paper['paper_code'],
+                'reason' => $reason
+            ]);
+
+            // Notify Lecturer
+            createNotification((int)$paper['lecturer_id'], 'Workflow Update: Paper Emergency Unlocked', "Your examination paper {$paper['paper_code']} was unlocked by the HOD due to an emergency. Reason: {$reason}", url("dashboard/lecturer/view_paper.php?id={$paperId}"));
+
+            $pdo->commit();
+            return true;
 
         } catch (Exception $e) {
             $pdo->rollBack();

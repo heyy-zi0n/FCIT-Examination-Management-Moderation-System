@@ -30,11 +30,12 @@ function testDatabase(): bool {
     }
 
     // Verify Foreign Key Constraints and seeded rows
-    $deptCount = (int)$pdo->query("SELECT COUNT(*) FROM departments")->fetchColumn();
-    if ($deptCount === 5) {
-        echo "  [PASS] Seeded departments count is 5.\n";
+    $stmt = $pdo->query("SELECT COUNT(*) FROM departments");
+    $count = $stmt->fetchColumn();
+    if ($count == 5) {
+        echo "  [PASS] Seeded exactly 5 canonical departments.\n";
     } else {
-        echo "  [FAIL] Seeded departments count mismatch (got {$deptCount}).\n";
+        echo "  [FAIL] Expected 5 canonical departments, found {$count}.\n";
         $allPassed = false;
     }
 

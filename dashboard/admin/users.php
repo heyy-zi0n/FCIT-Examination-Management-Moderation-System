@@ -188,7 +188,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                     </span>
                                 </td>
                                 <td class="py-4 px-4 text-right">
-                                    <div class="flex items-center justify-end gap-2">
+                                    <div class="flex flex-wrap items-center justify-end gap-2">
                                         <button type="button" onclick='openEditUserModal(<?= json_encode($u) ?>)' class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-300 dark:border-slate-700">
                                             Edit
                                         </button>
@@ -227,7 +227,7 @@ include __DIR__ . '/../../includes/navbar.php';
             <input type="hidden" name="action_save_user" value="1">
             <input type="hidden" name="user_id" id="form-user-id" value="0">
 
-            <div class="grid grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Title</label>
                     <input type="text" name="title" id="form-title" placeholder="Dr. / Prof." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
@@ -242,7 +242,7 @@ include __DIR__ . '/../../includes/navbar.php';
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Staff ID *</label>
                     <input type="text" name="staff_id" id="form-staff-id" required placeholder="LASU/FCIT/..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono">
@@ -253,7 +253,7 @@ include __DIR__ . '/../../includes/navbar.php';
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">System Role *</label>
                     <select name="role" id="form-role" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-semibold">

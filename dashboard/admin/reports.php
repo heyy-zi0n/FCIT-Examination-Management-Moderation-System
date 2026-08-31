@@ -14,10 +14,11 @@ $deptStats = $pdo->query("
            COUNT(DISTINCT c.id) AS total_courses,
            COUNT(DISTINCT ep.id) AS total_papers,
            COUNT(DISTINCT CASE WHEN ep.status = 'Draft' THEN ep.id END) AS draft_count,
+           COUNT(DISTINCT CASE WHEN ep.status IN ('Submitted', 'Returned', 'Moderated', 'Approved', 'Locked', 'Queued', 'Printed') THEN ep.id END) AS submitted_or_beyond_count,
            COUNT(DISTINCT CASE WHEN ep.status = 'Submitted' THEN ep.id END) AS submitted_count,
            COUNT(DISTINCT CASE WHEN ep.status = 'Returned' THEN ep.id END) AS returned_count,
            COUNT(DISTINCT CASE WHEN ep.status = 'Moderated' THEN ep.id END) AS moderated_count,
-           COUNT(DISTINCT CASE WHEN ep.status IN ('Approved', 'Locked', 'Queued', 'Printed') THEN ep.id END) AS approved_count,
+           COUNT(DISTINCT CASE WHEN ep.status IN ('Approved', 'Locked', 'Queued') THEN ep.id END) AS approved_count,
            COUNT(DISTINCT CASE WHEN ep.status = 'Printed' THEN ep.id END) AS printed_count
     FROM departments d
     LEFT JOIN courses c ON d.id = c.department_id
@@ -69,12 +70,13 @@ include __DIR__ . '/../../includes/navbar.php';
                         <tr>
                             <th class="py-3.5 px-4 font-semibold">Department</th>
                             <th class="py-3.5 px-4 font-semibold text-center">Courses</th>
+                            <th class="py-3.5 px-4 font-semibold text-center text-slate-400">Missing</th>
                             <th class="py-3.5 px-4 font-semibold text-center">Submitted</th>
                             <th class="py-3.5 px-4 font-semibold text-center">In Moderation</th>
                             <th class="py-3.5 px-4 font-semibold text-center">Returned</th>
                             <th class="py-3.5 px-4 font-semibold text-center">Dual Approved & Sealed</th>
                             <th class="py-3.5 px-4 font-semibold text-center">Printed</th>
-                            <th class="py-3.5 px-4 font-semibold text-right">Readiness %</th>
+                            <th class="py-3.5 px-4 font-semibold text-right">Compliance / Readiness %</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
@@ -87,6 +89,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                     <span class="font-mono text-blue-600 dark:text-blue-400 font-bold ml-1">(<?= htmlspecialchars($ds['dept_code']) ?>)</span>
                                 </td>
                                 <td class="py-4 px-4 text-center font-bold font-mono"><?= $ds['total_courses'] ?></td>
+                                <td class="py-4 px-4 text-center font-mono text-slate-400 font-bold bg-slate-50 dark:bg-slate-800/50"><?= max(0, $ds['total_courses'] - $ds['submitted_or_beyond_count']) ?></td>
                                 <td class="py-4 px-4 text-center font-mono text-blue-600 font-bold"><?= $ds['submitted_count'] ?></td>
                                 <td class="py-4 px-4 text-center font-mono text-amber-600 font-bold"><?= $ds['moderated_count'] ?></td>
                                 <td class="py-4 px-4 text-center font-mono text-rose-600 font-bold"><?= $ds['returned_count'] ?></td>

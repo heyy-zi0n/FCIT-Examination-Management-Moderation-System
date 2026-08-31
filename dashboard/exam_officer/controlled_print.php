@@ -23,9 +23,9 @@ $stmtPaper = $pdo->prepare("
     JOIN exam_schedules es ON ep.exam_schedule_id = es.id
     JOIN blind_lockdowns bl ON ep.id = bl.paper_id
     LEFT JOIN paper_versions pv ON ep.current_version_id = pv.id
-    WHERE ep.id = :id
+    WHERE ep.id = :id AND c.department_id = :dept_id
 ");
-$stmtPaper->execute(['id' => $paperId]);
+$stmtPaper->execute(['id' => $paperId, 'dept_id' => $user['department_id']]);
 $paper = $stmtPaper->fetch();
 
 if (!$paper) {
@@ -129,7 +129,7 @@ include __DIR__ . '/../../includes/navbar.php';
                     <div class="mt-2 text-base font-black uppercase text-slate-900 dark:text-white"><?= htmlspecialchars($paper['course_code']) ?> — <?= htmlspecialchars($paper['course_title']) ?></div>
                     
                     <!-- Meta Grid -->
-                    <div class="grid grid-cols-3 gap-2 text-xs font-mono mt-3 pt-3 border-t border-slate-200 text-slate-700 dark:text-slate-300">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs font-mono mt-3 pt-3 border-t border-slate-200 text-slate-700 dark:text-slate-300">
                         <div>Time Allowed: <?= $paper['duration_minutes'] ?> Mins</div>
                         <div>Exam Date: <?= formatDate($paper['exam_date'], 'd/m/Y') ?></div>
                         <div>Units: <?= $paper['credit_units'] ?></div>

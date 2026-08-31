@@ -141,7 +141,7 @@ include __DIR__ . '/../../includes/navbar.php';
                             <select name="semester_id" required class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-lasu-navy focus:outline-none">
                                 <?php foreach ($semesters as $sem): ?>
                                     <option value="<?= $sem['id'] ?>">
-                                        <?= htmlspecialchars($sem['name']) ?>
+                                        <?= formatSemester($sem['name']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>

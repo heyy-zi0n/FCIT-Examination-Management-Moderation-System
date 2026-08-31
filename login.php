@@ -57,7 +57,7 @@ include __DIR__ . '/includes/header.php';
             Staff Portal Sign In
         </h2>
         <p class="mt-1 text-xs text-slate-400">
-            Examination Question Lifecycle Management & Moderation Workflow
+            Examination Management & Moderation System
         </p>
     </div>
 
@@ -97,7 +97,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="flex items-center justify-between text-xs text-slate-400">
                     <span class="inline-flex items-center gap-1.5">
                         <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                        <span>Brute-force protection active</span>
+                        <span>Secure access enabled</span>
                     </span>
                 </div>
 
@@ -107,44 +107,14 @@ include __DIR__ . '/includes/header.php';
                 </button>
             </form>
 
-            <!-- Quick Demo Role Switcher (Convenient for Evaluators) -->
-            <div class="mt-8 pt-6 border-t border-slate-700/80">
-                <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center mb-3">
-                    Fast Evaluation Quick Fill
-                </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                    <button type="button" onclick="fillLogin('lecturer.csc@lasu.edu.ng', 'Password123!')" class="p-2 bg-slate-900/60 hover:bg-blue-900/40 border border-slate-700 rounded-lg text-slate-300 hover:text-white text-center transition">
-                        <div class="font-bold text-blue-400">Lecturer</div>
-                        <div class="text-[10px] text-slate-400">CSC Dept</div>
-                    </button>
-                    <button type="button" onclick="fillLogin('moderator.csc@lasu.edu.ng', 'Password123!')" class="p-2 bg-slate-900/60 hover:bg-amber-900/40 border border-slate-700 rounded-lg text-slate-300 hover:text-white text-center transition">
-                        <div class="font-bold text-amber-400">Moderator</div>
-                        <div class="text-[10px] text-slate-400">CSC Dept</div>
-                    </button>
-                    <button type="button" onclick="fillLogin('hod.csc@lasu.edu.ng', 'Password123!')" class="p-2 bg-slate-900/60 hover:bg-indigo-900/40 border border-slate-700 rounded-lg text-slate-300 hover:text-white text-center transition">
-                        <div class="font-bold text-indigo-400">HOD</div>
-                        <div class="text-[10px] text-slate-400">CSC Dept</div>
-                    </button>
-                    <button type="button" onclick="fillLogin('exam.officer@lasu.edu.ng', 'Password123!')" class="p-2 bg-slate-900/60 hover:bg-emerald-900/40 border border-slate-700 rounded-lg text-slate-300 hover:text-white text-center transition">
-                        <div class="font-bold text-emerald-400">Exam Officer</div>
-                        <div class="text-[10px] text-slate-400">Faculty EO</div>
-                    </button>
-                    <button type="button" onclick="fillLogin('admin@lasu.edu.ng', 'Password123!')" class="p-2 bg-slate-900/60 hover:bg-red-900/40 border border-slate-700 rounded-lg text-slate-300 hover:text-white text-center transition col-span-2 sm:col-span-2">
-                        <div class="font-bold text-red-400">Administrator</div>
-                        <div class="text-[10px] text-slate-400">Full System Control</div>
-                    </button>
-                </div>
-            </div>
+
 
         </div>
     </div>
 </div>
 
 <script>
-function fillLogin(email, pass) {
-    document.getElementById('email').value = email;
-    document.getElementById('password').value = pass;
-}
+
 
 function togglePasswordVisibility() {
     const pwdInput = document.getElementById('password');

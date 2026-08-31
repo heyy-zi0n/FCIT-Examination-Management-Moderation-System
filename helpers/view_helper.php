@@ -19,8 +19,20 @@ function renderStatusBadge(string $status): string {
         STATUS_PRINTED => 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-900/40 dark:text-teal-300'
     ];
 
+    $labels = [
+        STATUS_DRAFT => 'Draft Paper',
+        STATUS_SUBMITTED => 'Under Moderation',
+        STATUS_MODERATED => 'Moderator Approved',
+        STATUS_RETURNED => 'Revision Required',
+        STATUS_APPROVED => 'Blind Locked',
+        STATUS_LOCKED => 'Blind Locked',
+        STATUS_QUEUED => 'Ready for Printing',
+        STATUS_PRINTED => 'Printed'
+    ];
+
     $classes = $colors[$status] ?? 'bg-gray-100 text-gray-800 border-gray-300';
-    $safeStatus = htmlspecialchars($status, ENT_QUOTES, 'UTF-8');
+    $displayLabel = $labels[$status] ?? $status;
+    $safeStatus = htmlspecialchars($displayLabel, ENT_QUOTES, 'UTF-8');
 
     return sprintf(
         '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border %s">%s</span>',
@@ -62,6 +74,23 @@ function formatDate(?string $date, string $format = 'd M Y, h:i A'): string {
 function formatUserName(array $user): string {
     $title = !empty($user['title']) ? trim($user['title']) . ' ' : '';
     return htmlspecialchars($title . $user['first_name'] . ' ' . $user['last_name'], ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Normalize and format semester name to strictly "First Semester" or "Second Semester"
+ */
+function formatSemester(?string $semesterName): string {
+    if (empty($semesterName)) {
+        return '—';
+    }
+    $lower = strtolower($semesterName);
+    if (strpos($lower, 'first') !== false || strpos($lower, 'harmattan') !== false) {
+        return 'First Semester';
+    }
+    if (strpos($lower, 'second') !== false || strpos($lower, 'rain') !== false) {
+        return 'Second Semester';
+    }
+    return htmlspecialchars($semesterName, ENT_QUOTES, 'UTF-8');
 }
 
 /**

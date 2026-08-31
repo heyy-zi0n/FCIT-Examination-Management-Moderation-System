@@ -20,7 +20,7 @@ $stmt = $pdo->query("
     JOIN users u_lec ON ep.lecturer_id = u_lec.id
     LEFT JOIN users u_mod ON ep.moderator_id = u_mod.id
     LEFT JOIN paper_versions pv ON ep.current_version_id = pv.id
-    WHERE ep.status = 'Moderated'
+    WHERE c.department_id = {$user['department_id']} AND ep.status = 'Moderated' AND ep.eo_status = 'pending'
     ORDER BY ep.updated_at ASC
 ");
 $papers = $stmt->fetchAll();

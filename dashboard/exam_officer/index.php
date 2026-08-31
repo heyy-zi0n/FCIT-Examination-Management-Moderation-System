@@ -9,14 +9,39 @@ $user = requireRole(ROLE_EXAM_OFFICER);
 $pdo = getDb();
 $userId = (int)$user['id'];
 
-// Faculty-wide statistics
-$totalActiveSchedules = (int)$pdo->query("SELECT COUNT(*) FROM exam_schedules")->fetchColumn();
-$pendingEoCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status IN ('Moderated', 'Approved') AND eo_status = 'pending'")->fetchColumn();
-$readyForLockdownCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status = 'Approved'")->fetchColumn();
-$lockedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status = 'Locked'")->fetchColumn();
-$readyForPrintingCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status = 'Queued'")->fetchColumn();
-$totalPrintedCount = (int)$pdo->query("SELECT COUNT(*) FROM print_logs WHERE print_status = 'successful'")->fetchColumn();
+// Department-scoped statistics
+$deptId = (int)$user['department_id'];
 
+$totalActiveSchedules = (int)$pdo->query("SELECT COUNT(*) FROM exam_schedules es JOIN courses c ON es.course_id = c.id WHERE c.department_id = {$deptId}")->fetchColumn();
+$pendingEoCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status IN ('Moderated', 'Approved') AND ep.eo_status = 'pending'")->fetchColumn();
+$totalPrintedCount = (int)$pdo->query("SELECT COUNT(*) FROM print_logs pl JOIN examination_papers ep ON pl.paper_id = ep.id JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND pl.print_status = 'successful'")->fetchColumn();
+
+// Calculate actual Locked vs Ready for Printing based on eligibility
+require_once __DIR__ . '/../../services/PrintingService.php';
+$stmtLocked = $pdo->query("
+    SELECT ep.id, ep.status, es.exam_date 
+    FROM examination_papers ep
+    JOIN courses c ON ep.course_id = c.id
+    LEFT JOIN exam_schedules es ON ep.course_id = es.course_id
+    WHERE c.department_id = {$deptId} AND ep.status IN ('Approved', 'Locked', 'Queued')
+");
+$lockedPapers = $stmtLocked->fetchAll();
+
+$lockedCount = 0;
+$readyForPrintingCount = 0;
+
+foreach ($lockedPapers as $p) {
+    if (!empty($p['exam_date'])) {
+        $eligibility = PrintingService::checkPrintEligibility($p['exam_date']);
+        if ($eligibility['eligible']) {
+            $readyForPrintingCount++;
+        } else {
+            $lockedCount++;
+        }
+    } else {
+        $lockedCount++;
+    }
+}
 // Fetch Pending EO Approvals
 $stmtPending = $pdo->query("
     SELECT ep.*, c.course_code, c.course_title, d.name AS dept_name, al.level_name,
@@ -30,9 +55,10 @@ $stmtPending = $pdo->query("
     JOIN users u_lec ON ep.lecturer_id = u_lec.id
     LEFT JOIN users u_mod ON ep.moderator_id = u_mod.id
     LEFT JOIN paper_versions pv ON ep.current_version_id = pv.id
-    WHERE ep.status = 'Moderated' AND ep.eo_status = 'pending'
+    WHERE c.department_id = :dept_id AND ep.status = 'Moderated' AND ep.eo_status = 'pending'
     ORDER BY ep.updated_at ASC
 ");
+$stmtPending->execute(['dept_id' => $deptId]);
 $pendingPapers = $stmtPending->fetchAll();
 
 // Fetch upcoming locked papers eligible or soon-to-be eligible for print
@@ -45,9 +71,10 @@ $stmtQueue = $pdo->query("
     JOIN departments d ON c.department_id = d.id
     JOIN exam_schedules es ON ep.exam_schedule_id = es.id
     JOIN blind_lockdowns bl ON ep.id = bl.paper_id
-    WHERE ep.status IN ('Approved', 'Locked', 'Queued', 'Printed')
+    WHERE c.department_id = :dept_id AND ep.status IN ('Approved', 'Locked', 'Queued', 'Printed')
     ORDER BY es.exam_date ASC
 ");
+$stmtQueue->execute(['dept_id' => $deptId]);
 $queuePapers = $stmtQueue->fetchAll();
 
 $pageTitle = 'Examination Officer Dashboard — LASU FCIT CMS';
@@ -64,9 +91,9 @@ include __DIR__ . '/../../includes/navbar.php';
         <!-- Welcome Banner -->
         <div class="bg-gradient-to-r from-emerald-950 via-slate-900 to-lasu-navy rounded-2xl p-6 text-white shadow-lg mb-8 border border-slate-800 flex flex-col md:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <div class="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">Faculty Examination Office Pipeline</div>
+                <div class="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">Department Examination Office Pipeline</div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold"><?= formatUserName($user) ?></h1>
-                <p class="text-xs text-slate-300 mt-1">Manage the complete examination pipeline: Approvals → Lockdown → Production.</p>
+                <p class="text-xs text-slate-300 mt-1">Manage the complete examination pipeline for: <span class="font-semibold text-white"><?= htmlspecialchars($user['department_name'] ?? 'Your Department') ?></span></p>
             </div>
             <div class="flex items-center gap-3">
                 <a href="<?= url('dashboard/exam_officer/print_queue.php') ?>" class="px-5 py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
@@ -77,7 +104,7 @@ include __DIR__ . '/../../includes/navbar.php';
         </div>
 
         <!-- Metrics Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
             <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div class="text-xs font-semibold text-slate-500 uppercase">Upcoming Exams</div>
                 <div class="text-2xl font-black text-slate-900 dark:text-white mt-1"><?= $totalActiveSchedules ?></div>
@@ -86,9 +113,12 @@ include __DIR__ . '/../../includes/navbar.php';
                 <div class="text-xs font-semibold text-amber-600 uppercase">Awaiting EO Approval</div>
                 <div class="text-2xl font-black text-amber-600 mt-1"><?= $pendingEoCount ?></div>
             </div>
-            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-900/50 shadow-sm">
-                <div class="text-xs font-semibold text-blue-600 uppercase">Ready for Lockdown</div>
-                <div class="text-2xl font-black text-blue-600 mt-1"><?= $readyForLockdownCount ?></div>
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-900/50 shadow-sm col-span-2 sm:col-span-1 lg:col-span-1">
+                <div class="text-xs font-semibold text-blue-600 uppercase">Awaiting Moderation</div>
+                <?php 
+                $modCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status = 'Submitted'")->fetchColumn(); 
+                ?>
+                <div class="text-2xl font-black text-blue-600 mt-1"><?= $modCount ?></div>
             </div>
             <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-900/50 shadow-sm">
                 <div class="text-xs font-semibold text-purple-600 uppercase">Locked Papers</div>
@@ -146,9 +176,14 @@ include __DIR__ . '/../../includes/navbar.php';
                                         <?= htmlspecialchars($p['lec_first'] . ' ' . $p['lec_last']) ?>
                                     </td>
                                     <td class="py-4 px-4">
-                                        <span class="px-2.5 py-1 rounded-full font-bold text-[10px] <?= $p['hod_status'] === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' ?>">
-                                            HOD: <?= ucfirst($p['hod_status']) ?>
-                                        </span>
+                                        <div class="mb-1">
+                                            <span class="px-2.5 py-1 rounded-full font-bold text-[10px] <?= $p['hod_status'] === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' ?>">
+                                                HOD: <?= ucfirst($p['hod_status']) ?>
+                                            </span>
+                                        </div>
+                                        <div class="text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                                            Pending for <?= getPaperTimeInStage($p['updated_at']) ?>
+                                        </div>
                                     </td>
                                     <td class="py-4 px-4 text-right">
                                         <a href="<?= url('dashboard/exam_officer/review_paper.php?id=' . $p['id']) ?>" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition text-xs inline-flex items-center gap-1.5">

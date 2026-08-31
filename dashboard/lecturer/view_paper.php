@@ -63,6 +63,9 @@ $stmtAppr = $pdo->prepare("
 $stmtAppr->execute(['paper_id' => $paperId]);
 $approvals = $stmtAppr->fetchAll();
 
+// Fetch canonical event timeline
+$timeline = getPaperTimeline($paperId, $pdo);
+
 // Fetch schedule details if linked
 $schedule = null;
 if (!empty($paper['exam_schedule_id'])) {
@@ -71,48 +74,6 @@ if (!empty($paper['exam_schedule_id'])) {
     $schedule = $stmtSched->fetch();
 }
 
-// Determine next action
-$nextActionText = '';
-$nextActionActor = '';
-switch ($paper['status']) {
-    case STATUS_DRAFT:
-        $nextActionText = "Upload question document and submit for moderation.";
-        $nextActionActor = "Lecturer";
-        break;
-    case STATUS_SUBMITTED:
-        $nextActionText = "Review and moderate the submitted paper.";
-        $nextActionActor = "Moderator";
-        break;
-    case STATUS_RETURNED:
-        $nextActionText = "Address moderator comments and upload a new revision.";
-        $nextActionActor = "Lecturer";
-        break;
-    case STATUS_MODERATED:
-        if ($paper['hod_status'] === 'pending') {
-            $nextActionText = "Review and sign-off on the moderated paper.";
-            $nextActionActor = "Head of Department (HOD)";
-        } else if ($paper['eo_status'] === 'pending') {
-            $nextActionText = "Review and sign-off on the moderated paper.";
-            $nextActionActor = "Exam Officer";
-        }
-        break;
-    case STATUS_APPROVED:
-        $nextActionText = "Paper is approved and ready for blind lockdown.";
-        $nextActionActor = "System / Exam Officer";
-        break;
-    case STATUS_LOCKED:
-        $nextActionText = "Paper is locked securely. Awaiting print eligibility window.";
-        $nextActionActor = "Exam Officer";
-        break;
-    case STATUS_QUEUED:
-        $nextActionText = "Execute controlled printing of the paper.";
-        $nextActionActor = "Exam Officer";
-        break;
-    case STATUS_PRINTED:
-        $nextActionText = "Lifecycle complete. Paper has been printed successfully.";
-        $nextActionActor = "None";
-        break;
-}
 
 $pageTitle = "Examination Paper: {$paper['paper_code']} — LASU FCIT CMS";
 include __DIR__ . '/../../includes/header.php';
@@ -168,98 +129,6 @@ include __DIR__ . '/../../includes/navbar.php';
             </div>
         </div>
 
-        <!-- Next Required Action Banner -->
-        <div class="mb-6 p-4 rounded-xl border <?= $nextActionActor === 'Lecturer' ? 'bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200' : 'bg-slate-50 border-slate-200 text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300' ?>">
-            <div class="flex items-start sm:items-center gap-3">
-                <div class="p-2 bg-white dark:bg-slate-900 rounded-lg shadow-sm">
-                    <svg class="w-5 h-5 <?= $nextActionActor === 'Lecturer' ? 'text-amber-600' : 'text-slate-500' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <div>
-                    <div class="text-xs font-bold uppercase tracking-wider <?= $nextActionActor === 'Lecturer' ? 'text-amber-700 dark:text-amber-500' : 'text-slate-500' ?>">
-                        Next Action Required By: <?= htmlspecialchars($nextActionActor) ?>
-                    </div>
-                    <div class="text-sm font-medium mt-0.5">
-                        <?= htmlspecialchars($nextActionText) ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Canonical Lifecycle Timeline -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 mb-8 overflow-hidden">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-6">Examination Lifecycle Progress</h2>
-            
-            <div class="relative flex flex-col md:flex-row justify-between w-full">
-                <!-- Line background -->
-                <div class="absolute top-4 left-4 md:left-0 md:right-0 bottom-4 md:bottom-auto md:top-4 w-1 md:w-full md:h-1 bg-slate-100 dark:bg-slate-800 rounded"></div>
-                
-                <?php
-                $stages = [
-                    ['label' => 'Draft', 'status' => STATUS_DRAFT, 'icon' => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'],
-                    ['label' => 'Submitted', 'status' => STATUS_SUBMITTED, 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
-                    ['label' => 'Moderated', 'status' => STATUS_MODERATED, 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
-                    ['label' => 'HOD Appr.', 'status' => 'hod_approved', 'icon' => 'M5 13l4 4L19 7'],
-                    ['label' => 'EO Appr.', 'status' => 'eo_approved', 'icon' => 'M5 13l4 4L19 7'],
-                    ['label' => 'Locked', 'status' => STATUS_LOCKED, 'icon' => 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'],
-                    ['label' => 'Ready to Print', 'status' => STATUS_QUEUED, 'icon' => 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z'],
-                    ['label' => 'Printed', 'status' => STATUS_PRINTED, 'icon' => 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z']
-                ];
-
-                $currentStatus = $paper['status'];
-                $hodStatus = $paper['hod_status'];
-                $eoStatus = $paper['eo_status'];
-                
-                $statusScores = [
-                    STATUS_DRAFT => 0,
-                    STATUS_SUBMITTED => 1,
-                    STATUS_RETURNED => 1, // Logically returned goes back to draft/submitted state loop
-                    STATUS_MODERATED => 2,
-                    'hod_approved' => 3,
-                    'eo_approved' => 4,
-                    STATUS_APPROVED => 4,
-                    STATUS_LOCKED => 5,
-                    STATUS_QUEUED => 6,
-                    STATUS_PRINTED => 7
-                ];
-
-                $currentScore = $statusScores[$currentStatus] ?? 0;
-                if ($currentStatus === STATUS_MODERATED) {
-                    if ($hodStatus === 'approved') $currentScore = 3;
-                    if ($eoStatus === 'approved') $currentScore = 4;
-                }
-
-                foreach ($stages as $idx => $stage):
-                    $stageScore = $statusScores[$stage['status']];
-                    
-                    $isCompleted = $currentScore > $stageScore;
-                    $isActive = $currentScore === $stageScore;
-                    
-                    // Specific logic for HOD/EO intermediate states
-                    if ($stage['status'] === 'hod_approved' && $hodStatus === 'approved') {
-                        $isCompleted = true;
-                    }
-                    if ($stage['status'] === 'eo_approved' && $eoStatus === 'approved') {
-                        $isCompleted = true;
-                    }
-
-                    $bgColor = $isCompleted ? 'bg-emerald-500' : ($isActive ? 'bg-blue-500 ring-4 ring-blue-500/20' : 'bg-slate-200 dark:bg-slate-700');
-                    $textColor = $isCompleted ? 'text-white' : ($isActive ? 'text-white' : 'text-slate-400');
-                    $labelColor = $isCompleted ? 'text-emerald-600 dark:text-emerald-400 font-bold' : ($isActive ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-400 font-medium');
-                ?>
-                    <div class="relative z-10 flex md:flex-col items-center gap-4 md:gap-2 mb-6 md:mb-0">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center transition-colors <?= $bgColor ?> <?= $textColor ?>">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?= $stage['icon'] ?>"/></svg>
-                        </div>
-                        <div class="text-[10px] uppercase tracking-wider text-left md:text-center <?= $labelColor ?> w-24">
-                            <?= $stage['label'] ?>
-                            <?php if ($isActive && $currentStatus === STATUS_RETURNED && $stage['status'] === STATUS_SUBMITTED): ?>
-                                <br><span class="text-rose-500">(Returned)</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
 
         <!-- Schedule & Version History Section -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
@@ -344,12 +213,12 @@ include __DIR__ . '/../../includes/navbar.php';
                                     <div class="space-y-2">
                                         <?php foreach ($vComments as $c): ?>
                                             <div class="bg-white dark:bg-slate-900 rounded border border-rose-100 dark:border-rose-900/30 p-2 text-xs">
-                                                <div class="flex justify-between items-start mb-1">
+                                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 mb-1">
                                                     <span class="font-bold text-slate-800 dark:text-slate-200">
                                                         <?= htmlspecialchars(($c['title'] ? $c['title'] . ' ' : '') . $c['first_name'] . ' ' . $c['last_name']) ?>
                                                     </span>
                                                     <?php if (!empty($c['line_reference'])): ?>
-                                                        <span class="px-1.5 py-0.5 bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 rounded text-[9px] font-mono font-bold">Line: <?= htmlspecialchars($c['line_reference']) ?></span>
+                                                        <span class="inline-block self-start sm:self-auto px-1.5 py-0.5 bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 rounded text-[9px] font-mono font-bold">Line: <?= htmlspecialchars($c['line_reference']) ?></span>
                                                     <?php endif; ?>
                                                 </div>
                                                 <div class="text-slate-600 dark:text-slate-400 leading-snug">
@@ -375,6 +244,10 @@ include __DIR__ . '/../../includes/navbar.php';
             </div>
 
         </div>
+
+        <!-- Paper Lifecycle Tracking -->
+        <?php require __DIR__ . '/../../includes/components/paper_tracking.php'; ?>
+
 
     </main>
 </div>

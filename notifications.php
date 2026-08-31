@@ -85,14 +85,19 @@ include __DIR__ . '/includes/navbar.php';
                         </div>
 
                         <div class="flex items-center gap-2 flex-shrink-0">
-                            <?php if (!empty($n['link'])): ?>
-                                <a href="<?= htmlspecialchars($n['link']) ?>" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition">
-                                    View
+                            <?php if (!empty($n['link'])): 
+                                $btnText = 'View';
+                                if (str_starts_with($n['title'], 'Action Required')) $btnText = 'Take Action';
+                                elseif (str_starts_with($n['title'], 'Action Complete')) $btnText = 'View Details';
+                                elseif (str_starts_with($n['title'], 'Workflow Update') || str_starts_with($n['title'], 'Workflow Complete')) $btnText = 'View Status';
+                            ?>
+                                <a href="<?= htmlspecialchars($n['link']) ?>" class="px-3 py-1.5 <?= str_starts_with($n['title'], 'Action Required') ? 'bg-amber-500 hover:bg-amber-600 text-slate-900 shadow-sm' : 'bg-blue-600 hover:bg-blue-700 text-white' ?> rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                    <?= $btnText ?>
                                 </a>
                             <?php endif; ?>
                             <?php if (!$n['is_read']): ?>
-                                <a href="<?= url('notifications.php?mark_read=' . $n['id']) ?>" class="px-2.5 py-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 text-xs border border-slate-200 dark:border-slate-700 rounded transition" title="Mark Read">
-                                    &check;
+                                <a href="<?= url('notifications.php?mark_read=' . $n['id']) ?>" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition" title="Mark as Read">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                 </a>
                             <?php endif; ?>
                         </div>

@@ -17,6 +17,9 @@
 *.tmp
 *.temp
 
+# Antigravity/Gemini configuration and skills
+.gemini/
+
 # OS files
 .DS_Store
 Thumbs.db

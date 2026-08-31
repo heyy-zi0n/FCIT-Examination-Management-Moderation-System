@@ -107,6 +107,48 @@ $stmtLec = $pdo->prepare("SELECT * FROM users WHERE id = :id");
 $stmtLec->execute(['id' => (int)$paper['lecturer_id']]);
 $lecturer = $stmtLec->fetch();
 
+// Fetch canonical event timeline
+$timeline = getPaperTimeline($paperId, $pdo);
+
+// Determine next action
+$nextActionText = '';
+$nextActionActor = '';
+switch ($paper['status']) {
+    case STATUS_DRAFT:
+        $nextActionText = "Upload question document and submit for moderation.";
+        $nextActionActor = "Lecturer";
+        break;
+    case STATUS_SUBMITTED:
+        $nextActionText = "Review and moderate the submitted paper.";
+        $nextActionActor = "Moderator";
+        break;
+    case STATUS_RETURNED:
+        $nextActionText = "Address moderator comments and upload a new revision.";
+        $nextActionActor = "Lecturer";
+        break;
+    case STATUS_MODERATED:
+        if ($paper['hod_status'] === 'pending') {
+            $nextActionText = "Review and sign-off on the moderated paper.";
+            $nextActionActor = "Head of Department (HOD)";
+        } else if ($paper['eo_status'] === 'pending') {
+            $nextActionText = "Review and sign-off on the moderated paper.";
+            $nextActionActor = "Exam Officer";
+        }
+        break;
+    case STATUS_APPROVED:
+        $nextActionText = "Paper is approved and ready for blind lockdown.";
+        $nextActionActor = "System / Exam Officer";
+        break;
+    case STATUS_LOCKED:
+        $nextActionText = "Paper is locked securely. Awaiting print eligibility window.";
+        $nextActionActor = "Exam Officer";
+        break;
+    case STATUS_QUEUED:
+        $nextActionText = "Execute controlled printing of the paper.";
+        $nextActionActor = "Exam Officer";
+        break;
+}
+
 $pageTitle = "Moderate Paper: {$paper['paper_code']} — LASU FCIT CMS";
 include __DIR__ . '/../../includes/header.php';
 include __DIR__ . '/../../includes/navbar.php';
@@ -137,6 +179,9 @@ include __DIR__ . '/../../includes/navbar.php';
                 </a>
             </div>
         </div>
+
+        <!-- Paper Lifecycle Tracking -->
+        <?php require __DIR__ . '/../../includes/components/paper_tracking.php'; ?>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
@@ -236,7 +281,7 @@ include __DIR__ . '/../../includes/navbar.php';
                         <?= csrfField() ?>
                         <input type="hidden" name="action_add_comment" value="1">
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">Reference</label>
                                 <input type="text" name="line_reference" placeholder="e.g. Q2(b), Page 1" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
@@ -293,6 +338,8 @@ include __DIR__ . '/../../includes/navbar.php';
             </div>
 
         </div>
+
+
 
     </main>
 </div>

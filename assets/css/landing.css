@@ -1,0 +1,573 @@
+/* ============================================================
+   LASU FCIT CMS — Landing Page Animation & Interaction Styles
+   ============================================================ */
+
+/* ---- Reduced Motion: Respect user preference ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   1. BACKGROUND AMBIENT BLOBS
+   ============================================================ */
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.hero-blob-1 {
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(212,175,55,0.14) 0%, transparent 70%);
+  top: -120px;
+  left: -160px;
+  animation: blobDrift1 18s ease-in-out infinite alternate;
+}
+
+.hero-blob-2 {
+  width: 440px;
+  height: 440px;
+  background: radial-gradient(circle, rgba(59,130,246,0.10) 0%, transparent 70%);
+  top: 30%;
+  right: -120px;
+  animation: blobDrift2 22s ease-in-out infinite alternate;
+}
+
+.hero-blob-3 {
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+  bottom: 5%;
+  left: 30%;
+  animation: blobDrift3 15s ease-in-out infinite alternate;
+}
+
+@keyframes blobDrift1 {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(60px, 40px) scale(1.1); }
+}
+@keyframes blobDrift2 {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-50px, 60px) scale(0.95); }
+}
+@keyframes blobDrift3 {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, -40px) scale(1.08); }
+}
+
+/* Subtle animated grid pattern overlay */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+}
+
+/* ============================================================
+   2. HERO ENTRANCE ANIMATIONS
+   ============================================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.90); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-fade-down {
+  animation: fadeDown 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-fade-in {
+  animation: fadeIn 0.8s ease both;
+}
+.animate-scale-in {
+  animation: scaleIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Stagger delays */
+.delay-100 { animation-delay: 0.10s; }
+.delay-200 { animation-delay: 0.20s; }
+.delay-300 { animation-delay: 0.30s; }
+.delay-400 { animation-delay: 0.40s; }
+.delay-500 { animation-delay: 0.50s; }
+.delay-600 { animation-delay: 0.60s; }
+.delay-700 { animation-delay: 0.70s; }
+.delay-800 { animation-delay: 0.80s; }
+
+/* ============================================================
+   3. SCROLL REVEAL  (JS driven via IntersectionObserver)
+   ============================================================ */
+.reveal {
+  opacity: 0;
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.reveal-up    { transform: translateY(36px); }
+.reveal.reveal-down  { transform: translateY(-28px); }
+.reveal.reveal-left  { transform: translateX(-36px); }
+.reveal.reveal-right { transform: translateX(36px); }
+.reveal.reveal-scale { transform: scale(0.88); }
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   4. NAVBAR SCROLL GLASSMORPHISM
+   ============================================================ */
+.navbar-scrolled {
+  background: rgba(0, 33, 71, 0.88) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid rgba(212,175,55,0.15) !important;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.25) !important;
+}
+
+/* Premium Sign In button hover */
+.btn-signin {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.btn-signin:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px rgba(212,175,55,0.30), 0 8px 24px rgba(212,175,55,0.18);
+}
+.btn-signin::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  transition: left 0.45s ease;
+}
+.btn-signin:hover::before { left: 100%; }
+
+/* ============================================================
+   5. CTA BUTTONS — Hero
+   ============================================================ */
+.btn-hero-primary {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease;
+}
+.btn-hero-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(212,175,55,0.35), 0 2px 8px rgba(212,175,55,0.2);
+}
+.btn-hero-primary:active { transform: translateY(-1px); }
+
+.btn-hero-primary .btn-arrow {
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  display: inline-block;
+}
+.btn-hero-primary:hover .btn-arrow {
+  transform: translateX(5px);
+}
+
+.btn-hero-secondary {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.22s ease, background-color 0.22s ease, border-color 0.22s ease;
+}
+.btn-hero-secondary:hover {
+  transform: translateY(-2px);
+}
+.btn-hero-secondary .btn-arrow-down {
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  display: inline-block;
+}
+.btn-hero-secondary:hover .btn-arrow-down {
+  transform: translateY(4px);
+}
+
+/* ============================================================
+   6. STAT CARDS — animated counters + hover
+   ============================================================ */
+.stat-card {
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.28s ease,
+              border-color 0.28s ease;
+}
+.stat-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(212,175,55,0.20);
+  border-color: rgba(212,175,55,0.25) !important;
+}
+.stat-card:hover .stat-number {
+  transform: scale(1.12);
+}
+.stat-number {
+  display: inline-block;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   7. WORKFLOW TIMELINE
+   ============================================================ */
+.workflow-line-wrap {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: rgba(148,163,184,0.15);
+  overflow: hidden;
+}
+
+.workflow-line-fill {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(to bottom, rgba(212,175,55,0.9), rgba(212,175,55,0.3));
+  transition: height 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 2px;
+}
+.workflow-line-fill.is-filled { height: 100%; }
+
+/* Workflow step card */
+.workflow-step-card {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease;
+  cursor: default;
+}
+.workflow-step-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+  border-color: rgba(59,130,246,0.25) !important;
+}
+.dark .workflow-step-card:hover {
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  border-color: rgba(212,175,55,0.30) !important;
+}
+
+/* Workflow node dot */
+.workflow-node {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 10;
+}
+
+/* Pulse glow for key stages */
+.workflow-node-pulse {
+  animation: nodePulse 2.4s ease-in-out infinite;
+}
+@keyframes nodePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.5), 0 2px 8px rgba(0,0,0,0.2); }
+  50%       { box-shadow: 0 0 0 8px rgba(212,175,55,0.0), 0 2px 8px rgba(0,0,0,0.2); }
+}
+
+/* ============================================================
+   8. FEATURE CARDS (Governance) — 3D tilt + glow
+   ============================================================ */
+.feature-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  will-change: transform;
+  cursor: default;
+}
+.feature-card:hover {
+  box-shadow: 0 20px 48px rgba(0,0,0,0.10), 0 0 0 1px rgba(59,130,246,0.20);
+  border-color: rgba(59,130,246,0.20) !important;
+}
+.dark .feature-card:hover {
+  box-shadow: 0 16px 48px rgba(0,0,0,0.40), 0 0 0 1px rgba(59,130,246,0.25), 0 0 20px rgba(59,130,246,0.06);
+  border-color: rgba(59,130,246,0.25) !important;
+}
+
+.feature-card .feature-icon {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease;
+}
+.feature-card:hover .feature-icon {
+  transform: scale(1.12) rotate(-4deg);
+}
+
+/* Lock icon special animation */
+@keyframes lockBounce {
+  0%, 100% { transform: scale(1.12) rotate(0deg); }
+  25%       { transform: scale(1.12) rotate(-8deg); }
+  75%       { transform: scale(1.12) rotate(6deg); }
+}
+.feature-card:hover .icon-lock { animation: lockBounce 0.6s ease; }
+
+/* Animated checkmarks */
+.check-icon {
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+.feature-card:hover .check-icon { transform: scale(1.15); }
+
+/* ============================================================
+   9. DEPARTMENT CARDS
+   ============================================================ */
+.dept-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease;
+  cursor: default;
+}
+.dept-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(212,175,55,0.08) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.dept-card:hover::before { opacity: 1; }
+
+.dept-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.12), 0 0 0 1.5px rgba(212,175,55,0.30);
+  border-color: rgba(212,175,55,0.30) !important;
+}
+.dark .dept-card:hover {
+  box-shadow: 0 20px 48px rgba(0,0,0,0.40), 0 0 0 1.5px rgba(212,175,55,0.25);
+}
+
+.dept-code-badge {
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), letter-spacing 0.28s ease;
+}
+.dept-card:hover .dept-code-badge {
+  transform: scale(1.1);
+}
+
+.dept-card-arrow {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+  opacity: 0;
+  transform: translateX(-6px);
+}
+.dept-card:hover .dept-card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Cursor spotlight */
+.card-spotlight {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(circle 120px at var(--mx, 50%) var(--my, 50%),
+    rgba(212,175,55,0.07) 0%, transparent 70%);
+}
+.dept-card:hover .card-spotlight { opacity: 1; }
+
+/* ============================================================
+   10. STATUS PILLS
+   ============================================================ */
+.status-pill {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  cursor: default;
+  position: relative;
+}
+.status-pill:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+  z-index: 1;
+}
+
+/* ============================================================
+   11. ACCOUNTABILITY ROWS
+   ============================================================ */
+.track-item {
+  transition: transform 0.22s ease;
+}
+.track-item:hover { transform: translateX(4px); }
+
+.track-feature-row {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.track-feature-row:hover {
+  transform: translateX(4px);
+  border-color: rgba(59,130,246,0.25) !important;
+}
+.dark .track-feature-row:hover {
+  border-color: rgba(59,130,246,0.30) !important;
+}
+
+/* ============================================================
+   12. PARALLAX FLOATING SHAPES
+   ============================================================ */
+.parallax-shape {
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* ============================================================
+   13. SECTION HEADING UNDERLINE
+   ============================================================ */
+.section-heading-line {
+  position: relative;
+  display: inline-block;
+}
+.section-heading-line::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--lasu-gold), rgba(212,175,55,0.3));
+  border-radius: 2px;
+  margin-top: 6px;
+  transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.section-heading-line.is-visible::after { width: 100%; }
+
+/* ============================================================
+   14. MOBILE ADJUSTMENTS
+   ============================================================ */
+@media (max-width: 768px) {
+  .hero-blob-1 { width: 260px; height: 260px; }
+  .hero-blob-2 { width: 200px; height: 200px; }
+  .hero-blob-3 { display: none; }
+
+  .reveal.reveal-left,
+  .reveal.reveal-right { transform: translateY(24px); }
+
+  .dept-card:hover { transform: translateY(-4px); }
+  .workflow-step-card:hover { transform: translateY(-2px); }
+  .feature-card:hover { transform: none; }
+}
+
+/* ============================================================
+   15. DEPT CARD V2 (Screenshot-matched design)
+   ============================================================ */
+.dept-card-v2 {
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition:
+    transform       0.30s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow      0.30s ease,
+    border-color    0.30s ease;
+}
+
+/* Shimmer sweep on hover */
+.dept-card-v2::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    130deg,
+    transparent 0%,
+    rgba(59,130,246,0.04) 40%,
+    rgba(99,102,241,0.06) 60%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.dept-card-v2:hover::before { opacity: 1; }
+
+/* Bottom accent line that grows in */
+.dept-card-v2::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(59,130,246,0.7), rgba(99,102,241,0.5));
+  border-radius: 0 0 12px 12px;
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dept-card-v2:hover::after { width: 100%; }
+
+/* Lift + border glow */
+.dept-card-v2:hover {
+  transform: translateY(-6px);
+  border-color: rgba(99,102,241,0.35) !important;
+  box-shadow:
+    0 0 0 1px rgba(99,102,241,0.15),
+    0 12px 40px rgba(99,102,241,0.10),
+    0 4px 12px rgba(0,0,0,0.06);
+}
+.dark .dept-card-v2:hover {
+  border-color: rgba(99,102,241,0.30) !important;
+  box-shadow:
+    0 0 0 1px rgba(99,102,241,0.20),
+    0 12px 40px rgba(99,102,241,0.12),
+    0 4px 16px rgba(0,0,0,0.30);
+}
+
+/* Code badge scales + shifts color on hover */
+.dept-card-v2 span.dept-code-badge-v2,
+.dept-card-v2 > span {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              background-color 0.25s ease,
+              color 0.25s ease;
+}
+.dept-card-v2:hover > span {
+  transform: scale(1.08);
+  background-color: rgba(99,102,241,0.12) !important;
+  color: #6366f1 !important;
+}
+.dark .dept-card-v2:hover > span {
+  background-color: rgba(99,102,241,0.20) !important;
+  color: #a5b4fc !important;
+}
+
+/* Title color shift */
+.dept-card-v2 h3 {
+  transition: color 0.25s ease;
+}
+.dept-card-v2:hover h3 {
+  color: #1e40af;
+}
+.dark .dept-card-v2:hover h3 {
+  color: #93c5fd;
+}
+
+/* Description fades in slightly more opaque */
+.dept-card-v2 .dept-desc {
+  transition: color 0.25s ease;
+}
+.dept-card-v2:hover .dept-desc {
+  color: #475569;
+}
+.dark .dept-card-v2:hover .dept-desc {
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .dept-card-v2:hover { transform: translateY(-3px); }
+}
+

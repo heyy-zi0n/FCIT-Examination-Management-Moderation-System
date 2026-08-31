@@ -10,6 +10,7 @@ require_once __DIR__ . '/test_auth.php';
 require_once __DIR__ . '/test_document.php';
 require_once __DIR__ . '/test_workflow.php';
 require_once __DIR__ . '/test_printing.php';
+require_once __DIR__ . '/test_emergency_printing.php';
 require_once __DIR__ . '/test_security_idor.php';
 require_once __DIR__ . '/test_http_endpoints.php';
 
@@ -25,6 +26,7 @@ $suites = [
     'Document Security & AES-256 Lockdown' => 'testDocument',
     'Workflow State Machine & Dual Approval' => 'testWorkflow',
     'Controlled Printing & Lagos Timezone Restriction' => 'testPrinting',
+    'Emergency Printing' => 'testEmergencyPrinting',
     'IDOR Protection & Departmental Boundaries' => 'testSecurityIdor',
     'Live HTTP Endpoints & Role Dashboards' => 'testHttpEndpoints',
 ];

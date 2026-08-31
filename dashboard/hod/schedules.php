@@ -166,7 +166,7 @@ include __DIR__ . '/../../includes/navbar.php';
                                     </td>
                                     <td class="py-4 px-4">
                                         <div class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars($sc['session_name']) ?></div>
-                                        <div class="text-[10px] text-slate-400"><?= htmlspecialchars($sc['semester_name']) ?></div>
+                                        <div class="text-[10px] text-slate-400"><?= formatSemester($sc['semester_name']) ?></div>
                                     </td>
                                     <td class="py-4 px-4 font-bold text-slate-900 dark:text-white">
                                         <?= formatDate($sc['exam_date'], 'D, d M Y') ?>
