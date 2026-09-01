@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * LASU FCIT Examination Question Lifecycle Management System
@@ -341,5 +341,5 @@ $departments = $pdo->query("SELECT code, name FROM departments ORDER BY code ASC
     </div>
 </section>
 
-<script src="<?= url('assets/js/landing.js') ?>"></script>
+<script src="<?= url('assets/js/landing.js') ?>?v=<?= @filemtime(__DIR__ . '/assets/js/landing.js') ?>"></script>
 <?php include __DIR__ . '/includes/footer.php'; ?>

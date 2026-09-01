@@ -43,7 +43,7 @@ foreach ($lockedPapers as $p) {
     }
 }
 // Fetch Pending EO Approvals
-$stmtPending = $pdo->query("
+$stmtPending = $pdo->prepare("
     SELECT ep.*, c.course_code, c.course_title, d.name AS dept_name, al.level_name,
            u_lec.first_name AS lec_first, u_lec.last_name AS lec_last,
            u_mod.first_name AS mod_first, u_mod.last_name AS mod_last,
@@ -62,7 +62,7 @@ $stmtPending->execute(['dept_id' => $deptId]);
 $pendingPapers = $stmtPending->fetchAll();
 
 // Fetch upcoming locked papers eligible or soon-to-be eligible for print
-$stmtQueue = $pdo->query("
+$stmtQueue = $pdo->prepare("
     SELECT ep.*, c.course_code, c.course_title, d.code AS dept_code,
            es.exam_date, es.exam_time, es.venue, es.expected_students,
            bl.checksum_sha256, bl.locked_at

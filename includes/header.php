@@ -46,9 +46,9 @@ $user = currentUser();
         }
     </script>
     
-    <link rel="stylesheet" href="<?= url('assets/css/custom.css') ?>">
+    <link rel="stylesheet" href="<?= url('assets/css/custom.css') ?>?v=<?= @filemtime(__DIR__ . '/../assets/css/custom.css') ?>">
     <?php if (isset($isLandingPage) && $isLandingPage): ?>
-    <link rel="stylesheet" href="<?= url('assets/css/landing.css') ?>">
+    <link rel="stylesheet" href="<?= url('assets/css/landing.css') ?>?v=<?= @filemtime(__DIR__ . '/../assets/css/landing.css') ?>">
     <?php endif; ?>
 </head>
 <body class="h-full font-sans antialiased text-slate-800 dark:text-slate-100 flex flex-col">
