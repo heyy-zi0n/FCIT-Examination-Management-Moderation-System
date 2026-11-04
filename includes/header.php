@@ -51,4 +51,4 @@ $user = currentUser();
     <link rel="stylesheet" href="<?= url('assets/css/landing.css') ?>?v=<?= @filemtime(__DIR__ . '/../assets/css/landing.css') ?>">
     <?php endif; ?>
 </head>
-<body class="h-full font-sans antialiased text-slate-800 dark:text-slate-100 flex flex-col">
+<body class="<?= !empty($isLandingPage) ? 'min-h-full' : 'h-full' ?> font-sans antialiased text-slate-800 dark:text-slate-100 flex flex-col">

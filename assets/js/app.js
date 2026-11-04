@@ -3,22 +3,50 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Mobile Sidebar Toggle
+    // Mobile Sidebar Toggle (Single Authoritative Handler)
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const sidebar = document.getElementById('app-sidebar');
     const sidebarBackdrop = document.getElementById('sidebar-backdrop');
 
     if (mobileMenuBtn && sidebar) {
-        mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('-translate-x-full');
-            if (sidebarBackdrop) sidebarBackdrop.classList.toggle('hidden');
-        });
-    }
+        let isSidebarOpen = false;
 
-    if (sidebarBackdrop) {
-        sidebarBackdrop.addEventListener('click', () => {
-            if (sidebar) sidebar.classList.add('-translate-x-full');
-            sidebarBackdrop.classList.add('hidden');
+        const setSidebarState = (open) => {
+            isSidebarOpen = open;
+            if (isSidebarOpen) {
+                sidebar.classList.remove('-translate-x-full');
+                if (sidebarBackdrop) sidebarBackdrop.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                if (sidebarBackdrop) sidebarBackdrop.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        };
+
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setSidebarState(!isSidebarOpen);
+        });
+
+        if (sidebarBackdrop) {
+            sidebarBackdrop.addEventListener('click', () => {
+                if (isSidebarOpen) setSidebarState(false);
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isSidebarOpen) {
+                setSidebarState(false);
+            }
+        });
+
+        sidebar.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isSidebarOpen && window.innerWidth < 768) {
+                    setSidebarState(false);
+                }
+            });
         });
     }
 
@@ -30,6 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (targetMenu) {
             toggle.addEventListener('click', (e) => {
                 e.stopPropagation();
+                // Close any other open dropdowns first
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    if (menu !== targetMenu) {
+                        menu.classList.add('hidden');
+                    }
+                });
                 targetMenu.classList.toggle('hidden');
             });
         }

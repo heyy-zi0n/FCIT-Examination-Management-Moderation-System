@@ -15,31 +15,37 @@ $encStorageWriteable = is_writable(EXAM_STORAGE_PATH);
 $prevStorageWriteable = is_writable(PREVIEW_STORAGE_PATH);
 
 $libreOfficeAvailable = file_exists(LIBREOFFICE_PATH);
-$rawMysqlVersion = $pdo->query("SELECT VERSION()")->fetchColumn();
-$mysqlVersion = str_ireplace('-MariaDB', '', $rawMysqlVersion);
-if (strpos($mysqlVersion, '10.4.') === 0) {
-    $mysqlVersion = str_replace('10.4.', '8.0.', $mysqlVersion);
-}
+$mysqlVersion = (string)$pdo->query("SELECT VERSION()")->fetchColumn();
 $phpVersion = PHP_VERSION;
 $opensslAvailable = extension_loaded('openssl');
 $config = require __DIR__ . '/../../config/app.php';
 $masterKey = $config['encryption_key'] ?? '';
 $keyConfigured = !empty($masterKey) && strlen($masterKey) >= 32;
 
-// Storage usage calculation
-function getDirSize($dir) {
-    $size = 0;
-    if (is_dir($dir)) {
-        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)) as $file) {
-            $size += $file->getSize();
+// Accurate storage usage calculation separated by file type
+$rawStorageSize = 0;
+$encStorageSize = 0;
+if (is_dir(EXAM_STORAGE_PATH)) {
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(EXAM_STORAGE_PATH, FilesystemIterator::SKIP_DOTS)) as $file) {
+        if ($file->isFile()) {
+            $ext = strtolower($file->getExtension());
+            if ($ext === 'enc') {
+                $encStorageSize += $file->getSize();
+            } else {
+                $rawStorageSize += $file->getSize();
+            }
         }
     }
-    return $size;
 }
 
-$rawStorageSize = getDirSize(EXAM_STORAGE_PATH);
-$encStorageSize = getDirSize(EXAM_STORAGE_PATH);
-$prevStorageSize = getDirSize(PREVIEW_STORAGE_PATH);
+$prevStorageSize = 0;
+if (is_dir(PREVIEW_STORAGE_PATH)) {
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(PREVIEW_STORAGE_PATH, FilesystemIterator::SKIP_DOTS)) as $file) {
+        if ($file->isFile()) {
+            $prevStorageSize += $file->getSize();
+        }
+    }
+}
 
 $pageTitle = 'System Health & Security Diagnostics — LASU FCIT CMS';
 include __DIR__ . '/../../includes/header.php';
@@ -173,7 +179,7 @@ include __DIR__ . '/../../includes/navbar.php';
                     <span class="font-bold font-mono text-slate-800 dark:text-slate-200"><?= $phpVersion ?></span>
                 </div>
                 <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                    <span class="text-slate-400 block text-[10px] uppercase font-semibold">MySQL Engine</span>
+                    <span class="text-slate-400 block text-[10px] uppercase font-semibold">Database Engine</span>
                     <span class="font-bold font-mono text-slate-800 dark:text-slate-200"><?= htmlspecialchars($mysqlVersion) ?></span>
                 </div>
                 <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">

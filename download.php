@@ -16,7 +16,22 @@ if ($paperId <= 0) {
     die("Invalid examination paper ID.");
 }
 
-$paper = requirePaperAccess($paperId, 'download');
+try {
+    $paper = requirePaperAccess($paperId, 'download');
+
+    // Enforce Cryptographic Blind Lockdown: block direct downloads once approved/locked
+    $lockedStatuses = [STATUS_APPROVED, STATUS_LOCKED, STATUS_QUEUED, STATUS_PRINTED];
+    if (in_array($paper['status'], $lockedStatuses, true)) {
+        logAudit((int)$user['id'], 'blocked_locked_download_attempt', 'examination_paper', $paperId, [
+            'status' => $paper['status'],
+            'type' => $type
+        ]);
+        throw new RuntimeException("Access Denied: Examination paper is under Cryptographic Blind Lockdown (status: {$paper['status']}). Direct download is forbidden.");
+    }
+} catch (RuntimeException $e) {
+    http_response_code(403);
+    die($e->getMessage());
+}
 
 $pdo = getDb();
 if ($versionId <= 0) {

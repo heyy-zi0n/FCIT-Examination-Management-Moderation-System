@@ -12,19 +12,32 @@ $userId = (int)$user['id'];
 // Department-scoped statistics
 $deptId = (int)$user['department_id'];
 
-$totalActiveSchedules = (int)$pdo->query("SELECT COUNT(*) FROM exam_schedules es JOIN courses c ON es.course_id = c.id WHERE c.department_id = {$deptId}")->fetchColumn();
-$pendingEoCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status IN ('Moderated', 'Approved') AND ep.eo_status = 'pending'")->fetchColumn();
-$totalPrintedCount = (int)$pdo->query("SELECT COUNT(*) FROM print_logs pl JOIN examination_papers ep ON pl.paper_id = ep.id JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND pl.print_status = 'successful'")->fetchColumn();
+$stmtSchedCount = $pdo->prepare("SELECT COUNT(*) FROM exam_schedules es JOIN courses c ON es.course_id = c.id WHERE c.department_id = :dept_id");
+$stmtSchedCount->execute(['dept_id' => $deptId]);
+$totalActiveSchedules = (int)$stmtSchedCount->fetchColumn();
+
+$stmtPendingEo = $pdo->prepare("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = :dept_id AND ep.status IN ('Moderated', 'Approved') AND ep.eo_status = 'pending'");
+$stmtPendingEo->execute(['dept_id' => $deptId]);
+$pendingEoCount = (int)$stmtPendingEo->fetchColumn();
+
+$stmtPrinted = $pdo->prepare("SELECT COUNT(*) FROM print_logs pl JOIN examination_papers ep ON pl.paper_id = ep.id JOIN courses c ON ep.course_id = c.id WHERE c.department_id = :dept_id AND pl.print_status = 'successful'");
+$stmtPrinted->execute(['dept_id' => $deptId]);
+$totalPrintedCount = (int)$stmtPrinted->fetchColumn();
+
+$stmtModCount = $pdo->prepare("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = :dept_id AND ep.status = 'Submitted'");
+$stmtModCount->execute(['dept_id' => $deptId]);
+$modCount = (int)$stmtModCount->fetchColumn();
 
 // Calculate actual Locked vs Ready for Printing based on eligibility
 require_once __DIR__ . '/../../services/PrintingService.php';
-$stmtLocked = $pdo->query("
+$stmtLocked = $pdo->prepare("
     SELECT ep.id, ep.status, es.exam_date 
     FROM examination_papers ep
     JOIN courses c ON ep.course_id = c.id
     LEFT JOIN exam_schedules es ON ep.course_id = es.course_id
-    WHERE c.department_id = {$deptId} AND ep.status IN ('Approved', 'Locked', 'Queued')
+    WHERE c.department_id = :dept_id AND ep.status IN ('Approved', 'Locked', 'Queued')
 ");
+$stmtLocked->execute(['dept_id' => $deptId]);
 $lockedPapers = $stmtLocked->fetchAll();
 
 $lockedCount = 0;
@@ -42,6 +55,7 @@ foreach ($lockedPapers as $p) {
         $lockedCount++;
     }
 }
+
 // Fetch Pending EO Approvals
 $stmtPending = $pdo->prepare("
     SELECT ep.*, c.course_code, c.course_title, d.name AS dept_name, al.level_name,
@@ -115,9 +129,6 @@ include __DIR__ . '/../../includes/navbar.php';
             </div>
             <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-900/50 shadow-sm col-span-2 sm:col-span-1 lg:col-span-1">
                 <div class="text-xs font-semibold text-blue-600 uppercase">Awaiting Moderation</div>
-                <?php 
-                $modCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE status = 'Submitted'")->fetchColumn(); 
-                ?>
                 <div class="text-2xl font-black text-blue-600 mt-1"><?= $modCount ?></div>
             </div>
             <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-900/50 shadow-sm">

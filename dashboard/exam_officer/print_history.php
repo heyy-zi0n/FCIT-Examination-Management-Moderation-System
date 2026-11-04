@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../bootstrap.php';
 $user = requireRole(ROLE_EXAM_OFFICER);
 
 $pdo = getDb();
+$deptId = !empty($user['department_id']) ? (int)$user['department_id'] : null;
 
 // Search by verification code if provided
 $codeSearch = sanitizeInput($_GET['verification_code'] ?? '');
@@ -19,12 +20,20 @@ $sql = "
     JOIN departments d ON c.department_id = d.id
     JOIN users u_eo ON pl.exam_officer_id = u_eo.id
 ";
+$conditions = [];
 $params = [];
+
+if ($deptId !== null) {
+    $conditions[] = "c.department_id = :dept_id";
+    $params['dept_id'] = $deptId;
+}
 if (!empty($codeSearch)) {
-    $sql .= " WHERE pl.verification_code LIKE :code AND c.department_id = {$user['department_id']}";
+    $conditions[] = "pl.verification_code LIKE :code";
     $params['code'] = "%{$codeSearch}%";
-} else {
-    $sql .= " WHERE c.department_id = {$user['department_id']}";
+}
+
+if (!empty($conditions)) {
+    $sql .= " WHERE " . implode(" AND ", $conditions);
 }
 $sql .= " ORDER BY pl.printed_at DESC";
 

@@ -21,6 +21,7 @@ $stmtAssigned->execute(['user_id' => $userId]);
 $assignments = $stmtAssigned->fetchAll();
 
 // Fetch Pending Papers in Moderation Queue (status = 'Submitted')
+// Enforces paired (department_id, level_id) match and Separation of Duties (lecturer_id != userId)
 $stmtQueue = $pdo->prepare("
     SELECT ep.*, c.course_code, c.course_title, d.code AS dept_code, al.level_name,
            u_lec.first_name AS lec_first, u_lec.last_name AS lec_last, u_lec.title AS lec_title,
@@ -32,30 +33,41 @@ $stmtQueue = $pdo->prepare("
     JOIN users u_lec ON ep.lecturer_id = u_lec.id
     LEFT JOIN paper_versions pv ON ep.current_version_id = pv.id
     WHERE ep.status = 'Submitted'
+      AND ep.lecturer_id != :uid_sod
       AND (
           ep.moderator_id = :user_id1
-          OR (c.department_id IN (SELECT department_id FROM moderator_assignments WHERE moderator_id = :user_id2)
-              AND c.level_id IN (SELECT level_id FROM moderator_assignments WHERE moderator_id = :user_id3))
+          OR EXISTS (
+              SELECT 1 FROM moderator_assignments ma
+              WHERE ma.moderator_id = :user_id2
+                AND ma.department_id = c.department_id
+                AND ma.level_id = c.level_id
+          )
       )
     ORDER BY ep.updated_at ASC
 ");
 $stmtQueue->execute([
+    'uid_sod' => $userId,
     'user_id1' => $userId,
-    'user_id2' => $userId,
-    'user_id3' => $userId
+    'user_id2' => $userId
 ]);
 $pendingPapers = $stmtQueue->fetchAll();
 
-// Moderation Metrics
+// Moderation Metrics (Parameterized)
 $pendingReviewCount = count($pendingPapers);
-$revisionsRequestedCount = (int)$pdo->query("
+
+$stmtRev = $pdo->prepare("
     SELECT COUNT(DISTINCT paper_id) FROM paper_approvals 
-    WHERE approver_id = {$userId} AND stage = 'moderator' AND decision = 'returned'
-")->fetchColumn();
-$recentlyApprovedCount = (int)$pdo->query("
+    WHERE approver_id = :uid AND stage = 'moderator' AND decision = 'returned'
+");
+$stmtRev->execute(['uid' => $userId]);
+$revisionsRequestedCount = (int)$stmtRev->fetchColumn();
+
+$stmtAppr = $pdo->prepare("
     SELECT COUNT(DISTINCT paper_id) FROM paper_approvals 
-    WHERE approver_id = {$userId} AND stage = 'moderator' AND decision = 'approved'
-")->fetchColumn();
+    WHERE approver_id = :uid AND stage = 'moderator' AND decision = 'approved'
+");
+$stmtAppr->execute(['uid' => $userId]);
+$recentlyApprovedCount = (int)$stmtAppr->fetchColumn();
 
 $pageTitle = 'Moderation Queue — LASU FCIT CMS';
 include __DIR__ . '/../../includes/header.php';

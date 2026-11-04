@@ -33,6 +33,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new InvalidArgumentException("Please provide a valid email address.");
             }
 
+            $validRoles = [ROLE_ADMIN, ROLE_HOD, ROLE_EXAM_OFFICER, ROLE_MODERATOR, ROLE_LECTURER];
+            if (!in_array($role, $validRoles, true)) {
+                throw new InvalidArgumentException("Invalid system role selected.");
+            }
+
+            if ($role !== ROLE_ADMIN && $deptId === null) {
+                throw new InvalidArgumentException("Department assignment is required for non-administrator roles.");
+            }
+
             if ($userId > 0) {
                 // Update User
                 $stmtUpd = $pdo->prepare("
@@ -54,8 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
 
                 if (!empty($password)) {
-                    if (strlen($password) < 8) {
-                        throw new InvalidArgumentException("Password must be at least 8 characters long.");
+                    if (strlen($password) < PASSWORD_MIN_LENGTH) {
+                        throw new InvalidArgumentException("Password must be at least " . PASSWORD_MIN_LENGTH . " characters long.");
                     }
                     $pwdHash = hashPassword($password);
                     $pdo->prepare("UPDATE users SET password_hash = :p WHERE id = :id")->execute(['p' => $pwdHash, 'id' => $userId]);
@@ -66,8 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             } else {
                 // Create New User
-                if (empty($password) || strlen($password) < 8) {
-                    throw new InvalidArgumentException("Initial password must be at least 8 characters long.");
+                if (empty($password) || strlen($password) < PASSWORD_MIN_LENGTH) {
+                    throw new InvalidArgumentException("Initial password must be at least " . PASSWORD_MIN_LENGTH . " characters long.");
                 }
                 $pwdHash = hashPassword($password);
 
@@ -103,6 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action_toggle_status'])) {
         $targetId = (int)($_POST['target_user_id'] ?? 0);
         $newStatus = sanitizeInput($_POST['new_status'] ?? 'active');
+        if (!in_array($newStatus, ['active', 'inactive', 'suspended'], true)) {
+            $newStatus = 'inactive';
+        }
 
         if ($targetId > 0 && $targetId !== (int)$user['id']) {
             $pdo->prepare("UPDATE users SET status = :s WHERE id = :id")->execute(['s' => $newStatus, 'id' => $targetId]);
@@ -114,9 +126,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch all users with department names
+// Fetch all users with department names (explicitly exclude password_hash, failed_attempts, locked_until)
 $usersList = $pdo->query("
-    SELECT u.*, d.name AS dept_name, d.code AS dept_code
+    SELECT u.id, u.staff_id, u.title, u.first_name, u.last_name, u.email,
+           u.profile_picture, u.role, u.department_id, u.status, u.last_login_at, u.created_at,
+           d.name AS dept_name, d.code AS dept_code
     FROM users u
     LEFT JOIN departments d ON u.department_id = d.id
     ORDER BY u.role ASC, u.first_name ASC
@@ -162,7 +176,18 @@ include __DIR__ . '/../../includes/navbar.php';
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-                        <?php foreach ($usersList as $u): ?>
+                        <?php foreach ($usersList as $u):
+                            $safeUserPayload = [
+                                'id' => (int)$u['id'],
+                                'staff_id' => $u['staff_id'],
+                                'title' => $u['title'],
+                                'first_name' => $u['first_name'],
+                                'last_name' => $u['last_name'],
+                                'email' => $u['email'],
+                                'role' => $u['role'],
+                                'department_id' => $u['department_id']
+                            ];
+                        ?>
                             <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
                                 <td class="py-4 px-4">
                                     <div class="flex items-center gap-3">
@@ -189,7 +214,10 @@ include __DIR__ . '/../../includes/navbar.php';
                                 </td>
                                 <td class="py-4 px-4 text-right">
                                     <div class="flex flex-wrap items-center justify-end gap-2">
-                                        <button type="button" onclick='openEditUserModal(<?= json_encode($u) ?>)' class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-300 dark:border-slate-700">
+                                        <button type="button"
+                                            data-user="<?= htmlspecialchars(json_encode($safeUserPayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8') ?>"
+                                            onclick="openEditUserModal(this)"
+                                            class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-300 dark:border-slate-700">
                                             Edit
                                         </button>
                                         <?php if ((int)$u['id'] !== (int)$user['id']): ?>
@@ -277,7 +305,7 @@ include __DIR__ . '/../../includes/navbar.php';
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1" id="form-password-label">Password *</label>
-                <input type="password" name="password" id="form-password" placeholder="Min 8 characters" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
+                <input type="password" name="password" id="form-password" minlength="<?= PASSWORD_MIN_LENGTH ?>" placeholder="Min <?= PASSWORD_MIN_LENGTH ?> characters" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
                 <span class="text-[10px] text-slate-400" id="form-password-help">Leave blank when editing to keep current password.</span>
             </div>
 
@@ -300,13 +328,15 @@ function openCreateUserModal() {
     document.getElementById('form-email').value = '';
     document.getElementById('form-role').value = 'lecturer';
     document.getElementById('form-dept').value = '';
+    document.getElementById('form-password').value = '';
     document.getElementById('form-password').required = true;
     document.getElementById('form-password-label').textContent = 'Initial Password *';
     openModal('user-modal');
 }
 
-function openEditUserModal(u) {
-    document.getElementById('user-modal-title').textContent = 'Edit User: ' + u.first_name + ' ' + u.last_name;
+function openEditUserModal(btn) {
+    const u = JSON.parse(btn.getAttribute('data-user'));
+    document.getElementById('user-modal-title').textContent = 'Edit User: ' + (u.first_name || '') + ' ' + (u.last_name || '');
     document.getElementById('form-user-id').value = u.id;
     document.getElementById('form-title').value = u.title || '';
     document.getElementById('form-first-name').value = u.first_name || '';
@@ -315,6 +345,7 @@ function openEditUserModal(u) {
     document.getElementById('form-email').value = u.email || '';
     document.getElementById('form-role').value = u.role || 'lecturer';
     document.getElementById('form-dept').value = u.department_id || '';
+    document.getElementById('form-password').value = '';
     document.getElementById('form-password').required = false;
     document.getElementById('form-password-label').textContent = 'Reset Password (Optional)';
     openModal('user-modal');

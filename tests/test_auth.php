@@ -11,7 +11,7 @@ function testAuth(): bool {
 
     // Test 1: Valid Login
     try {
-        $user = AuthService::authenticate('lecturer.csc@lasu.edu.ng', 'Password123!');
+        $user = AuthService::authenticate('lecturer.csc@lasu.edu.ng', 'Pass5656');
         if ($user && $user['email'] === 'lecturer.csc@lasu.edu.ng' && $user['role'] === ROLE_LECTURER) {
             echo "  [PASS] Valid authentication succeeds.\n";
         } else {

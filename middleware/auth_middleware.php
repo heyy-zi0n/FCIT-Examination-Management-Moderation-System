@@ -18,7 +18,7 @@ function requireAuth(): array {
 }
 
 /**
- * Require specific role(s)
+ * Require specific role(s) or active department-scoped delegation
  */
 function requireRole(string|array $allowedRoles): array {
     $user = requireAuth();
@@ -34,17 +34,28 @@ function requireRole(string|array $allowedRoles): array {
         return $user;
     }
 
-    // Check active delegations for HOD or Exam Officer
+    // Check active, department-scoped delegations for HOD or Exam Officer
     $pdo = getDb();
     $stmtDel = $pdo->prepare("
-        SELECT role_delegated, department_id FROM delegations
-        WHERE delegate_id = :user_id AND is_active = 1 AND CURRENT_DATE BETWEEN start_date AND end_date
+        SELECT d.role_delegated, d.department_id, dept.name AS department_name, dept.code AS department_code
+        FROM delegations d
+        JOIN departments dept ON d.department_id = dept.id
+        WHERE d.delegate_id = :user_id
+          AND d.department_id IS NOT NULL
+          AND d.is_active = 1
+          AND CURRENT_DATE BETWEEN d.start_date AND d.end_date
+        ORDER BY d.id DESC
     ");
     $stmtDel->execute(['user_id' => (int)$user['id']]);
     $delegations = $stmtDel->fetchAll();
 
     foreach ($delegations as $del) {
         if (in_array($del['role_delegated'], $roles, true)) {
+            // Bind the delegated department scope onto the returned user context
+            $user['department_id'] = (int)$del['department_id'];
+            $user['department_name'] = $del['department_name'];
+            $user['department_code'] = $del['department_code'];
+            $user['delegated_role'] = $del['role_delegated'];
             return $user;
         }
     }

@@ -8,12 +8,19 @@ class EncryptionService {
     private static ?string $key = null;
 
     /**
-     * Get or derive 256-bit encryption key
+     * Get or derive 256-bit encryption key (Fail-Closed)
      */
     private static function getKey(): string {
         if (self::$key === null) {
-            $config = require __DIR__ . '/../config/app.php';
-            $masterKey = $config['encryption_key'] ?? 'lasu_fcit_secret_key_2026_exam_security_master_hash_v1';
+            global $appConfig;
+            $masterKey = trim((string)($appConfig['encryption_key'] ?? $_ENV['ENCRYPTION_KEY'] ?? getenv('ENCRYPTION_KEY') ?: ''));
+
+            if (strlen($masterKey) < 32) {
+                throw new RuntimeException(
+                    'CRITICAL SECURITY ERROR: Master ENCRYPTION_KEY is missing or shorter than 32 bytes. Cryptographic operations aborted.'
+                );
+            }
+
             self::$key = hash('sha256', $masterKey, true); // 32 bytes binary
         }
         return self::$key;
@@ -61,8 +68,12 @@ class EncryptionService {
     public static function decryptFileContent(string $ciphertext, string $ivBase64, string $tagBase64, string $expectedSha256): string {
         $cipher = ENCRYPTION_CIPHER;
         $key = self::getKey();
-        $iv = base64_decode($ivBase64);
-        $tag = base64_decode($tagBase64);
+        $iv = base64_decode($ivBase64, true);
+        $tag = base64_decode($tagBase64, true);
+
+        if ($iv === false || $tag === false) {
+            throw new RuntimeException('Invalid encryption IV or authentication tag encoding.');
+        }
 
         $plaintext = openssl_decrypt(
             $ciphertext,

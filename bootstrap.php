@@ -22,8 +22,13 @@ require_once __DIR__ . '/config/constants.php';
 $appConfig = require_once __DIR__ . '/config/app.php';
 require_once __DIR__ . '/config/database.php';
 
-// 2. Set Default Timezone
+// 2. Set Default Timezone & Baseline Security Headers
 date_default_timezone_set(APP_TIMEZONE);
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+}
 
 // 3. Configure Secure Sessions
 if (session_status() === PHP_SESSION_NONE) {

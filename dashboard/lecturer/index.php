@@ -9,14 +9,31 @@ $user = requireRole(ROLE_LECTURER);
 $pdo = getDb();
 $userId = (int)$user['id'];
 
-// Statistics
-$totalAssignedCourses = (int)$pdo->query("SELECT COUNT(*) FROM lecturer_course_assignments WHERE lecturer_id = {$userId}")->fetchColumn();
-$draftCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status = 'Draft'")->fetchColumn();
-$awaitingModerationCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status = 'Submitted'")->fetchColumn();
-$returnedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status = 'Returned'")->fetchColumn();
-$approvedLockdownCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status IN ('Moderated', 'Approved')")->fetchColumn();
-$lockedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status IN ('Locked', 'Queued')")->fetchColumn();
-$printedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers WHERE lecturer_id = {$userId} AND status = 'Printed'")->fetchColumn();
+// Statistics (Consolidated & Parameterized)
+$stmtAssignedCount = $pdo->prepare("SELECT COUNT(*) FROM lecturer_course_assignments WHERE lecturer_id = :uid");
+$stmtAssignedCount->execute(['uid' => $userId]);
+$totalAssignedCourses = (int)$stmtAssignedCount->fetchColumn();
+
+$stmtStats = $pdo->prepare("
+    SELECT
+        SUM(CASE WHEN status = 'Draft' THEN 1 ELSE 0 END) AS draft_count,
+        SUM(CASE WHEN status = 'Submitted' THEN 1 ELSE 0 END) AS awaiting_mod_count,
+        SUM(CASE WHEN status = 'Returned' THEN 1 ELSE 0 END) AS returned_count,
+        SUM(CASE WHEN status IN ('Moderated', 'Approved') THEN 1 ELSE 0 END) AS approved_lockdown_count,
+        SUM(CASE WHEN status IN ('Locked', 'Queued') THEN 1 ELSE 0 END) AS locked_count,
+        SUM(CASE WHEN status = 'Printed' THEN 1 ELSE 0 END) AS printed_count
+    FROM examination_papers
+    WHERE lecturer_id = :uid
+");
+$stmtStats->execute(['uid' => $userId]);
+$stats = $stmtStats->fetch() ?: [];
+
+$draftCount = (int)($stats['draft_count'] ?? 0);
+$awaitingModerationCount = (int)($stats['awaiting_mod_count'] ?? 0);
+$returnedCount = (int)($stats['returned_count'] ?? 0);
+$approvedLockdownCount = (int)($stats['approved_lockdown_count'] ?? 0);
+$lockedCount = (int)($stats['locked_count'] ?? 0);
+$printedCount = (int)($stats['printed_count'] ?? 0);
 
 // Fetch Action Required Papers
 $stmtAction = $pdo->prepare("

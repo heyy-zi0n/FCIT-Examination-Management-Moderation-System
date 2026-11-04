@@ -23,6 +23,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_create_delegat
             throw new InvalidArgumentException("All fields are required to create a formal delegation.");
         }
 
+        if ($delegateId === (int)$user['id']) {
+            throw new InvalidArgumentException("Separation of Duties Violation: You cannot delegate authority to yourself.");
+        }
+
+        if (strtotime($endDate) < strtotime($startDate)) {
+            throw new InvalidArgumentException("Delegation end date cannot be earlier than the start date.");
+        }
+
+        // Verify target delegate belongs to the same department and is active
+        $stmtChk = $pdo->prepare("
+            SELECT id FROM users
+            WHERE id = :did AND department_id = :dept_id AND status = 'active'
+            LIMIT 1
+        ");
+        $stmtChk->execute(['did' => $delegateId, 'dept_id' => $deptId]);
+        if (!$stmtChk->fetch()) {
+            throw new InvalidArgumentException("Selected staff member does not belong to your department or is inactive.");
+        }
+
         $stmtIns = $pdo->prepare("
             INSERT INTO delegations (delegator_id, delegate_id, role_delegated, department_id, start_date, end_date, reason, is_active, created_at)
             VALUES (:uid, :did, 'hod', :dept_id, :s_dt, :e_dt, :reason, 1, NOW())
@@ -38,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_create_delegat
 
         logAudit((int)$user['id'], 'create_hod_delegation', 'delegation', (int)$pdo->lastInsertId(), [
             'delegate_id' => $delegateId,
+            'department_id' => $deptId,
             'start_date' => $startDate,
             'end_date' => $endDate
         ]);
@@ -52,7 +72,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_create_delegat
 }
 
 // Fetch department staff eligible for delegation
-$staff = $pdo->query("SELECT id, title, first_name, last_name, email FROM users WHERE department_id = {$deptId} AND id != {$user['id']} AND status = 'active' ORDER BY first_name ASC")->fetchAll();
+$stmtStaff = $pdo->prepare("
+    SELECT id, title, first_name, last_name, email
+    FROM users
+    WHERE department_id = :dept_id AND id != :uid AND status = 'active'
+    ORDER BY first_name ASC
+");
+$stmtStaff->execute(['dept_id' => $deptId, 'uid' => (int)$user['id']]);
+$staff = $stmtStaff->fetchAll();
 
 // Fetch active & past delegations
 $stmtDel = $pdo->prepare("

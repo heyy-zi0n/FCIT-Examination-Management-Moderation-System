@@ -12,7 +12,20 @@
  */
 function url(string $path = ''): string {
     global $appConfig;
-    $baseUrl = rtrim($appConfig['base_url'] ?? '/FOCITECMS', '/');
+    if (!empty($appConfig['base_url'])) {
+        $baseUrl = rtrim($appConfig['base_url'], '/');
+    } elseif (!empty($_ENV['APP_URL'])) {
+        $baseUrl = rtrim($_ENV['APP_URL'], '/');
+    } else {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+        $scriptDir = (strpos($scriptName, '/') === 0)
+            ? rtrim(str_replace('\\', '/', dirname($scriptName)), '/')
+            : '';
+        $basePath = preg_replace('#/(dashboard|config|helpers|includes|middleware|services|tests)(/.*)?$#', '', $scriptDir);
+        $baseUrl = $host !== '' ? "{$scheme}://{$host}{$basePath}" : $basePath;
+    }
     
     if ($path === '') {
         return $baseUrl . '/';

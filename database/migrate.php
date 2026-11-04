@@ -4,6 +4,11 @@
  * Database Migration and Seeder Runner
  */
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('403 Forbidden: CLI execution only.');
+}
+
 require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../config/database.php';
 
@@ -38,8 +43,8 @@ try {
     // Step 3: Seed deterministic data
     echo "[3/4] Seeding core and institutional data...\n";
     
-    // Default password hash for 'Password123!'
-    $defaultPasswordHash = password_hash('Password123!', PASSWORD_BCRYPT);
+    // Default password hash for 'Pass5656'
+    $defaultPasswordHash = password_hash('Pass5656', PASSWORD_BCRYPT, ['cost' => 12]);
 
     // Departments
     $departments = [
@@ -337,7 +342,7 @@ try {
     echo "=======================================================\n";
     echo "MIGRATION & SEEDING COMPLETED SUCCESSFULLY!\n";
     echo "=======================================================\n";
-    echo "Test Accounts (Password for all accounts: Password123!):\n";
+    echo "Test Accounts (Password for all accounts: Pass5656):\n";
     echo " - Admin:         admin@lasu.edu.ng\n";
     echo " - Exam Officer:  exam.officer@lasu.edu.ng\n";
     echo " - HOD (CSC):     hod.csc@lasu.edu.ng\n";

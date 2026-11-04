@@ -80,14 +80,14 @@ class TestHttpClient {
 
 function testHttpEndpoints() {
     echo "--- Testing HTTP Endpoints via Apache Web Server ---\n";
-    $baseUrl = 'http://localhost/FOCITECMS';
+    $baseUrl = 'http://localhost/ems';
     $allPassed = true;
 
     // Test 1: Public Landing & Login Pages
     $client = new TestHttpClient($baseUrl);
 
     $resLanding = $client->request('/index.php');
-    if ($resLanding['code'] === 200 && strpos($resLanding['body'], 'Faculty of Computing & Information Technology') !== false) {
+    if ($resLanding['code'] === 200 && strpos($resLanding['body'], 'Faculty of Computing') !== false) {
         echo "  [PASS] Landing page (index.php) returned HTTP 200 with LASU FCIT branding.\n";
     } else {
         echo "  [FAIL] Landing page failed (Code: {$resLanding['code']}).\n";
@@ -126,7 +126,7 @@ function testHttpEndpoints() {
     $roles = [
         'lecturer' => [
             'email' => 'lecturer.csc@lasu.edu.ng',
-            'password' => 'Password123!',
+            'password' => 'Pass5656',
             'pages' => [
                 '/dashboard/lecturer/index.php',
                 '/dashboard/lecturer/create_paper.php',
@@ -137,7 +137,7 @@ function testHttpEndpoints() {
         ],
         'moderator' => [
             'email' => 'moderator.csc@lasu.edu.ng',
-            'password' => 'Password123!',
+            'password' => 'Pass5656',
             'pages' => [
                 '/dashboard/moderator/index.php',
                 '/dashboard/moderator/history.php',
@@ -147,7 +147,7 @@ function testHttpEndpoints() {
         ],
         'hod' => [
             'email' => 'hod.csc@lasu.edu.ng',
-            'password' => 'Password123!',
+            'password' => 'Pass5656',
             'pages' => [
                 '/dashboard/hod/index.php',
                 '/dashboard/hod/pending_approvals.php',
@@ -159,7 +159,7 @@ function testHttpEndpoints() {
         ],
         'exam_officer' => [
             'email' => 'exam.officer@lasu.edu.ng',
-            'password' => 'Password123!',
+            'password' => 'Pass5656',
             'pages' => [
                 '/dashboard/exam_officer/index.php',
                 '/dashboard/exam_officer/pending_approvals.php',
@@ -170,7 +170,7 @@ function testHttpEndpoints() {
         ],
         'admin' => [
             'email' => 'admin@lasu.edu.ng',
-            'password' => 'Password123!',
+            'password' => 'Pass5656',
             'pages' => [
                 '/dashboard/admin/index.php',
                 '/dashboard/admin/users.php',

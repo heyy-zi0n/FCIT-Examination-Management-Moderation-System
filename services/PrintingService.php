@@ -112,12 +112,26 @@ class PrintingService {
                 throw new RuntimeException("Cannot print: No authoritative examination schedule assigned to this course.");
             }
 
-            // Enforce Calendar Day Printing Rule
-            $eligibility = self::checkPrintEligibility($paper['exam_date']);
-            if (!$eligibility['eligible'] && empty($reprintReason)) {
-                $isEmergency = self::hasApprovedEmergencyPrint($paperId, (int)$paper['current_version_id']);
-                if (!$isEmergency) {
-                    throw new RuntimeException($eligibility['message']);
+            // Determine whether this paper has already been printed
+            $isReprint = ($paper['status'] === STATUS_PRINTED);
+            $reprintReason = ($reprintReason !== null) ? trim($reprintReason) : '';
+
+            if ($isReprint) {
+                // Reprinting an already-printed paper requires an explicit justification
+                if ($reprintReason === '') {
+                    throw new RuntimeException("A valid reprint reason is mandatory to reprint an already printed examination paper.");
+                }
+            } else {
+                // Initial print: discard any supplied reprint_reason so it cannot bypass the 24-hour date gate
+                $reprintReason = null;
+
+                // Strictly enforce the 24-hour Calendar Day Printing Rule (or verified HOD Emergency Print Override)
+                $eligibility = self::checkPrintEligibility($paper['exam_date']);
+                if (!$eligibility['eligible']) {
+                    $isEmergency = self::hasApprovedEmergencyPrint($paperId, (int)$paper['current_version_id']);
+                    if (!$isEmergency) {
+                        throw new RuntimeException($eligibility['message']);
+                    }
                 }
             }
 
@@ -142,8 +156,8 @@ class PrintingService {
             // Generate unique print verification code
             $verificationCode = sprintf('LASU-PRN-%s-%s', strtoupper(bin2hex(random_bytes(6))), date('YmdHis'));
 
-            // Check if reprint
-            $isReprint = ($paper['status'] === STATUS_PRINTED) ? 1 : 0;
+            // Convert boolean to integer flag for database storage
+            $isReprintFlag = $isReprint ? 1 : 0;
 
             // Record in print_logs
             $stmtLog = $pdo->prepare("
@@ -163,7 +177,7 @@ class PrintingService {
                 'code' => $verificationCode,
                 'ip' => getClientIp(),
                 'ua' => getUserAgent(),
-                'is_reprint' => $isReprint,
+                'is_reprint' => $isReprintFlag,
                 'reason' => $reprintReason
             ]);
             $logId = (int)$pdo->lastInsertId();
@@ -178,7 +192,7 @@ class PrintingService {
                 'course_code' => $paper['course_code'],
                 'verification_code' => $verificationCode,
                 'copies' => $copies,
-                'is_reprint' => $isReprint
+                'is_reprint' => $isReprintFlag
             ]);
 
             // Notifications

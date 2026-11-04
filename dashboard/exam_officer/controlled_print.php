@@ -44,6 +44,7 @@ if ($isEmergencyApproved) {
 $isReprint = ($paper['status'] === STATUS_PRINTED);
 
 $printExecutionResult = null;
+$decryptedPdfBase64 = null;
 
 // Handle Print Confirmation Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_confirm_print'])) {
@@ -61,9 +62,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_confirm_print'
             throw new InvalidArgumentException("A mandatory justification reason is required for reprint authorization.");
         }
 
-        // Execute Controlled Print via Service
+        // Execute Controlled Print via Service (decrypts .enc payload into memory)
         $printExecutionResult = PrintingService::executeControlledPrint($paperId, $userId, $copies, $reprintReason);
-        
+
+        // Convert in-memory decrypted DOCX content to an ephemeral PDF and immediately unlink temp files
+        $ephemeralToken = bin2hex(random_bytes(12));
+        $tmpDocxPath = PREVIEW_STORAGE_PATH . "/ephemeral_print_{$ephemeralToken}.docx";
+        $tmpPdfPath  = PREVIEW_STORAGE_PATH . "/ephemeral_print_{$ephemeralToken}.pdf";
+
+        try {
+            if (!is_dir(PREVIEW_STORAGE_PATH)) {
+                mkdir(PREVIEW_STORAGE_PATH, 0755, true);
+            }
+            file_put_contents($tmpDocxPath, $printExecutionResult['decrypted_content'], LOCK_EX);
+
+            if (DocumentService::generatePdfPreview($tmpDocxPath, $tmpPdfPath) && is_file($tmpPdfPath)) {
+                $pdfBytes = file_get_contents($tmpPdfPath);
+                if ($pdfBytes !== false) {
+                    $decryptedPdfBase64 = base64_encode($pdfBytes);
+                }
+            }
+        } finally {
+            if (is_file($tmpDocxPath)) {
+                @unlink($tmpDocxPath);
+            }
+            if (is_file($tmpPdfPath)) {
+                @unlink($tmpPdfPath);
+            }
+            // Wipe raw plaintext from result array after conversion
+            unset($printExecutionResult['decrypted_content']);
+        }
+
+        if ($decryptedPdfBase64 === null) {
+            throw new RuntimeException("Controlled print logged, but PDF rendering failed. Ensure LibreOffice is installed and configured.");
+        }
+
         logAudit($userId, 'controlled_print_render', 'print_log', $paperId, [
             'paper_code' => $paper['paper_code'],
             'copies' => $copies,
@@ -71,6 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_confirm_print'
         ]);
 
     } catch (Exception $e) {
+        $printExecutionResult = null;
         setFlash('error', $e->getMessage());
     }
 }
@@ -97,18 +131,18 @@ include __DIR__ . '/../../includes/navbar.php';
             <p class="text-xs text-slate-500 mt-1">Department: <?= htmlspecialchars($paper['dept_name']) ?> • Examination Date: <?= formatDate($paper['exam_date'], 'l, d F Y') ?></p>
         </div>
 
-        <?php if ($printExecutionResult): ?>
-            <!-- PRINT SUCCESSFUL & SECURE PRINT RENDERER -->
+        <?php if ($printExecutionResult && $decryptedPdfBase64): ?>
+            <!-- PRINT SUCCESSFUL & SECURE EPHEMERAL PRINT RENDERER -->
             <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-6 mb-8 text-center no-print">
                 <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </div>
                 <h2 class="text-lg font-bold text-emerald-900 dark:text-emerald-300">Controlled Printing Authorization Generated</h2>
                 <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
-                    Print Verification Serial: <span class="font-mono font-bold bg-white dark:bg-slate-900 px-3 py-1 rounded-lg border border-emerald-300"><?= $printExecutionResult['verification_code'] ?></span>
+                    Print Verification Serial: <span class="font-mono font-bold bg-white dark:bg-slate-900 px-3 py-1 rounded-lg border border-emerald-300"><?= htmlspecialchars($printExecutionResult['verification_code']) ?></span>
                 </p>
                 <div class="mt-4 flex items-center justify-center gap-3">
-                    <button type="button" onclick="window.print()" class="px-6 py-2.5 bg-lasu-navy text-lasu-gold hover:bg-lasu-navy-light font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
+                    <button type="button" onclick="triggerControlledPrint()" class="px-6 py-2.5 bg-lasu-navy text-lasu-gold hover:bg-lasu-navy-light font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                         <span>Send to Physical Printer</span>
                     </button>
@@ -119,46 +153,70 @@ include __DIR__ . '/../../includes/navbar.php';
             </div>
 
             <!-- Official Controlled Examination Document Output -->
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 print-only">
-                
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
                 <!-- Security Header Banner -->
                 <div class="border-b-2 border-slate-900 pb-4 mb-6 text-center">
                     <div class="text-xs font-bold uppercase tracking-widest text-slate-600">Lagos State University, Ojo</div>
                     <div class="text-sm font-extrabold uppercase text-slate-900 dark:text-white">Faculty of Computing & Information Technology</div>
                     <div class="text-xs font-semibold text-slate-700 dark:text-slate-300"><?= htmlspecialchars($paper['dept_name']) ?></div>
                     <div class="mt-2 text-base font-black uppercase text-slate-900 dark:text-white"><?= htmlspecialchars($paper['course_code']) ?> — <?= htmlspecialchars($paper['course_title']) ?></div>
-                    
-                    <!-- Meta Grid -->
+
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs font-mono mt-3 pt-3 border-t border-slate-200 text-slate-700 dark:text-slate-300">
-                        <div>Time Allowed: <?= $paper['duration_minutes'] ?> Mins</div>
+                        <div>Time Allowed: <?= (int)$paper['duration_minutes'] ?> Mins</div>
                         <div>Exam Date: <?= formatDate($paper['exam_date'], 'd/m/Y') ?></div>
-                        <div>Units: <?= $paper['credit_units'] ?></div>
+                        <div>Units: <?= (int)$paper['credit_units'] ?></div>
                     </div>
                 </div>
 
-                <!-- Live Document Viewer Frame -->
+                <!-- Ephemeral In-Memory Decrypted Document Stream -->
                 <div class="h-[750px] w-full border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden mb-6">
-                    <iframe src="<?= url('preview.php?paper_id=' . $paperId . '&version_id=' . $paper['current_version_id'] . '&type=question') ?>" class="w-full h-full border-0" title="Printable Question Document"></iframe>
+                    <iframe id="controlled-print-frame" class="w-full h-full border-0" title="Authorized Printable Question Document"></iframe>
                 </div>
 
                 <!-- Security Verification Footer Stamp -->
                 <div class="border-t-2 border-slate-900 pt-4 flex items-center justify-between text-[10px] font-mono text-slate-600 dark:text-slate-400">
                     <div>
-                        <span>SERIAL: <?= $printExecutionResult['verification_code'] ?></span> | 
+                        <span>SERIAL: <?= htmlspecialchars($printExecutionResult['verification_code']) ?></span> |
                         <span>OFFICER: <?= formatUserName($user) ?></span>
                     </div>
                     <div>
                         <span>PRINTED: <?= date('d-M-Y H:i:s T') ?></span> |
-                        <span>COPIES: <?= $printExecutionResult['copies'] ?></span>
+                        <span>COPIES: <?= (int)$printExecutionResult['copies'] ?></span>
                     </div>
                 </div>
             </div>
+
+            <script>
+            (function () {
+                const base64Pdf = <?= json_encode($decryptedPdfBase64) ?>;
+                const binary = atob(base64Pdf);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: 'application/pdf' });
+                const blobUrl = URL.createObjectURL(blob);
+                const frame = document.getElementById('controlled-print-frame');
+                if (frame) {
+                    frame.src = blobUrl;
+                }
+
+                window.triggerControlledPrint = function () {
+                    if (frame && frame.contentWindow) {
+                        frame.contentWindow.focus();
+                        frame.contentWindow.print();
+                    } else {
+                        window.print();
+                    }
+                };
+            })();
+            </script>
 
         <?php else: ?>
 
             <!-- Print Authorization Form & Gate Check -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 <!-- Print Parameters Card -->
                 <div class="lg:col-span-1 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
                     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
@@ -172,7 +230,7 @@ include __DIR__ . '/../../includes/navbar.php';
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Copies to Print *</label>
-                            <input type="number" name="copies_to_print" required min="1" max="1000" value="<?= $paper['expected_students'] ?: 100 ?>" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold font-mono">
+                            <input type="number" name="copies_to_print" required min="1" max="1000" value="<?= (int)($paper['expected_students'] ?: 100) ?>" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold font-mono">
                             <span class="text-[10px] text-slate-400">Default based on scheduled expected student cohort</span>
                         </div>
 
@@ -190,9 +248,9 @@ include __DIR__ . '/../../includes/navbar.php';
                         </div>
 
                         <?php if ($eligibility['eligible'] || $isReprint): ?>
-                            <button type="submit" onclick="return confirm('Authorize physical examination printing? This creates an immutable audit record.')" class="w-full py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2">
+                            <button type="submit" onclick="return confirm('Authorize physical examination printing? This decrypts the sealed payload and creates an immutable audit record.')" class="w-full py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                                <span>Execute Controlled Printing</span>
+                                <span>Authorize &amp; Decrypt for Printing</span>
                             </button>
                         <?php else: ?>
                             <div class="p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-xs">
@@ -202,15 +260,15 @@ include __DIR__ . '/../../includes/navbar.php';
                     </form>
                 </div>
 
-                <!-- Preview & Integrity Card -->
-                <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
-                        Cryptographic Lockdown & Integrity Verification
-                    </h2>
+                <!-- Cryptographic Lockdown Status Card (No Pre-Authorization Document Preview) -->
+                <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
+                            Cryptographic Lockdown &amp; Integrity Verification
+                        </h2>
 
-                    <div class="space-y-4 text-xs">
-                        <div class="p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/50">
-                            <div class="flex items-center gap-2 text-purple-900 dark:text-purple-300 font-bold mb-2">
+                        <div class="p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/50 mb-6">
+                            <div class="flex items-center gap-2 text-purple-900 dark:text-purple-300 font-bold mb-2 text-xs">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                                 <span>AES-256-GCM Blind Lockdown Payload Active</span>
                             </div>
@@ -221,10 +279,18 @@ include __DIR__ . '/../../includes/navbar.php';
                                 Sealed on: <?= formatDate($paper['locked_at']) ?>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="border border-slate-200 dark:border-slate-800 rounded-xl h-[480px] overflow-hidden">
-                            <iframe src="<?= url('preview.php?paper_id=' . $paperId . '&version_id=' . $paper['current_version_id'] . '&type=question') ?>" class="w-full h-full border-0" title="Document Preview"></iframe>
+                    <div class="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center bg-slate-50/50 dark:bg-slate-950/40 my-auto">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-900 text-lasu-gold flex items-center justify-center mx-auto mb-4 shadow-md">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         </div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-1">
+                            Examination Content Sealed Under Blind Lockdown
+                        </h3>
+                        <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                            Plaintext files and previews have been purged from storage. The encrypted `.enc` payload can only be decrypted in memory and streamed to the print interface after submitting the authorization form on the left.
+                        </p>
                     </div>
                 </div>
 

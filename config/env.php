@@ -35,3 +35,19 @@ function loadEnv($path) {
         }
     }
 }
+
+/**
+ * Retrieve an environment variable with an optional default value.
+ */
+if (!function_exists('env')) {
+    function env(string $key, mixed $default = null): mixed {
+        if (array_key_exists($key, $_ENV)) {
+            return $_ENV[$key];
+        }
+        if (array_key_exists($key, $_SERVER)) {
+            return $_SERVER[$key];
+        }
+        $val = getenv($key);
+        return $val !== false ? $val : $default;
+    }
+}

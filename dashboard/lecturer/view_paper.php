@@ -286,7 +286,7 @@ include __DIR__ . '/../../includes/navbar.php';
 <script>
 function openPreviewModal(paperId, versionId) {
     const frame = document.getElementById('preview-frame');
-    frame.src = `/FOCITECMS/preview.php?paper_id=${paperId}&version_id=${versionId}&type=question`;
+    frame.src = `<?= url('preview.php') ?>?paper_id=${paperId}&version_id=${versionId}&type=question`;
     openModal('preview-modal');
 }
 </script>

@@ -2,6 +2,12 @@
 /**
  * Migration Script: Update Departments Descriptions to CMS Context
  */
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('403 Forbidden: CLI execution only.');
+}
+
 require_once __DIR__ . '/../bootstrap.php';
 $pdo = getDb();
 

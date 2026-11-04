@@ -28,8 +28,11 @@ class ProfileService {
             throw new Exception("Uploaded file is not a valid image.");
         }
 
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $detectedMime = $finfo->file($file['tmp_name']);
         $mime = $info['mime'];
-        if (!in_array($mime, ALLOWED_PROFILE_PIC_MIMES, true)) {
+
+        if ($detectedMime !== $mime || !in_array($mime, ALLOWED_PROFILE_PIC_MIMES, true)) {
             throw new Exception("Invalid image type. Only JPEG, PNG, and WebP are allowed.");
         }
 
@@ -43,7 +46,7 @@ class ProfileService {
         $saved = false;
 
         if (extension_loaded('gd')) {
-            // Process Image with GD
+            // Process Image with GD (strips embedded metadata/polyglot payloads)
             $srcImage = null;
             switch ($mime) {
                 case 'image/jpeg':
@@ -57,51 +60,51 @@ class ProfileService {
                     break;
             }
 
-            if ($srcImage) {
-                $width = imagesx($srcImage);
-                $height = imagesy($srcImage);
-                
-                // Crop to square
-                $minSize = min($width, $height);
-                $cropX = ($width - $minSize) / 2;
-                $cropY = ($height - $minSize) / 2;
-
-                $targetSize = min($minSize, 500); // Max 500x500
-
-                $dstImage = imagecreatetruecolor($targetSize, $targetSize);
-                
-                // Handle transparency for PNG/WebP
-                if ($mime === 'image/png' || $mime === 'image/webp') {
-                    imagealphablending($dstImage, false);
-                    imagesavealpha($dstImage, true);
-                    $transparent = imagecolorallocatealpha($dstImage, 255, 255, 255, 127);
-                    imagefilledrectangle($dstImage, 0, 0, $targetSize, $targetSize, $transparent);
-                }
-
-                imagecopyresampled(
-                    $dstImage, $srcImage,
-                    0, 0,
-                    $cropX, $cropY,
-                    $targetSize, $targetSize,
-                    $minSize, $minSize
-                );
-
-                if ($ext === 'png') {
-                    $saved = imagepng($dstImage, $destPath);
-                } elseif ($ext === 'webp') {
-                    $saved = imagewebp($dstImage, $destPath, 85);
-                } else {
-                    $saved = imagejpeg($dstImage, $destPath, 85);
-                }
-
-                imagedestroy($srcImage);
-                imagedestroy($dstImage);
+            if (!$srcImage) {
+                throw new Exception("Uploaded image could not be decoded safely.");
             }
-        }
 
-        // Fallback: If GD is missing or processing failed, just copy the raw file
-        if (!$saved) {
-            $saved = move_uploaded_file($file['tmp_name'], $destPath) || copy($file['tmp_name'], $destPath);
+            $width = imagesx($srcImage);
+            $height = imagesy($srcImage);
+            
+            // Crop to square
+            $minSize = min($width, $height);
+            $cropX = (int)(($width - $minSize) / 2);
+            $cropY = (int)(($height - $minSize) / 2);
+
+            $targetSize = min($minSize, 500); // Max 500x500
+
+            $dstImage = imagecreatetruecolor($targetSize, $targetSize);
+            
+            // Handle transparency for PNG/WebP
+            if ($mime === 'image/png' || $mime === 'image/webp') {
+                imagealphablending($dstImage, false);
+                imagesavealpha($dstImage, true);
+                $transparent = imagecolorallocatealpha($dstImage, 255, 255, 255, 127);
+                imagefilledrectangle($dstImage, 0, 0, $targetSize, $targetSize, $transparent);
+            }
+
+            imagecopyresampled(
+                $dstImage, $srcImage,
+                0, 0,
+                $cropX, $cropY,
+                $targetSize, $targetSize,
+                $minSize, $minSize
+            );
+
+            if ($ext === 'png') {
+                $saved = imagepng($dstImage, $destPath);
+            } elseif ($ext === 'webp') {
+                $saved = imagewebp($dstImage, $destPath, 85);
+            } else {
+                $saved = imagejpeg($dstImage, $destPath, 85);
+            }
+
+            imagedestroy($srcImage);
+            imagedestroy($dstImage);
+        } else {
+            // Fallback only if GD extension is not installed on host
+            $saved = move_uploaded_file($file['tmp_name'], $destPath);
         }
 
         if (!$saved) {
@@ -124,7 +127,7 @@ class ProfileService {
 
         // Remove old pic safely
         if (!empty($oldPic)) {
-            $oldPath = PROFILE_PICTURES_STORAGE_PATH . '/' . $oldPic;
+            $oldPath = PROFILE_PICTURES_STORAGE_PATH . '/' . basename($oldPic);
             if (file_exists($oldPath) && is_file($oldPath)) {
                 @unlink($oldPath);
             }
@@ -143,7 +146,7 @@ class ProfileService {
         $oldPic = $stmt->fetchColumn();
 
         if (!empty($oldPic)) {
-            $oldPath = PROFILE_PICTURES_STORAGE_PATH . '/' . $oldPic;
+            $oldPath = PROFILE_PICTURES_STORAGE_PATH . '/' . basename($oldPic);
             if (file_exists($oldPath) && is_file($oldPath)) {
                 @unlink($oldPath);
             }

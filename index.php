@@ -43,8 +43,9 @@ $totalPrinted      = $statusCounts[STATUS_PRINTED];
 $departments = $pdo->query("SELECT code, name FROM departments ORDER BY code ASC")->fetchAll();
 ?>
 
+<main class="flex-none w-full overflow-x-hidden">
 <!-- HERO SECTION -->
-<div id="hero" class="flex-none min-h-[calc(100vh-4rem)] bg-gradient-to-b from-slate-900 via-lasu-navy to-slate-950 text-white relative overflow-hidden flex flex-col justify-center py-12 md:py-20 px-4 sm:px-6 lg:px-8">
+<div id="hero" class="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-slate-900 via-lasu-navy to-slate-950 text-white relative overflow-hidden flex flex-col justify-center py-12 md:py-20 px-4 sm:px-6 lg:px-8">
     <div class="hero-blob hero-blob-1 parallax-shape" data-parallax-speed="0.08"></div>
     <div class="hero-blob hero-blob-2 parallax-shape" data-parallax-speed="-0.05"></div>
     <div class="hero-blob hero-blob-3 parallax-shape" data-parallax-speed="0.12"></div>
@@ -102,7 +103,7 @@ $departments = $pdo->query("SELECT code, name FROM departments ORDER BY code ASC
     </div>
 </div>
 
-<section id="how-it-works" class="py-16 md:py-24 bg-slate-50 dark:bg-slate-900 overflow-hidden">
+<section id="how-it-works" class="py-16 md:py-24 bg-slate-50 dark:bg-slate-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-3xl mx-auto mb-12 md:mb-20">
             <p class="text-sm font-extrabold text-blue-600 dark:text-lasu-gold uppercase tracking-widest mb-3 reveal reveal-up">Examination Lifecycle</p>
@@ -128,8 +129,8 @@ $departments = $pdo->query("SELECT code, name FROM departments ORDER BY code ASC
                 $isLeft = $idx % 2 === 0;
                 $delay = round($idx * 0.08, 2) . 's';
             ?>
-                <div class="relative flex flex-col md:flex-row items-center mb-10 last:mb-0">
-                    <div class="md:w-1/2 <?= $isLeft ? 'md:pr-14 md:text-right' : 'md:pl-14 md:order-last' ?> mb-4 md:mb-0 w-full pl-10 md:pl-0">
+                <div class="relative flex flex-col md:flex-row items-start md:items-center mb-10 last:mb-0">
+                    <div class="md:w-1/2 <?= $isLeft ? 'md:pr-14 md:text-right' : 'md:pl-14 md:order-last' ?> mb-0 w-full pl-12 md:pl-0">
                         <div class="workflow-step-card bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm reveal <?= $isLeft ? 'reveal-left' : 'reveal-right' ?>" style="transition-delay: <?= $delay ?>">
                             <div class="text-[10px] font-black text-lasu-gold/70 tracking-widest uppercase mb-2">Step <?= str_pad($idx + 1, 2, '0', STR_PAD_LEFT) ?></div>
                             <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1"><?= $step['title'] ?></h3>
@@ -189,8 +190,8 @@ $departments = $pdo->query("SELECT code, name FROM departments ORDER BY code ASC
 <section class="py-16 md:py-24 bg-slate-950 text-white relative">
     <!-- Background Glows -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-900/20 rounded-full blur-[100px]"></div>
-        <div class="absolute top-0 right-0 w-[400px] h-[400px] bg-lasu-gold/10 rounded-full blur-[80px]"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-blue-900/20 rounded-full blur-[80px] sm:blur-[100px]"></div>
+        <div class="absolute top-0 right-0 w-[220px] sm:w-[400px] h-[220px] sm:h-[400px] bg-lasu-gold/10 rounded-full blur-[60px] sm:blur-[80px]"></div>
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -198,10 +199,10 @@ $departments = $pdo->query("SELECT code, name FROM departments ORDER BY code ASC
 
             <!-- Text Content -->
             <div class="reveal reveal-left w-full">
-                <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4 sm:mb-6 leading-tight">
+                <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white mb-4 sm:mb-6 leading-tight">
                     The Cryptographic <span class="text-lasu-gold">Blind Vault</span>
                 </h2>
-                <p class="text-lg text-slate-400 font-medium mb-8 leading-relaxed">
+                <p class="text-base sm:text-lg text-slate-400 font-medium mb-8 leading-relaxed">
                     Once a paper receives dual-authorization, it enters the Blind Vault. Secured by AES-256-GCM encryption, the contents become entirely inaccessible to all users—including system administrators—until the designated print window.
                 </p>
 
@@ -212,7 +213,7 @@ $departments = $pdo->query("SELECT code, name FROM departments ORDER BY code ASC
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                             </svg>
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <h4 class="text-base font-bold text-white mb-1">AES-256-GCM Encryption</h4>
                             <p class="text-sm text-slate-400">Papers are encrypted at rest with authenticated encryption, guaranteeing absolute data confidentiality and integrity.</p>
                         </div>
@@ -223,7 +224,7 @@ $departments = $pdo->query("SELECT code, name FROM departments ORDER BY code ASC
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
                             </svg>
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <h4 class="text-base font-bold text-white mb-1">Time-Gated Access Keys</h4>
                             <p class="text-sm text-slate-400">Decryption is programmatically restricted to the day immediately preceding the scheduled examination.</p>
                         </div>
@@ -234,7 +235,7 @@ $departments = $pdo->query("SELECT code, name FROM departments ORDER BY code ASC
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                             </svg>
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <h4 class="text-base font-bold text-white mb-1">Zero-Knowledge Architecture</h4>
                             <p class="text-sm text-slate-400">Not even database administrators can extract or read the examination questions once the blind lockdown is engaged.</p>
                         </div>
@@ -243,31 +244,31 @@ $departments = $pdo->query("SELECT code, name FROM departments ORDER BY code ASC
             </div>
 
             <!-- Visual Graphic -->
-            <div class="reveal reveal-right relative w-full h-full min-h-[300px] flex items-center justify-center">
+            <div class="reveal reveal-right relative w-full h-full min-h-[260px] sm:min-h-[300px] flex items-center justify-center">
                 <!-- A floating glowing lock visual -->
-                <div class="relative w-full max-w-md mx-auto aspect-square flex items-center justify-center">
+                <div class="relative w-full max-w-[280px] sm:max-w-md mx-auto aspect-square flex items-center justify-center">
 
                     <!-- Spinning rings -->
-                    <div class="absolute inset-4 rounded-full border border-blue-500/20 animate-[spin_15s_linear_infinite]"></div>
-                    <div class="absolute inset-10 rounded-full border border-dashed border-lasu-gold/30 animate-[spin_20s_linear_infinite_reverse]"></div>
-                    <div class="absolute inset-20 rounded-full border border-blue-400/10 animate-[spin_25s_linear_infinite]"></div>
+                    <div class="absolute inset-2 sm:inset-4 rounded-full border border-blue-500/20 animate-[spin_15s_linear_infinite]"></div>
+                    <div class="absolute inset-6 sm:inset-10 rounded-full border border-dashed border-lasu-gold/30 animate-[spin_20s_linear_infinite_reverse]"></div>
+                    <div class="absolute inset-12 sm:inset-20 rounded-full border border-blue-400/10 animate-[spin_25s_linear_infinite]"></div>
 
                     <!-- Center Vault Shield -->
-                    <div class="relative w-48 h-48 bg-slate-900 border border-slate-700/50 rounded-3xl shadow-[0_0_50px_rgba(59,130,246,0.3)] flex items-center justify-center overflow-hidden group hover:border-blue-500/50 transition-colors duration-500 z-10">
+                    <div class="relative w-36 h-36 sm:w-48 sm:h-48 bg-slate-900 border border-slate-700/50 rounded-3xl shadow-[0_0_50px_rgba(59,130,246,0.3)] flex items-center justify-center overflow-hidden group hover:border-blue-500/50 transition-colors duration-500 z-10">
                         <!-- Inner glow on hover -->
                         <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                        <svg class="w-20 h-20 text-lasu-gold drop-shadow-[0_0_15px_rgba(251,191,36,0.4)] relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-16 h-16 sm:w-20 sm:h-20 text-lasu-gold drop-shadow-[0_0_15px_rgba(251,191,36,0.4)] relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                         </svg>
                     </div>
 
                     <!-- Floating Badges -->
-                    <div class="absolute top-1/4 right-0 bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-lg py-2 px-4 shadow-xl z-20 transform -translate-y-2">
-                        <span class="text-xs font-black text-emerald-400 tracking-wider">LOCKED</span>
+                    <div class="absolute top-1/4 right-2 sm:right-0 bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-lg py-1.5 px-3 sm:py-2 sm:px-4 shadow-xl z-20 transform -translate-y-2">
+                        <span class="text-[11px] sm:text-xs font-black text-emerald-400 tracking-wider">LOCKED</span>
                     </div>
-                    <div class="absolute bottom-1/4 left-0 bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-lg py-2 px-4 shadow-xl z-20 transform translate-y-2">
-                        <span class="text-xs font-black text-blue-400 tracking-wider">AES-256</span>
+                    <div class="absolute bottom-1/4 left-2 sm:left-0 bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-lg py-1.5 px-3 sm:py-2 sm:px-4 shadow-xl z-20 transform translate-y-2">
+                        <span class="text-[11px] sm:text-xs font-black text-blue-400 tracking-wider">AES-256</span>
                     </div>
                 </div>
             </div>
@@ -340,6 +341,7 @@ $departments = $pdo->query("SELECT code, name FROM departments ORDER BY code ASC
         </div>
     </div>
 </section>
+</main>
 
 <script src="<?= url('assets/js/landing.js') ?>?v=<?= @filemtime(__DIR__ . '/assets/js/landing.js') ?>"></script>
 <?php include __DIR__ . '/includes/footer.php'; ?>

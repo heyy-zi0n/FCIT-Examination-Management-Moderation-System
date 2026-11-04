@@ -454,6 +454,16 @@
 /* ============================================================
    14. MOBILE ADJUSTMENTS
    ============================================================ */
+@media (max-width: 767px) {
+  .workflow-line-wrap {
+    left: 1.125rem;
+  }
+  .workflow-node {
+    left: 1.125rem;
+    top: 1.25rem;
+  }
+}
+
 @media (max-width: 768px) {
   .hero-blob-1 { width: 260px; height: 260px; }
   .hero-blob-2 { width: 200px; height: 200px; }

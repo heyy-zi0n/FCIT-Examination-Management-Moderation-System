@@ -189,7 +189,17 @@ include __DIR__ . '/../../includes/navbar.php';
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-                        <?php foreach ($courses as $c): ?>
+                        <?php foreach ($courses as $c):
+                            $safeCoursePayload = [
+                                'id' => (int)$c['id'],
+                                'course_code' => $c['course_code'],
+                                'course_title' => $c['course_title'],
+                                'credit_units' => (int)$c['credit_units'],
+                                'department_id' => (int)$c['department_id'],
+                                'level_id' => (int)$c['level_id'],
+                                'semester_id' => (int)$c['semester_id']
+                            ];
+                        ?>
                             <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
                                 <td class="py-4 px-4 font-bold font-mono text-slate-900 dark:text-white">
                                     <?= htmlspecialchars($c['course_code']) ?>
@@ -209,7 +219,10 @@ include __DIR__ . '/../../includes/navbar.php';
                                     <?= $c['credit_units'] ?>
                                 </td>
                                 <td class="py-4 px-4 text-right">
-                                    <button type="button" onclick='openEditCourseModal(<?= json_encode($c) ?>)' class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-300 dark:border-slate-700">
+                                    <button type="button"
+                                        data-course="<?= htmlspecialchars(json_encode($safeCoursePayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8') ?>"
+                                        onclick="openEditCourseModal(this)"
+                                        class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-300 dark:border-slate-700">
                                         Edit Course
                                     </button>
                                 </td>
@@ -296,15 +309,16 @@ include __DIR__ . '/../../includes/navbar.php';
         openModal('course-modal');
     }
 
-    function openEditCourseModal(c) {
-        document.getElementById('course-modal-title').textContent = 'Edit Course: ' + c.course_code;
+    function openEditCourseModal(btn) {
+        const c = JSON.parse(btn.getAttribute('data-course'));
+        document.getElementById('course-modal-title').textContent = 'Edit Course: ' + (c.course_code || '');
         document.getElementById('form-course-id').value = c.id;
-        document.getElementById('form-course-code').value = c.course_code;
-        document.getElementById('form-course-title').value = c.course_title;
-        document.getElementById('form-credit-units').value = c.credit_units;
-        document.getElementById('form-course-dept').value = c.department_id;
-        document.getElementById('form-course-level').value = c.level_id;
-        document.getElementById('form-course-semester').value = c.semester_id;
+        document.getElementById('form-course-code').value = c.course_code || '';
+        document.getElementById('form-course-title').value = c.course_title || '';
+        document.getElementById('form-credit-units').value = c.credit_units || '3';
+        document.getElementById('form-course-dept').value = c.department_id || '';
+        document.getElementById('form-course-level').value = c.level_id || '';
+        document.getElementById('form-course-semester').value = c.semester_id || '';
         openModal('course-modal');
     }
 </script>

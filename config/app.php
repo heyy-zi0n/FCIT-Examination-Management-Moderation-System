@@ -8,21 +8,43 @@ require_once __DIR__ . '/constants.php';
 // Set default timezone
 date_default_timezone_set(APP_TIMEZONE);
 
+// Dynamically detect base URL if APP_URL is not configured in .env
+if (!empty($_ENV['APP_URL'])) {
+    $detectedBaseUrl = rtrim($_ENV['APP_URL'], '/');
+} else {
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+    $scriptDir = (strpos($scriptName, '/') === 0)
+        ? rtrim(str_replace('\\', '/', dirname($scriptName)), '/')
+        : '';
+    $basePath = preg_replace('#/(dashboard|config|helpers|includes|middleware|services|tests)(/.*)?$#', '', $scriptDir);
+    $detectedBaseUrl = $host !== '' ? "{$scheme}://{$host}{$basePath}" : $basePath;
+}
+
+// Fail-closed validation for the master encryption key
+$encryptionKey = trim((string)($_ENV['ENCRYPTION_KEY'] ?? getenv('ENCRYPTION_KEY') ?: ''));
+if (strlen($encryptionKey) < 32) {
+    throw new RuntimeException(
+        'CRITICAL SECURITY ERROR: ENCRYPTION_KEY environment variable is missing or shorter than 32 bytes.'
+    );
+}
+
 return [
     'app_name' => APP_NAME,
     'full_name' => APP_FULL_NAME,
     'short_name' => APP_SHORT_NAME,
     'version' => APP_VERSION,
-    'base_url' => $_ENV['APP_URL'] ?? '/FOCITECMS',
+    'base_url' => $detectedBaseUrl,
     'timezone' => APP_TIMEZONE,
-    'encryption_key' => $_ENV['ENCRYPTION_KEY'] ?? 'lasu_fcit_secret_key_2026_exam_security_master_hash_v1', // Master encryption key for blind lockdown
+    'encryption_key' => $encryptionKey,
     'debug' => ($_ENV['APP_DEBUG'] ?? 'false') === 'true',
     'session' => [
         'name' => 'LASU_FCIT_SESSID',
         'lifetime' => SESSION_LIFETIME_SECONDS,
         'path' => '/',
         'domain' => '',
-        'secure' => false, // Set to true if running strictly on HTTPS
+        'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
         'httponly' => true,
         'samesite' => 'Lax'
     ],

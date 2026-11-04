@@ -93,7 +93,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_save_schedule'
 }
 
 // Fetch department courses, sessions, semesters
-$courses = $pdo->query("SELECT * FROM courses WHERE department_id = {$deptId} ORDER BY course_code ASC")->fetchAll();
+$stmtCourses = $pdo->prepare("SELECT * FROM courses WHERE department_id = :dept_id ORDER BY course_code ASC");
+$stmtCourses->execute(['dept_id' => $deptId]);
+$courses = $stmtCourses->fetchAll();
+
 $sessions = $pdo->query("SELECT * FROM academic_sessions ORDER BY is_current DESC")->fetchAll();
 $semesters = $pdo->query("SELECT * FROM semesters")->fetchAll();
 

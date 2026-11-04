@@ -1,4 +1,13 @@
 <?php
+/**
+ * Migration Script: Create emergency_print_requests table
+ */
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('403 Forbidden: CLI execution only.');
+}
+
 require_once __DIR__ . '/../bootstrap.php';
 $pdo = getDb();
 

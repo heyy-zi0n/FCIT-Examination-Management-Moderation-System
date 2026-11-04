@@ -7,14 +7,17 @@ require_once __DIR__ . '/../../bootstrap.php';
 $user = requireRole(ROLE_EXAM_OFFICER);
 
 $pdo = getDb();
+$deptId = !empty($user['department_id']) ? (int)$user['department_id'] : null;
 
-// Fetch all approved/locked/printed papers
-$stmt = $pdo->query("
+// Fetch all approved/locked/printed papers with correlated emergency print request status (no N+1 query)
+$whereDept = $deptId !== null ? "c.department_id = :dept_id AND " : "";
+$stmt = $pdo->prepare("
     SELECT ep.*, c.course_code, c.course_title, d.name AS dept_name, d.code AS dept_code, al.level_name,
            es.exam_date, es.exam_time, es.venue, es.expected_students,
            bl.id AS lockdown_id, bl.checksum_sha256, bl.locked_at, bl.is_unlocked,
            pv.version_number, pv.question_file_name, pv.question_file_size,
-           (SELECT COUNT(*) FROM print_logs pl WHERE pl.paper_id = ep.id AND pl.print_status = 'successful') AS print_count
+           (SELECT COUNT(*) FROM print_logs pl WHERE pl.paper_id = ep.id AND pl.print_status = 'successful') AS print_count,
+           (SELECT epr.status FROM emergency_print_requests epr WHERE epr.paper_id = ep.id AND epr.version_id = ep.current_version_id ORDER BY epr.id DESC LIMIT 1) AS epr_status
     FROM examination_papers ep
     JOIN courses c ON ep.course_id = c.id
     JOIN departments d ON c.department_id = d.id
@@ -22,9 +25,11 @@ $stmt = $pdo->query("
     JOIN exam_schedules es ON ep.exam_schedule_id = es.id
     JOIN blind_lockdowns bl ON ep.id = bl.paper_id
     LEFT JOIN paper_versions pv ON ep.current_version_id = pv.id
-    WHERE c.department_id = {$user['department_id']} AND ep.status IN ('Approved', 'Locked', 'Queued', 'Printed')
+    WHERE {$whereDept} ep.status IN ('Approved', 'Locked', 'Queued', 'Printed')
     ORDER BY es.exam_date ASC, ep.id ASC
 ");
+$params = $deptId !== null ? ['dept_id' => $deptId] : [];
+$stmt->execute($params);
 $queue = $stmt->fetchAll();
 
 $pageTitle = 'Controlled Print Queue — LASU FCIT CMS';
@@ -94,10 +99,7 @@ include __DIR__ . '/../../includes/navbar.php';
                         <?php else: ?>
                             <?php foreach ($queue as $qp): 
                                 $elig = PrintingService::checkPrintEligibility($qp['exam_date']);
-                                
-                                $stmtEpr = $pdo->prepare("SELECT status FROM emergency_print_requests WHERE paper_id = ? AND version_id = ? ORDER BY id DESC LIMIT 1");
-                                $stmtEpr->execute([$qp['id'], $qp['current_version_id']]);
-                                $eprStatus = $stmtEpr->fetchColumn();
+                                $eprStatus = $qp['epr_status'] ?? null;
                                 
                                 if ($eprStatus === 'approved') {
                                     $elig['eligible'] = true;

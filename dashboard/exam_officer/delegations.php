@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../bootstrap.php';
 $user = requireRole(ROLE_EXAM_OFFICER);
 
 $pdo = getDb();
+$deptId = (int)($user['department_id'] ?? 0);
 
 // Handle Add Delegation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_create_delegation'])) {
@@ -18,17 +19,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_create_delegat
     $reason = sanitizeInput($_POST['reason'] ?? '');
 
     try {
+        if ($deptId <= 0) {
+            throw new RuntimeException("Cannot create delegation: Your account is not assigned to a valid department.");
+        }
+
         if ($delegateId <= 0 || empty($startDate) || empty($endDate) || empty(trim($reason))) {
             throw new InvalidArgumentException("All fields are required to create an Exam Officer delegation.");
         }
 
+        if ($delegateId === (int)$user['id']) {
+            throw new InvalidArgumentException("You cannot delegate authority to yourself.");
+        }
+
+        if (strtotime($endDate) < strtotime($startDate)) {
+            throw new InvalidArgumentException("End date cannot be earlier than start date.");
+        }
+
         $stmtIns = $pdo->prepare("
             INSERT INTO delegations (delegator_id, delegate_id, role_delegated, department_id, start_date, end_date, reason, is_active, created_at)
-            VALUES (:uid, :did, 'exam_officer', NULL, :s_dt, :e_dt, :reason, 1, NOW())
+            VALUES (:uid, :did, 'exam_officer', :dept_id, :s_dt, :e_dt, :reason, 1, NOW())
         ");
         $stmtIns->execute([
             'uid' => (int)$user['id'],
             'did' => $delegateId,
+            'dept_id' => $deptId,
             's_dt' => $startDate,
             'e_dt' => $endDate,
             'reason' => $reason
@@ -36,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_create_delegat
 
         logAudit((int)$user['id'], 'create_eo_delegation', 'delegation', (int)$pdo->lastInsertId(), [
             'delegate_id' => $delegateId,
+            'department_id' => $deptId,
             'start_date' => $startDate,
             'end_date' => $endDate
         ]);
@@ -49,8 +64,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_create_delegat
     }
 }
 
-// Fetch faculty academic staff eligible for EO delegation
-$staff = $pdo->query("SELECT id, title, first_name, last_name, email, role FROM users WHERE id != {$user['id']} AND status = 'active' ORDER BY first_name ASC")->fetchAll();
+// Fetch active academic staff in this department eligible for EO delegation
+$stmtStaff = $pdo->prepare("
+    SELECT id, title, first_name, last_name, email, role
+    FROM users
+    WHERE id != :uid AND department_id = :dept_id AND status = 'active'
+    ORDER BY first_name ASC
+");
+$stmtStaff->execute(['uid' => (int)$user['id'], 'dept_id' => $deptId]);
+$staff = $stmtStaff->fetchAll();
 
 // Fetch active & past EO delegations
 $stmtDel = $pdo->prepare("
@@ -147,7 +169,7 @@ include __DIR__ . '/../../includes/navbar.php';
             <div>
                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Select Delegate Staff *</label>
                 <select name="delegate_id" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
-                    <option value="">Select Faculty Academic Staff</option>
+                    <option value="">Select Departmental Academic Staff</option>
                     <?php foreach ($staff as $s): ?>
                         <option value="<?= $s['id'] ?>">
                             <?= htmlspecialchars(($s['title'] ? $s['title'] . ' ' : '') . $s['first_name'] . ' ' . $s['last_name']) ?> (<?= htmlspecialchars($s['email']) ?> - <?= ucfirst($s['role']) ?>)

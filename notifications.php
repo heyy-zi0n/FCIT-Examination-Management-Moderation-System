@@ -8,21 +8,24 @@ require_once __DIR__ . '/bootstrap.php';
 $user = requireAuth();
 $pdo = getDb();
 
-// Handle Mark All Read action
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'mark_all_read') {
+// Handle POST actions (Mark All Read / Mark Single Read)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requireCsrf();
-    markAllNotificationsRead((int)$user['id']);
-    setFlash('success', 'All notifications marked as read.');
-    redirect('notifications.php');
-    exit;
-}
 
-// Handle Mark Single Read action
-if (isset($_GET['mark_read'])) {
-    $notifId = (int)$_GET['mark_read'];
-    markNotificationRead($notifId, (int)$user['id']);
-    redirect('notifications.php');
-    exit;
+    $action = $_POST['action'] ?? '';
+    if ($action === 'mark_all_read') {
+        markAllNotificationsRead((int)$user['id']);
+        setFlash('success', 'All notifications marked as read.');
+        redirect('notifications.php');
+        exit;
+    }
+
+    if ($action === 'mark_single_read' && !empty($_POST['notif_id'])) {
+        $notifId = (int)$_POST['notif_id'];
+        markNotificationRead($notifId, (int)$user['id']);
+        redirect('notifications.php');
+        exit;
+    }
 }
 
 $pageTitle = 'Notifications — LASU FCIT CMS';
@@ -96,9 +99,14 @@ include __DIR__ . '/includes/navbar.php';
                                 </a>
                             <?php endif; ?>
                             <?php if (!$n['is_read']): ?>
-                                <a href="<?= url('notifications.php?mark_read=' . $n['id']) ?>" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition" title="Mark as Read">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                </a>
+                                <form method="POST" action="<?= url('notifications.php') ?>" class="inline">
+                                    <?= csrfField() ?>
+                                    <input type="hidden" name="action" value="mark_single_read">
+                                    <input type="hidden" name="notif_id" value="<?= (int)$n['id'] ?>">
+                                    <button type="submit" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition" title="Mark as Read">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    </button>
+                                </form>
                             <?php endif; ?>
                         </div>
                     </div>

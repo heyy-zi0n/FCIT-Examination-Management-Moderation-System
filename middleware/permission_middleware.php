@@ -31,74 +31,77 @@ function requirePaperAccess(int $paperId, string $action = 'view'): array {
         die("Examination paper not found.");
     }
 
+    $userId = (int)$user['id'];
+    $paperDeptId = (int)$paper['department_id'];
+
     // 1. Admin has supervisory access
     if ($user['role'] === ROLE_ADMIN) {
         return $paper;
     }
 
-    // 2. Lecturer: Only own submissions
-    if ($user['role'] === ROLE_LECTURER) {
-        if ((int)$paper['lecturer_id'] === (int)$user['id']) {
-            return $paper;
-        }
+    // 2. Lecturer: Own submissions
+    if ($user['role'] === ROLE_LECTURER && (int)$paper['lecturer_id'] === $userId) {
+        return $paper;
     }
 
-    // 3. Moderator: Only assigned department + level papers
+    // 3. Moderator: Assigned paper or assigned (department_id, level_id) portfolio
     if ($user['role'] === ROLE_MODERATOR) {
+        if ((int)$paper['moderator_id'] === $userId) {
+            return $paper;
+        }
+
         $stmtMod = $pdo->prepare("
             SELECT id FROM moderator_assignments
-            WHERE moderator_id = :mod_id AND department_id = :dept_id AND level_id = :lvl_id AND academic_session_id = :session_id
+            WHERE moderator_id = :mod_id
+              AND department_id = :dept_id
+              AND level_id = :lvl_id
+              AND (academic_session_id = :session_id OR academic_session_id IS NOT NULL)
+            LIMIT 1
         ");
         $stmtMod->execute([
-            'mod_id' => (int)$user['id'],
-            'dept_id' => (int)$paper['department_id'],
+            'mod_id' => $userId,
+            'dept_id' => $paperDeptId,
             'lvl_id' => (int)$paper['level_id'],
             'session_id' => (int)$paper['academic_session_id']
         ]);
-        if ($stmtMod->fetch() || (int)$paper['moderator_id'] === (int)$user['id']) {
+        if ($stmtMod->fetch()) {
             return $paper;
         }
     }
 
-    // 4. HOD: Only departmental papers or active delegate
-    if ($user['role'] === ROLE_HOD) {
-        if ((int)$user['department_id'] === (int)$paper['department_id']) {
-            return $paper;
-        }
-    }
-
-    // Check HOD delegation
-    $stmtDelHod = $pdo->prepare("
-        SELECT id FROM delegations
-        WHERE delegate_id = :user_id AND role_delegated = 'hod' AND department_id = :dept_id
-          AND is_active = 1 AND CURRENT_DATE BETWEEN start_date AND end_date
-    ");
-    $stmtDelHod->execute(['user_id' => (int)$user['id'], 'dept_id' => (int)$paper['department_id']]);
-    if ($stmtDelHod->fetch()) {
+    // 4. HOD: Own department papers
+    if ($user['role'] === ROLE_HOD && (int)$user['department_id'] === $paperDeptId) {
         return $paper;
     }
 
-    // 5. Exam Officer: Department-wide examination workflow
-    if ($user['role'] === ROLE_EXAM_OFFICER && (int)$user['department_id'] === (int)$paper['department_id']) {
+    // 5. Exam Officer: Own department papers
+    if ($user['role'] === ROLE_EXAM_OFFICER && (int)$user['department_id'] === $paperDeptId) {
         return $paper;
     }
 
-    // Check Exam Officer delegation
-    $stmtDelEo = $pdo->prepare("
+    // 6. Active Department-Scoped Delegation (HOD or Exam Officer for this paper's department)
+    $stmtDel = $pdo->prepare("
         SELECT id FROM delegations
-        WHERE delegate_id = :user_id AND role_delegated = 'exam_officer'
-          AND is_active = 1 AND CURRENT_DATE BETWEEN start_date AND end_date
+        WHERE delegate_id = :user_id
+          AND role_delegated IN ('hod', 'exam_officer')
+          AND department_id = :dept_id
+          AND is_active = 1
+          AND CURRENT_DATE BETWEEN start_date AND end_date
+        LIMIT 1
     ");
-    $stmtDelEo->execute(['user_id' => (int)$user['id']]);
-    if ($stmtDelEo->fetch()) {
+    $stmtDel->execute([
+        'user_id' => $userId,
+        'dept_id' => $paperDeptId
+    ]);
+    if ($stmtDel->fetch()) {
         return $paper;
     }
 
     // Unauthorized IDOR attempt: Log and fail closed
-    logAudit((int)$user['id'], 'unauthorized_paper_access_attempt', 'examination_paper', $paperId, [
+    logAudit($userId, 'unauthorized_paper_access_attempt', 'examination_paper', $paperId, [
         'user_role' => $user['role'],
         'user_dept' => $user['department_id'],
-        'paper_dept' => $paper['department_id'],
+        'paper_dept' => $paperDeptId,
         'action' => $action
     ]);
 
@@ -120,12 +123,16 @@ function requireDepartmentAccess(int $departmentId): void {
         return;
     }
 
-    // Check delegation
+    // Check active department-scoped delegation
     $pdo = getDb();
     $stmtDel = $pdo->prepare("
         SELECT id FROM delegations
-        WHERE delegate_id = :user_id AND department_id = :dept_id
-          AND is_active = 1 AND CURRENT_DATE BETWEEN start_date AND end_date
+        WHERE delegate_id = :user_id
+          AND role_delegated IN ('hod', 'exam_officer')
+          AND department_id = :dept_id
+          AND is_active = 1
+          AND CURRENT_DATE BETWEEN start_date AND end_date
+        LIMIT 1
     ");
     $stmtDel->execute(['user_id' => (int)$user['id'], 'dept_id' => $departmentId]);
     if ($stmtDel->fetch()) {

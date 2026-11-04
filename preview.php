@@ -17,8 +17,22 @@ if ($paperId <= 0) {
     die("Invalid examination paper ID.");
 }
 
-// 1. Authorize paper access
-$paper = requirePaperAccess($paperId, 'preview');
+// 1. Authorize paper access & enforce Cryptographic Blind Lockdown
+try {
+    $paper = requirePaperAccess($paperId, 'preview');
+
+    $lockedStatuses = [STATUS_APPROVED, STATUS_LOCKED, STATUS_QUEUED, STATUS_PRINTED];
+    if (in_array($paper['status'], $lockedStatuses, true)) {
+        logAudit((int)$user['id'], 'blocked_locked_preview_attempt', 'examination_paper', $paperId, [
+            'status' => $paper['status'],
+            'type' => $type
+        ]);
+        throw new RuntimeException("Access Denied: Examination paper is under Cryptographic Blind Lockdown (status: {$paper['status']}). Direct preview is forbidden.");
+    }
+} catch (RuntimeException $e) {
+    http_response_code(403);
+    die($e->getMessage());
+}
 
 $pdo = getDb();
 if ($versionId <= 0) {
@@ -75,7 +89,6 @@ $ok = DocumentService::generatePdfPreview($filePath, $previewPdfPath);
 if ($ok && file_exists($previewPdfPath)) {
     DocumentService::streamPdfToBrowser($previewPdfPath, "Preview_{$fileName}.pdf", true);
 } else {
-    // If conversion engine is unavailable on the system, output a clean secure message
     http_response_code(500);
     die("Document preview is currently unavailable for DOCX. Please ensure LibreOffice service is configured.");
 }

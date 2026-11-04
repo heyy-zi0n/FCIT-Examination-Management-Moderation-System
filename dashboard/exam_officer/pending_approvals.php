@@ -7,8 +7,10 @@ require_once __DIR__ . '/../../bootstrap.php';
 $user = requireRole(ROLE_EXAM_OFFICER);
 
 $pdo = getDb();
+$deptId = !empty($user['department_id']) ? (int)$user['department_id'] : null;
 
-$stmt = $pdo->query("
+$whereDept = $deptId !== null ? "c.department_id = :dept_id AND " : "";
+$stmt = $pdo->prepare("
     SELECT ep.*, c.course_code, c.course_title, d.name AS dept_name, al.level_name,
            u_lec.first_name AS lec_first, u_lec.last_name AS lec_last,
            u_mod.first_name AS mod_first, u_mod.last_name AS mod_last,
@@ -20,9 +22,11 @@ $stmt = $pdo->query("
     JOIN users u_lec ON ep.lecturer_id = u_lec.id
     LEFT JOIN users u_mod ON ep.moderator_id = u_mod.id
     LEFT JOIN paper_versions pv ON ep.current_version_id = pv.id
-    WHERE c.department_id = {$user['department_id']} AND ep.status = 'Moderated' AND ep.eo_status = 'pending'
+    WHERE {$whereDept} ep.status = 'Moderated' AND ep.eo_status = 'pending'
     ORDER BY ep.updated_at ASC
 ");
+$params = $deptId !== null ? ['dept_id' => $deptId] : [];
+$stmt->execute($params);
 $papers = $stmt->fetchAll();
 
 $pageTitle = 'Faculty Moderated Papers — Exam Officer Portal — LASU FCIT CMS';

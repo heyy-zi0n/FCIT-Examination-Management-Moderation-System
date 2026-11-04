@@ -44,6 +44,7 @@ define('USER_STATUS_INACTIVE', 'inactive');
 define('USER_STATUS_LOCKED', 'locked');
 
 // Security Settings
+define('PASSWORD_MIN_LENGTH', 8);
 define('MAX_LOGIN_ATTEMPTS', 5);
 define('LOCKOUT_TIME_SECONDS', 900); // 15 minutes
 define('SESSION_LIFETIME_SECONDS', 1800); // 30 minutes

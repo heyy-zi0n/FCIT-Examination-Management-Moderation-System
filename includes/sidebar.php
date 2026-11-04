@@ -8,8 +8,10 @@ if (!$currentUser) return;
 $role = $currentUser['role'];
 $currentUri = $_SERVER['REQUEST_URI'] ?? '';
 
-function isSidebarActive(string $path, string $currentUri): bool {
-    return strpos($currentUri, $path) !== false;
+if (!function_exists('isSidebarActive')) {
+    function isSidebarActive(string $path, string $currentUri): bool {
+        return strpos($currentUri, $path) !== false;
+    }
 }
 ?>
 <!-- Mobile Backdrop -->
@@ -179,59 +181,7 @@ function isSidebarActive(string $path, string $currentUri): bool {
     <div class="p-4 border-t border-slate-800 text-xs text-slate-400">
         <div class="flex items-center justify-between">
             <span>LASU FCIT EMMS</span>
-            <span class="font-mono text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">v1.0.0</span>
+            <span class="font-mono text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">v<?= htmlspecialchars(APP_VERSION) ?></span>
         </div>
     </div>
 </aside>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const sidebar = document.getElementById('app-sidebar');
-    const backdrop = document.getElementById('sidebar-backdrop');
-    
-    if (!mobileMenuBtn || !sidebar || !backdrop) return;
-    
-    let isSidebarOpen = false;
-    
-    function toggleSidebar() {
-        isSidebarOpen = !isSidebarOpen;
-        
-        if (isSidebarOpen) {
-            sidebar.classList.remove('-translate-x-full');
-            backdrop.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Lock body scroll
-        } else {
-            sidebar.classList.add('-translate-x-full');
-            backdrop.classList.add('hidden');
-            document.body.style.overflow = ''; // Restore body scroll
-        }
-    }
-    
-    mobileMenuBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        toggleSidebar();
-    });
-    
-    backdrop.addEventListener('click', function() {
-        if (isSidebarOpen) toggleSidebar();
-    });
-    
-    // Close sidebar on Esc key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && isSidebarOpen) {
-            toggleSidebar();
-        }
-    });
-    
-    // Auto-close on link click (useful for single-page style navigation if any, or just good hygiene)
-    const navLinks = sidebar.querySelectorAll('a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            if (isSidebarOpen && window.innerWidth < 768) {
-                toggleSidebar();
-            }
-        });
-    });
-});
-</script>

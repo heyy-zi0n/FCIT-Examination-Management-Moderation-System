@@ -9,33 +9,48 @@ $user = requireRole(ROLE_HOD);
 $pdo = getDb();
 $deptId = (int)$user['department_id'];
 
-// Departmental Metrics
-$totalCourses = (int)$pdo->query("SELECT COUNT(*) FROM courses WHERE department_id = {$deptId}")->fetchColumn();
+// Departmental Metrics (Consolidated & Parameterized)
+$stmtCourses = $pdo->prepare("SELECT COUNT(*) FROM courses WHERE department_id = :dept_id");
+$stmtCourses->execute(['dept_id' => $deptId]);
+$totalCourses = (int)$stmtCourses->fetchColumn();
 
-// Not Started = total courses minus any courses that have an examination paper
-$startedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId}")->fetchColumn();
-$notStartedCount = $totalCourses - $startedCount;
-if ($notStartedCount < 0) $notStartedCount = 0;
+$stmtCounts = $pdo->prepare("
+    SELECT
+        COUNT(*) AS started_count,
+        SUM(CASE WHEN ep.status = 'Draft' THEN 1 ELSE 0 END) AS drafts_count,
+        SUM(CASE WHEN ep.status != 'Draft' THEN 1 ELSE 0 END) AS submitted_workflow_count,
+        SUM(CASE WHEN ep.status = 'Submitted' THEN 1 ELSE 0 END) AS awaiting_mod_count,
+        SUM(CASE WHEN ep.status = 'Returned' THEN 1 ELSE 0 END) AS revision_required_count,
+        SUM(CASE WHEN ep.status = 'Moderated' AND ep.hod_status = 'pending' THEN 1 ELSE 0 END) AS pending_hod_count,
+        SUM(CASE WHEN ep.eo_status = 'pending' AND ep.status IN ('Moderated', 'Approved') THEN 1 ELSE 0 END) AS pending_eo_count,
+        SUM(CASE WHEN ep.status = 'Printed' THEN 1 ELSE 0 END) AS printed_count
+    FROM examination_papers ep
+    JOIN courses c ON ep.course_id = c.id
+    WHERE c.department_id = :dept_id
+");
+$stmtCounts->execute(['dept_id' => $deptId]);
+$metrics = $stmtCounts->fetch() ?: [];
 
-$draftsCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Draft'")->fetchColumn();
+$startedCount = (int)($metrics['started_count'] ?? 0);
+$notStartedCount = max(0, $totalCourses - $startedCount);
+$draftsCount = (int)($metrics['drafts_count'] ?? 0);
 $missingCount = $notStartedCount + $draftsCount;
-
-$submittedIntoWorkflowCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status != 'Draft'")->fetchColumn();
-
-$awaitingModerationCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Submitted'")->fetchColumn();
-$revisionRequiredCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Returned'")->fetchColumn();
-$pendingHodCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Moderated' AND ep.hod_status = 'pending'")->fetchColumn();
-$pendingEoCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.eo_status = 'pending' AND ep.status IN ('Moderated', 'Approved')")->fetchColumn();
-$printedCount = (int)$pdo->query("SELECT COUNT(*) FROM examination_papers ep JOIN courses c ON ep.course_id = c.id WHERE c.department_id = {$deptId} AND ep.status = 'Printed'")->fetchColumn();
+$submittedIntoWorkflowCount = (int)($metrics['submitted_workflow_count'] ?? 0);
+$awaitingModerationCount = (int)($metrics['awaiting_mod_count'] ?? 0);
+$revisionRequiredCount = (int)($metrics['revision_required_count'] ?? 0);
+$pendingHodCount = (int)($metrics['pending_hod_count'] ?? 0);
+$pendingEoCount = (int)($metrics['pending_eo_count'] ?? 0);
+$printedCount = (int)($metrics['printed_count'] ?? 0);
 
 require_once __DIR__ . '/../../services/PrintingService.php';
-$stmtLocked = $pdo->query("
+$stmtLocked = $pdo->prepare("
     SELECT ep.id, ep.status, es.exam_date 
     FROM examination_papers ep
     JOIN courses c ON ep.course_id = c.id
     LEFT JOIN exam_schedules es ON ep.course_id = es.course_id
-    WHERE c.department_id = {$deptId} AND ep.status IN ('Approved', 'Locked', 'Queued')
+    WHERE c.department_id = :dept_id AND ep.status IN ('Approved', 'Locked', 'Queued')
 ");
+$stmtLocked->execute(['dept_id' => $deptId]);
 $lockedPapers = $stmtLocked->fetchAll();
 
 $lockedCount = 0;
@@ -72,7 +87,7 @@ $stmtPending = $pdo->prepare("
 $stmtPending->execute(['dept_id' => $deptId]);
 $pendingPapers = $stmtPending->fetchAll();
 
-$pageTitle = "HOD Dashboard — Department of {$user['department_name']} — LASU FCIT CMS";
+$pageTitle = "HOD Dashboard — Department of " . ($user['department_name'] ?? 'Computing') . " — LASU FCIT CMS";
 include __DIR__ . '/../../includes/header.php';
 include __DIR__ . '/../../includes/navbar.php';
 ?>

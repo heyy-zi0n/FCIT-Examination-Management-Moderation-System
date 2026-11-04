@@ -5,19 +5,23 @@
  */
 
 /**
- * Get current logged in user array or null
+ * Get current logged in user array or null.
+ * Re-verifies account status against the database once per HTTP request so
+ * deactivated/suspended accounts or role changes take effect immediately.
  */
 function currentUser(): ?array {
     if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
         return null;
     }
 
-    // Return cached user if present in session
-    if (isset($_SESSION['user_data']) && is_array($_SESSION['user_data'])) {
-        return $_SESSION['user_data'];
+    static $requestUser = null;
+    static $requestUserId = null;
+
+    $sessionUserId = (int)$_SESSION['user_id'];
+    if ($requestUser !== null && $requestUserId === $sessionUserId) {
+        return $requestUser;
     }
 
-    // Otherwise fetch fresh from database
     try {
         $pdo = getDb();
         $stmt = $pdo->prepare("
@@ -28,13 +32,20 @@ function currentUser(): ?array {
             WHERE u.id = :id AND u.status = 'active'
             LIMIT 1
         ");
-        $stmt->execute(['id' => (int)$_SESSION['user_id']]);
+        $stmt->execute(['id' => $sessionUserId]);
         $user = $stmt->fetch();
 
         if ($user) {
+            $_SESSION['user_role'] = $user['role'];
             $_SESSION['user_data'] = $user;
+            $requestUser = $user;
+            $requestUserId = $sessionUserId;
             return $user;
         }
+
+        // User was deactivated, suspended, or deleted — invalidate session immediately
+        logoutUser();
+        return null;
     } catch (Exception $e) {
         error_log('Error loading current user: ' . $e->getMessage());
     }
@@ -91,7 +102,7 @@ function logoutUser(): void {
 
     $userId = $_SESSION['user_id'] ?? null;
     if ($userId) {
-        logAudit($userId, 'logout', 'user', $userId, ['description' => 'User logged out']);
+        logAudit((int)$userId, 'logout', 'user', (int)$userId, ['description' => 'User logged out']);
     }
 
     $_SESSION = [];
@@ -118,7 +129,6 @@ function logoutUser(): void {
 function checkSessionInactivity(): void {
     if (isset($_SESSION['user_id'])) {
         if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > SESSION_LIFETIME_SECONDS)) {
-            $expiredUserId = $_SESSION['user_id'];
             logoutUser();
             redirect('login.php?error=session_expired');
             exit;
@@ -168,28 +178,38 @@ function verifyCsrfToken(?string $token): bool {
 }
 
 /**
- * Sanitize string input
+ * Normalize string input (trim whitespace and strip control/null characters).
+ * Do NOT HTML-encode on input to prevent double-encoding in database storage;
+ * use htmlspecialchars() at output rendering time.
  */
 function sanitizeInput(mixed $data): mixed {
     if (is_array($data)) {
         return array_map('sanitizeInput', $data);
     }
     if (is_string($data)) {
-        return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
+        $cleaned = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', trim($data));
+        return $cleaned ?? trim($data);
     }
     return $data;
 }
 
 /**
- * Get client IP address safely
+ * Get client IP address safely without trusting spoofable X-Forwarded-For headers
+ * from untrusted peers.
  */
 function getClientIp(): string {
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+    $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    $trustedProxies = array_filter(array_map('trim', explode(',', (string)env('TRUSTED_PROXIES', ''))));
+
+    if (!empty($trustedProxies) && in_array($remoteAddr, $trustedProxies, true) && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
         $forwarded = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-        $ip = trim($forwarded[0]);
+        $candidate = trim($forwarded[0]);
+        if (filter_var($candidate, FILTER_VALIDATE_IP)) {
+            return $candidate;
+        }
     }
-    return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '127.0.0.1';
+
+    return filter_var($remoteAddr, FILTER_VALIDATE_IP) ? $remoteAddr : '127.0.0.1';
 }
 
 /**

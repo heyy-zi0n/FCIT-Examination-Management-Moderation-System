@@ -51,7 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_assign_moderat
 }
 
 // Fetch department staff eligible for moderation
-$moderators = $pdo->query("SELECT id, title, first_name, last_name, email FROM users WHERE department_id = {$deptId} AND role IN ('moderator', 'lecturer') ORDER BY first_name ASC")->fetchAll();
+$stmtMods = $pdo->prepare("SELECT id, title, first_name, last_name, email FROM users WHERE department_id = :dept_id AND role IN ('moderator', 'lecturer') AND status = 'active' ORDER BY first_name ASC");
+$stmtMods->execute(['dept_id' => $deptId]);
+$moderators = $stmtMods->fetchAll();
+
 $levels = $pdo->query("SELECT * FROM academic_levels ORDER BY level_code ASC")->fetchAll();
 $sessions = $pdo->query("SELECT * FROM academic_sessions ORDER BY is_current DESC")->fetchAll();
 

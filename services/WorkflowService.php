@@ -7,6 +7,49 @@
 class WorkflowService {
 
     /**
+     * Enforce Separation of Duties (SoD):
+     * A single user ID cannot fulfill multiple governance roles on the same examination paper.
+     */
+    private static function assertSeparationOfDuties(array $paper, int $actorId, string $stage): void {
+        $lecturerId  = (int)($paper['lecturer_id'] ?? 0);
+        $moderatorId = (int)($paper['moderator_id'] ?? 0);
+        $hodId       = ($paper['hod_status'] ?? '') === DECISION_APPROVED ? (int)($paper['hod_id'] ?? 0) : 0;
+        $eoId        = ($paper['eo_status'] ?? '') === DECISION_APPROVED ? (int)($paper['eo_id'] ?? 0) : 0;
+
+        if ($actorId === $lecturerId) {
+            throw new RuntimeException(
+                "Separation of Duties Violation: The course lecturer who authored this paper cannot act as {$stage}."
+            );
+        }
+
+        if ($stage === 'hod') {
+            if ($moderatorId > 0 && $actorId === $moderatorId) {
+                throw new RuntimeException(
+                    "Separation of Duties Violation: The moderator who vetted this paper cannot also sign off as HOD."
+                );
+            }
+            if ($eoId > 0 && $actorId === $eoId) {
+                throw new RuntimeException(
+                    "Separation of Duties Violation: The same user cannot sign off as both Exam Officer and HOD on the same paper."
+                );
+            }
+        }
+
+        if ($stage === 'exam_officer') {
+            if ($moderatorId > 0 && $actorId === $moderatorId) {
+                throw new RuntimeException(
+                    "Separation of Duties Violation: The moderator who vetted this paper cannot also sign off as Exam Officer."
+                );
+            }
+            if ($hodId > 0 && $actorId === $hodId) {
+                throw new RuntimeException(
+                    "Separation of Duties Violation: The same user cannot sign off as both HOD and Exam Officer on the same paper."
+                );
+            }
+        }
+    }
+
+    /**
      * Create initial examination paper draft
      */
     public static function createDraftPaper(int $lecturerId, int $courseId, int $sessionId, int $semesterId, ?int $scheduleId, array $qUpload, ?array $gUpload, ?string $submissionNotes): array {
@@ -36,22 +79,26 @@ class WorkflowService {
                 throw new RuntimeException("Selected course not found.");
             }
 
-            // Auto-detect moderator for this department & level
+            // Auto-detect moderator for this department & level (excluding the authoring lecturer for SoD)
             $stmtMod = $pdo->prepare("
                 SELECT moderator_id FROM moderator_assignments
-                WHERE department_id = :dept_id AND level_id = :level_id AND academic_session_id = :session_id
+                WHERE department_id = :dept_id
+                  AND level_id = :level_id
+                  AND academic_session_id = :session_id
+                  AND moderator_id != :lec_id
                 LIMIT 1
             ");
             $stmtMod->execute([
                 'dept_id' => $course['department_id'],
                 'level_id' => $course['level_id'],
-                'session_id' => $sessionId
+                'session_id' => $sessionId,
+                'lec_id' => $lecturerId
             ]);
             $modRow = $stmtMod->fetch();
             $moderatorId = $modRow ? (int)$modRow['moderator_id'] : null;
 
             // Generate unique Paper Code
-            $paperCode = sprintf('LASU-%s-%s-SEM%d-%04d', $course['course_code'], str_replace('/', '-', $sessionId), $semesterId, rand(1000, 9999));
+            $paperCode = sprintf('LASU-%s-%s-SEM%d-%04d', $course['course_code'], str_replace('/', '-', (string)$sessionId), $semesterId, random_int(1000, 9999));
 
             $scheduleId = empty($scheduleId) ? null : $scheduleId;
 
@@ -158,28 +205,38 @@ class WorkflowService {
                 throw new RuntimeException("No valid document version associated with this paper.");
             }
 
-            // Ensure moderator is assigned
-            $moderatorId = $paper['moderator_id'];
+            // Ensure moderator is assigned and distinct from lecturer (SoD)
+            $moderatorId = $paper['moderator_id'] ? (int)$paper['moderator_id'] : null;
+            if ($moderatorId === $lecturerId) {
+                $moderatorId = null;
+            }
+
             if (!$moderatorId) {
                 $stmtMod = $pdo->prepare("
                     SELECT moderator_id FROM moderator_assignments
-                    WHERE department_id = :dept_id AND level_id = :level_id AND academic_session_id = :session_id
+                    WHERE department_id = :dept_id
+                      AND level_id = :level_id
+                      AND academic_session_id = :session_id
+                      AND moderator_id != :lec_id
                     LIMIT 1
                 ");
                 $stmtMod->execute([
                     'dept_id' => $paper['department_id'],
                     'level_id' => $paper['level_id'],
-                    'session_id' => $paper['academic_session_id']
+                    'session_id' => $paper['academic_session_id'],
+                    'lec_id' => $lecturerId
                 ]);
                 $modRow = $stmtMod->fetch();
                 $moderatorId = $modRow ? (int)$modRow['moderator_id'] : null;
             }
 
-            // Update status to Submitted
+            // Update status to Submitted and clear any prior stage approvals
             $stmtUpd = $pdo->prepare("
                 UPDATE examination_papers
                 SET status = 'Submitted', moderator_id = :mod_id, moderator_decision = 'pending',
-                    hod_status = 'pending', eo_status = 'pending', updated_at = NOW()
+                    hod_id = NULL, hod_status = 'pending', hod_decision_at = NULL,
+                    eo_id = NULL, eo_status = 'pending', eo_decision_at = NULL,
+                    updated_at = NOW()
                 WHERE id = :id
             ");
             $stmtUpd->execute(['mod_id' => $moderatorId, 'id' => $paperId]);
@@ -234,6 +291,9 @@ class WorkflowService {
             if ($paper['status'] !== STATUS_SUBMITTED) {
                 throw new RuntimeException("Paper is not in 'Submitted' state for moderation (current status: {$paper['status']}).");
             }
+
+            // Enforce Separation of Duties
+            self::assertSeparationOfDuties($paper, $moderatorId, 'moderator');
 
             // Verify moderator assignment
             $stmtAuth = $pdo->prepare("
@@ -327,13 +387,16 @@ class WorkflowService {
                 throw new RuntimeException("Only papers in 'Submitted' state can be returned by moderator.");
             }
 
+            // Enforce Separation of Duties
+            self::assertSeparationOfDuties($paper, $moderatorId, 'moderator');
+
             // Update status to Returned
             $stmtUpd = $pdo->prepare("
                 UPDATE examination_papers
-                SET status = 'Returned', moderator_decision = 'returned', moderator_decision_at = NOW(), updated_at = NOW()
+                SET status = 'Returned', moderator_id = :mod_id, moderator_decision = 'returned', moderator_decision_at = NOW(), updated_at = NOW()
                 WHERE id = :id
             ");
-            $stmtUpd->execute(['id' => $paperId]);
+            $stmtUpd->execute(['mod_id' => $moderatorId, 'id' => $paperId]);
 
             // Record in paper_approvals
             $stmtAppr = $pdo->prepare("
@@ -404,6 +467,9 @@ class WorkflowService {
             if ($paper['status'] !== STATUS_MODERATED) {
                 throw new RuntimeException("Paper must be in 'Moderated' status for HOD approval (current status: {$paper['status']}).");
             }
+
+            // Enforce Separation of Duties (Lecturer, Moderator, HOD, and EO must be distinct users)
+            self::assertSeparationOfDuties($paper, $hodId, 'hod');
 
             // Verify HOD department access
             $stmtHod = $pdo->prepare("SELECT department_id FROM users WHERE id = :id AND role = 'hod'");
@@ -493,6 +559,26 @@ class WorkflowService {
                 throw new RuntimeException("Paper must be in 'Moderated' status to be returned by HOD.");
             }
 
+            // Enforce Separation of Duties
+            self::assertSeparationOfDuties($paper, $hodId, 'hod');
+
+            // Verify HOD department access or delegation
+            $stmtHod = $pdo->prepare("SELECT department_id FROM users WHERE id = :id AND role = 'hod'");
+            $stmtHod->execute(['id' => $hodId]);
+            $hodUser = $stmtHod->fetch();
+
+            $stmtDel = $pdo->prepare("
+                SELECT id FROM delegations
+                WHERE delegate_id = :id AND role_delegated = 'hod' AND department_id = :dept_id
+                  AND is_active = 1 AND CURRENT_DATE BETWEEN start_date AND end_date
+            ");
+            $stmtDel->execute(['id' => $hodId, 'dept_id' => $paper['department_id']]);
+            $isDelegate = (bool)$stmtDel->fetch();
+
+            if (!$isDelegate && (!$hodUser || (int)$hodUser['department_id'] !== (int)$paper['department_id'])) {
+                throw new RuntimeException("You are not authorized as HOD for this department.");
+            }
+
             // Update to Returned and reset dual approvals
             $stmtUpd = $pdo->prepare("
                 UPDATE examination_papers
@@ -559,6 +645,9 @@ class WorkflowService {
             if ($paper['status'] !== STATUS_MODERATED) {
                 throw new RuntimeException("Paper must be in 'Moderated' status for Exam Officer approval (current status: {$paper['status']}).");
             }
+
+            // Enforce Separation of Duties (Lecturer, Moderator, HOD, and EO must be distinct users)
+            self::assertSeparationOfDuties($paper, $eoId, 'exam_officer');
 
             // Verify EO role or delegation
             $stmtEo = $pdo->prepare("SELECT role, department_id FROM users WHERE id = :id");
@@ -647,6 +736,9 @@ class WorkflowService {
                 throw new RuntimeException("Paper must be in 'Moderated' status to be returned by Exam Officer.");
             }
 
+            // Enforce Separation of Duties
+            self::assertSeparationOfDuties($paper, $eoId, 'exam_officer');
+
             // Verify EO role or delegation
             $stmtEo = $pdo->prepare("SELECT role, department_id FROM users WHERE id = :id");
             $stmtEo->execute(['id' => $eoId]);
@@ -729,7 +821,20 @@ class WorkflowService {
 
         // Dual approval check
         if ($paper['hod_status'] === DECISION_APPROVED && $paper['eo_status'] === DECISION_APPROVED) {
-            // Both approved! Transition to Approved and immediately execute Blind Lockdown
+            // Final Separation-of-Duties verification across all four actors
+            $actors = array_filter([
+                'lecturer'     => (int)($paper['lecturer_id'] ?? 0),
+                'moderator'    => (int)($paper['moderator_id'] ?? 0),
+                'hod'          => (int)($paper['hod_id'] ?? 0),
+                'exam_officer' => (int)($paper['eo_id'] ?? 0),
+            ]);
+            if (count($actors) !== count(array_unique($actors))) {
+                throw new RuntimeException(
+                    "Separation of Duties Violation: Lecturer, Moderator, HOD Approver, and Exam Officer Approver must be distinct users."
+                );
+            }
+
+            // Transition to Approved and immediately execute Blind Lockdown
             $stmtUpd = $pdo->prepare("
                 UPDATE examination_papers
                 SET status = 'Approved', locked_at = NOW(), updated_at = NOW()
@@ -737,7 +842,7 @@ class WorkflowService {
             ");
             $stmtUpd->execute(['id' => $paperId]);
 
-            // Perform Blind Lockdown
+            // Perform Blind Lockdown (encrypts payload and securely deletes plaintext files & cached previews)
             self::activateBlindLockdown($paperId, (int)$paper['current_version_id'], $actorId, $paper);
 
             // Audit Dual Approval & Lockdown
@@ -760,7 +865,10 @@ class WorkflowService {
     }
 
     /**
-     * Activate Blind Lockdown for the exact approved version
+     * Activate Blind Lockdown for the exact approved version:
+     * 1. Encrypts the approved question paper using AES-256-GCM.
+     * 2. Verifies the written .enc file on disk against the original SHA-256 hash.
+     * 3. Securely deletes (unlink) all plaintext question .docx files and cached .pdf previews.
      */
     public static function activateBlindLockdown(int $paperId, int $versionId, int $actorId, ?array $paperData = null): bool {
         $pdo = getDb();
@@ -780,24 +888,46 @@ class WorkflowService {
             throw new RuntimeException("Cannot lock paper: Approved question file not found on disk.");
         }
 
-        // Verify SHA-256 before encryption
+        // 1. Verify SHA-256 before encryption
         if (!DocumentService::verifyFileIntegrity($paperData['question_file_path'], $paperData['question_file_hash'])) {
             throw new RuntimeException("Cannot lock paper: File integrity check failed prior to encryption.");
         }
 
-        // Read and encrypt question paper content
+        // 2. Read and encrypt question paper content
         $rawFileContent = file_get_contents($paperData['question_file_path']);
+        if ($rawFileContent === false) {
+            throw new RuntimeException("Cannot lock paper: Failed to read source question file.");
+        }
         $encryptedResult = EncryptionService::encryptFileContent($rawFileContent);
 
-        // Store encrypted payload
+        // 3. Write encrypted payload to lockdown directory
         $lockDir = STORAGE_PATH . "/examinations/paper-{$paperId}/lockdown";
-        if (!is_dir($lockDir)) {
-            mkdir($lockDir, 0755, true);
+        if (!is_dir($lockDir) && !mkdir($lockDir, 0755, true) && !is_dir($lockDir)) {
+            throw new RuntimeException("Cannot lock paper: Failed to create lockdown directory.");
         }
-        $encryptedPath = "{$lockDir}/locked_v{$paperData['version_number']}.enc";
-        file_put_contents($encryptedPath, $encryptedResult['ciphertext']);
 
-        // Insert or update blind_lockdowns record
+        $encryptedPath = "{$lockDir}/locked_v{$paperData['version_number']}.enc";
+        $bytesWritten = file_put_contents($encryptedPath, $encryptedResult['ciphertext'], LOCK_EX);
+
+        if ($bytesWritten === false || !file_exists($encryptedPath)) {
+            throw new RuntimeException("Cannot lock paper: Failed to write encrypted .enc file to disk.");
+        }
+
+        // 4. Verify the written .enc file can be decrypted and matches the original SHA-256 hash
+        $diskCiphertext = file_get_contents($encryptedPath);
+        if ($diskCiphertext === false) {
+            throw new RuntimeException("Cannot lock paper: Unable to read back encrypted .enc file for verification.");
+        }
+
+        // decryptFileContent() verifies both the AES-256-GCM authentication tag and the SHA-256 plaintext hash
+        EncryptionService::decryptFileContent(
+            $diskCiphertext,
+            $encryptedResult['iv'],
+            $encryptedResult['tag'],
+            $paperData['question_file_hash']
+        );
+
+        // 5. Insert or update blind_lockdowns record
         $stmtLock = $pdo->prepare("
             INSERT INTO blind_lockdowns (
                 paper_id, version_id, locked_by, encrypted_file_path, checksum_sha256,
@@ -832,12 +962,38 @@ class WorkflowService {
             'tag' => $encryptedResult['tag']
         ]);
 
-        // Audit Lockdown
+        // 6. Securely purge plaintext .docx question files (current and historical versions for this paper)
+        if (is_file($paperData['question_file_path'])) {
+            if (!unlink($paperData['question_file_path'])) {
+                throw new RuntimeException("Blind Lockdown aborted: Failed to unlink plaintext question file.");
+            }
+        }
+
+        $stmtVersions = $pdo->prepare("SELECT question_file_path FROM paper_versions WHERE paper_id = :paper_id");
+        $stmtVersions->execute(['paper_id' => $paperId]);
+        foreach ($stmtVersions->fetchAll() as $verRow) {
+            if (!empty($verRow['question_file_path']) && is_file($verRow['question_file_path'])) {
+                @unlink($verRow['question_file_path']);
+            }
+        }
+
+        // 7. Securely purge all cached .pdf previews for this paper in storage/previews/
+        if (defined('PREVIEW_STORAGE_PATH') && is_dir(PREVIEW_STORAGE_PATH)) {
+            $cachedPreviews = glob(PREVIEW_STORAGE_PATH . "/preview_p{$paperId}_*.pdf") ?: [];
+            foreach ($cachedPreviews as $previewFile) {
+                if (is_file($previewFile)) {
+                    @unlink($previewFile);
+                }
+            }
+        }
+
+        // 8. Audit Lockdown
         logAudit($actorId, 'blind_lockdown_activated', 'blind_lockdown', $paperId, [
             'paper_code' => $paperData['paper_code'],
             'version' => $paperData['version_number'],
             'encrypted_path' => $encryptedPath,
-            'checksum_sha256' => $encryptedResult['checksum_sha256']
+            'checksum_sha256' => $encryptedResult['checksum_sha256'],
+            'plaintext_purged' => true
         ]);
 
         return true;
@@ -948,6 +1104,9 @@ class WorkflowService {
             if (!$paper) {
                 throw new RuntimeException("Paper not found.");
             }
+
+            // Enforce Separation of Duties
+            self::assertSeparationOfDuties($paper, $hodId, 'hod');
 
             // Verify HOD department access
             $stmtHod = $pdo->prepare("SELECT department_id FROM users WHERE id = :id AND role = 'hod'");

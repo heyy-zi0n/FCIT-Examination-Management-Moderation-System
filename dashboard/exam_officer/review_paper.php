@@ -23,7 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             WorkflowService::eoApprovePaper($paperId, $userId, $comments);
             
             // Check if Dual approval triggered Approved status
-            $statusCheck = $pdo->query("SELECT status FROM examination_papers WHERE id = {$paperId}")->fetchColumn();
+            $stmtStatus = $pdo->prepare("SELECT status FROM examination_papers WHERE id = :id");
+            $stmtStatus->execute(['id' => $paperId]);
+            $statusCheck = $stmtStatus->fetchColumn();
             if ($statusCheck === STATUS_APPROVED) {
                 setFlash('success', "Dual Approval Satisfied! Both HOD and Exam Officer have approved. Examination paper {$paper['paper_code']} is now securely sealed under Cryptographic Blind Lockdown and eligible for print queue.");
             } else {
@@ -88,8 +90,6 @@ if (!empty($paper['exam_schedule_id'])) {
 
 // Fetch canonical event timeline
 $timeline = getPaperTimeline($paperId, $pdo);
-
-
 
 $pageTitle = "Exam Officer Review: {$paper['paper_code']} — LASU FCIT CMS";
 include __DIR__ . '/../../includes/header.php';
@@ -266,8 +266,6 @@ include __DIR__ . '/../../includes/navbar.php';
             </div>
 
         </div>
-
-
 
     </main>
 </div>

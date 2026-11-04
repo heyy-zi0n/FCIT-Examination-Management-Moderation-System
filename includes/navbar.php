@@ -6,18 +6,32 @@
 $currentUser = currentUser();
 $unreadCount = $currentUser ? getUnreadNotificationsCount((int)$currentUser['id']) : 0;
 $userNotifs = $currentUser ? getUserNotifications((int)$currentUser['id'], 5) : [];
+
+// Dynamically resolve current Academic Session from database
+$activeSessionName = '2025/2026';
+try {
+    $pdoNav = getDb();
+    $sessionVal = $pdoNav->query("SELECT session_name FROM academic_sessions WHERE is_current = 1 ORDER BY id DESC LIMIT 1")->fetchColumn();
+    if (!empty($sessionVal)) {
+        $activeSessionName = (string)$sessionVal;
+    }
+} catch (Exception $e) {
+    // Fallback to default if DB is unavailable
+}
 ?>
 <header class="bg-lasu-navy text-white shadow-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
 
             <!-- Left: Brand / Logo -->
-            <div class="flex items-center gap-3">
-                <button id="mobile-menu-btn" type="button" class="md:hidden text-slate-300 hover:text-white p-2 rounded-lg focus:outline-none">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
+            <div class="flex items-center gap-3 min-w-0">
+                <?php if ($currentUser && empty($isLandingPage)): ?>
+                    <button id="mobile-menu-btn" type="button" class="md:hidden text-slate-300 hover:text-white p-2 rounded-lg focus:outline-none shrink-0" aria-label="Toggle navigation menu">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                <?php endif; ?>
                 <a href="<?= url('') ?>" class="flex items-center gap-3 group">
                     <img src="<?= url('assets/img/lasu-logo.png') ?>" alt="LASU Logo" class="h-12 w-auto object-contain group-hover:scale-105 transition-transform drop-shadow-md">
                     <div class="hidden sm:block">
@@ -36,7 +50,7 @@ $userNotifs = $currentUser ? getUserNotifications((int)$currentUser['id'], 5) : 
             <div class="hidden lg:flex items-center gap-2 px-3 py-1 bg-lasu-navy-light rounded-full text-xs text-slate-200 border border-slate-700/50">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span class="font-medium">Active Session:</span>
-                <span class="font-semibold text-lasu-gold">2025/2026</span>
+                <span class="font-semibold text-lasu-gold"><?= htmlspecialchars($activeSessionName) ?></span>
                 <span class="text-slate-400">•</span>
                 <span>First Semester</span>
             </div>
@@ -119,12 +133,15 @@ $userNotifs = $currentUser ? getUserNotifications((int)$currentUser['id'], 5) : 
                                 <span>Security & Profile</span>
                             </a>
                             <div class="border-t border-slate-100 dark:border-slate-800 my-1"></div>
-                            <a href="<?= url('logout.php') ?>" class="flex items-center gap-2 px-4 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
-                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                                <span class="font-medium">Sign Out</span>
-                            </a>
+                            <form method="POST" action="<?= url('logout.php') ?>">
+                                <?= csrfField() ?>
+                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-left">
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    <span class="font-medium">Sign Out</span>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 <?php else: ?>

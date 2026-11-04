@@ -89,10 +89,16 @@ class DocumentService {
 
     /**
      * Generate PDF Preview using LibreOffice Headless
+     * Uses parameterized array proc_open() to prevent OS command injection.
      */
     public static function generatePdfPreview(string $sourceDocxPath, string $previewPdfPath): bool {
         if (file_exists($previewPdfPath)) {
             return true; // Already generated
+        }
+
+        if (!file_exists($sourceDocxPath) || !is_readable($sourceDocxPath)) {
+            error_log("LibreOffice PDF conversion aborted: Source file does not exist ({$sourceDocxPath})");
+            return false;
         }
 
         $previewDir = dirname($previewPdfPath);
@@ -106,7 +112,8 @@ class DocumentService {
             $alts = [
                 'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
                 'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
-                'soffice'
+                '/usr/bin/soffice',
+                '/usr/bin/libreoffice'
             ];
             foreach ($alts as $alt) {
                 if (file_exists($alt)) {
@@ -116,25 +123,43 @@ class DocumentService {
             }
         }
 
-        $sourceDir = dirname($sourceDocxPath);
         $sourceBaseName = pathinfo($sourceDocxPath, PATHINFO_FILENAME);
         $tempConvertedPdf = $previewDir . DIRECTORY_SEPARATOR . $sourceBaseName . '.pdf';
 
-        // Normalize paths for Windows LibreOffice compatibility
+        // Normalize paths
         $realSourceDocxPath = realpath($sourceDocxPath) ?: $sourceDocxPath;
         $realPreviewDir = realpath($previewDir) ?: $previewDir;
 
-        // Execute LibreOffice conversion via PowerShell to bypass Windows exec() limitations for GUI binaries
-        $cmd = sprintf(
-            'powershell -NoProfile -Command "& \'%s\' --headless --convert-to pdf --outdir \'%s\' \'%s\'"',
+        // Execute LibreOffice directly via proc_open with argument array (bypasses cmd.exe / PowerShell shell parsing)
+        $cmdArgs = [
             $libreOfficePath,
+            '--headless',
+            '--convert-to',
+            'pdf',
+            '--outdir',
             $realPreviewDir,
             $realSourceDocxPath
-        );
+        ];
 
-        $output = [];
-        $returnVar = 0;
-        exec($cmd, $output, $returnVar);
+        $descriptors = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w']
+        ];
+
+        $process = @proc_open($cmdArgs, $descriptors, $pipes, null, null, ['bypass_shell' => true]);
+        $output = '';
+        $returnVar = -1;
+
+        if (is_resource($process)) {
+            fclose($pipes[0]);
+            $stdout = stream_get_contents($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            $output = trim($stdout . "\n" . $stderr);
+            $returnVar = proc_close($process);
+        }
 
         if ($returnVar === 0 && file_exists($tempConvertedPdf)) {
             if ($tempConvertedPdf !== $previewPdfPath) {
@@ -143,7 +168,7 @@ class DocumentService {
             return true;
         }
 
-        error_log("LibreOffice PDF conversion failed for {$sourceDocxPath}. Return code: {$returnVar}. Output: " . implode("\n", $output));
+        error_log("LibreOffice PDF conversion failed for {$sourceDocxPath}. Return code: {$returnVar}. Output: {$output}");
         return false;
     }
 
