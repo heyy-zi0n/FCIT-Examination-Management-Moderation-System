@@ -1,27 +1,104 @@
-/* LASU FCIT CMS Custom Styles & Micro-Animations */
+/* ============================================================
+   LASU FCIT EMMS — Design System Tokens & Institutional Styles
+   ============================================================ */
 :root {
+    /* Brand & Institutional Tokens */
     --lasu-navy: #002147;
     --lasu-navy-light: #0d3b66;
     --lasu-gold: #D4AF37;
     --lasu-gold-hover: #b89628;
+    --lasu-gold-accessible: #8a6a10; /* >= 4.7:1 contrast on white */
     --lasu-emerald: #10B981;
+
+    /* Semantic Surface & Text Tokens (Light Institutional Workspace) */
+    --color-bg: #f8fafc;
+    --color-surface: #ffffff;
+    --color-surface-subtle: #f1f5f9;
+    --color-border: #e2e8f0;
+    --color-text: #0f172a;
+    --color-text-muted: #475569;
+    --color-focus: #0d3b66;
+
+    /* Elevation & Radii */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+    --shadow-card: 0 4px 16px -2px rgb(15 23 42 / 0.06), 0 1px 3px 0 rgb(15 23 42 / 0.04);
 }
 
 body {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Tabular numerals for metrics, codes, timestamps, and tables */
+.tabular-nums,
+table td,
+table th {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Accessible Keyboard Focus Ring (WCAG 2.4.7) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--lasu-gold);
+    outline-offset: 2px;
+}
+
+/* Prevent unwanted iOS Safari viewport zoom on mobile form inputs (<16px) */
+@media (max-width: 639px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* Native <dialog> Modal & Top-Layer Rules */
+dialog:not([open]) {
+    display: none;
+}
+
+:where(dialog:modal) {
+    max-width: min(32rem, calc(100vw - 2rem));
+}
+
+dialog:modal {
+    overscroll-behavior: contain;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    max-height: calc(100dvh - 2rem);
+}
+
+dialog::backdrop {
+    background: rgb(15 23 42 / 0.72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    overflow: hidden;
+    overscroll-behavior: contain;
 }
 
 /* Glassmorphic Cards */
 .glass-panel {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    border: 1px solid rgba(226, 232, 240, 0.85);
 }
 
-.dark .glass-panel {
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(51, 65, 85, 0.8);
+/* Scrollable Data Table Region Affordance */
+.table-scroll-region {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Custom Scrollbar */
@@ -38,6 +115,16 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* Reduced Motion Global Support */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 /* Print Specific Styles */

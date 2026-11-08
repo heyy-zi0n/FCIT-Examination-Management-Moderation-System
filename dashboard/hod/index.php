@@ -44,7 +44,7 @@ $printedCount = (int)($metrics['printed_count'] ?? 0);
 
 require_once __DIR__ . '/../../services/PrintingService.php';
 $stmtLocked = $pdo->prepare("
-    SELECT ep.id, ep.status, es.exam_date 
+    SELECT ep.id, ep.status, es.exam_date
     FROM examination_papers ep
     JOIN courses c ON ep.course_id = c.id
     LEFT JOIN exam_schedules es ON ep.course_id = es.course_id
@@ -95,125 +95,116 @@ include __DIR__ . '/../../includes/navbar.php';
 <div class="flex-1 flex">
     <?php include __DIR__ . '/../../includes/sidebar.php'; ?>
 
-    <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+    <main id="main-content" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
         <?= renderAlerts() ?>
 
         <!-- Welcome Banner -->
-        <div class="bg-gradient-to-r from-indigo-950 via-slate-900 to-lasu-navy rounded-2xl p-6 text-white shadow-lg mb-8 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="bg-gradient-to-r from-lasu-navy via-slate-900 to-lasu-navy-light rounded-2xl p-6 text-white shadow-md mb-8 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
                 <div class="text-xs font-semibold text-lasu-gold uppercase tracking-wider mb-1">Departmental Examination Readiness Portal</div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold"><?= formatUserName($user) ?></h1>
-                <p class="text-xs text-slate-300 mt-1">Department: <span class="font-semibold text-white"><?= htmlspecialchars($user['department_name'] ?? 'Computing') ?></span></p>
+                <p class="text-sm text-slate-300 mt-1">Department of <span class="font-semibold text-white"><?= htmlspecialchars($user['department_name'] ?? 'Computing', ENT_QUOTES, 'UTF-8') ?></span></p>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="<?= url('dashboard/hod/pending_approvals.php') ?>" class="px-4 py-2.5 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow transition flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="<?= url('dashboard/hod/schedules.php') ?>" class="min-h-[40px] px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-semibold rounded-xl text-xs transition inline-flex items-center gap-2">
+                    <span>Exam Schedules</span>
+                </a>
+                <a href="<?= url('dashboard/hod/pending_approvals.php') ?>" class="min-h-[40px] px-4 py-2.5 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow-sm transition inline-flex items-center gap-2">
                     <span>Pending Approvals</span>
-                    <span class="w-5 h-5 bg-lasu-navy text-white rounded-full flex items-center justify-center text-[10px]"><?= $pendingHodCount ?></span>
+                    <span class="min-w-[20px] h-5 px-1.5 bg-lasu-navy text-white rounded-full inline-flex items-center justify-center text-[11px] tabular-nums"><?= $pendingHodCount ?></span>
                 </a>
             </div>
         </div>
 
-        <!-- Metrics Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="text-xs font-semibold text-slate-500 uppercase">Expected Papers</div>
-                <div class="text-3xl font-black text-slate-900 dark:text-white mt-1"><?= $totalCourses ?></div>
+        <!-- Departmental Readiness Metrics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            <div class="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-sm">
+                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Expected Papers</div>
+                <div class="text-2xl sm:text-3xl font-black text-slate-900 mt-1.5 tabular-nums"><?= $totalCourses ?></div>
+                <div class="text-xs text-slate-500 mt-1 tabular-nums"><?= $notStartedCount ?> not started &bull; <?= $draftsCount ?> draft</div>
             </div>
-            <div class="bg-slate-50 dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-                <div class="text-xs font-semibold text-slate-600 uppercase">Not Started</div>
-                <div class="text-3xl font-black text-slate-700 mt-1"><?= $notStartedCount ?></div>
+            <div class="rounded-xl p-4 sm:p-5 border shadow-sm <?= $missingCount > 0 ? 'bg-rose-50/70 border-rose-300' : 'bg-white border-slate-200' ?>">
+                <div class="text-xs font-semibold uppercase tracking-wide <?= $missingCount > 0 ? 'text-rose-800' : 'text-slate-500' ?>">Not Yet Submitted</div>
+                <div class="text-2xl sm:text-3xl font-black mt-1.5 tabular-nums <?= $missingCount > 0 ? 'text-rose-700' : 'text-slate-900' ?>"><?= $missingCount ?></div>
+                <div class="text-xs <?= $missingCount > 0 ? 'text-rose-700' : 'text-slate-500' ?> mt-1 tabular-nums"><?= $submittedIntoWorkflowCount ?> in workflow</div>
             </div>
-            <div class="bg-slate-100 dark:bg-slate-800/80 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-                <div class="text-xs font-semibold text-slate-600 uppercase">Drafts In Progress</div>
-                <div class="text-3xl font-black text-slate-700 mt-1"><?= $draftsCount ?></div>
+            <div class="rounded-xl p-4 sm:p-5 border shadow-sm <?= $pendingHodCount > 0 ? 'bg-amber-50/70 border-amber-300' : 'bg-white border-slate-200' ?>">
+                <div class="text-xs font-semibold uppercase tracking-wide <?= $pendingHodCount > 0 ? 'text-amber-800' : 'text-slate-500' ?>">Pending HOD Sign-Off</div>
+                <div class="text-2xl sm:text-3xl font-black mt-1.5 tabular-nums <?= $pendingHodCount > 0 ? 'text-amber-900' : 'text-slate-900' ?>"><?= $pendingHodCount ?></div>
+                <div class="text-xs <?= $pendingHodCount > 0 ? 'text-amber-800' : 'text-slate-500' ?> mt-1 tabular-nums"><?= $awaitingModerationCount ?> in moderation</div>
             </div>
-            <div class="bg-rose-50 dark:bg-rose-900/20 rounded-xl p-5 border border-rose-200 dark:border-rose-900/50 shadow-sm">
-                <div class="text-xs font-semibold text-rose-600 uppercase">Missing / Not Submitted</div>
-                <div class="text-3xl font-black text-rose-600 mt-1"><?= $missingCount ?></div>
+            <div class="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-sm">
+                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Blind Locked</div>
+                <div class="text-2xl sm:text-3xl font-black text-slate-900 mt-1.5 tabular-nums"><?= $lockedCount ?></div>
+                <div class="text-xs text-slate-500 mt-1 tabular-nums"><?= $readyForPrintingCount ?> window open</div>
             </div>
-            <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-5 border border-indigo-200 dark:border-indigo-900/50 shadow-sm col-span-2">
-                <div class="text-xs font-semibold text-indigo-600 uppercase">Submitted into Workflow</div>
-                <div class="text-3xl font-black text-indigo-600 mt-1"><?= $submittedIntoWorkflowCount ?></div>
-            </div>
-            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-5 border border-amber-200 dark:border-amber-900/50 shadow-sm col-span-2">
-                <div class="text-xs font-semibold text-amber-600 uppercase">Pending HOD Sign-Off</div>
-                <div class="text-3xl font-black text-amber-600 mt-1"><?= $pendingHodCount ?></div>
-            </div>
-            <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-5 border border-purple-200 dark:border-purple-900/50 shadow-sm col-span-2 sm:col-span-1">
-                <div class="text-xs font-semibold text-purple-600 uppercase">Locked Papers</div>
-                <div class="text-3xl font-black text-purple-600 mt-1"><?= $lockedCount ?></div>
-            </div>
-            <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-5 border border-emerald-200 dark:border-emerald-900/50 shadow-sm col-span-2 sm:col-span-1">
-                <div class="text-xs font-semibold text-emerald-600 uppercase">Ready to Print</div>
-                <div class="text-3xl font-black text-emerald-600 mt-1"><?= $readyForPrintingCount ?></div>
-            </div>
-            <div class="bg-slate-100 dark:bg-slate-800 rounded-xl p-5 border border-slate-300 dark:border-slate-700 shadow-sm col-span-2 sm:col-span-1">
-                <div class="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase">Printed Papers</div>
-                <div class="text-3xl font-black text-slate-700 dark:text-slate-200 mt-1"><?= $printedCount ?></div>
+            <div class="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-sm col-span-2 sm:col-span-1">
+                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Printed Papers</div>
+                <div class="text-2xl sm:text-3xl font-black text-emerald-700 mt-1.5 tabular-nums"><?= $printedCount ?></div>
+                <div class="text-xs text-slate-500 mt-1">Completed lifecycle</div>
             </div>
         </div>
 
         <!-- Pending Papers Awaiting HOD Sign-off -->
-        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden mb-8">
-            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Moderated Papers Awaiting HOD Approval</h2>
-                    <p class="text-xs text-slate-500">Papers vetted by departmental moderators requiring your official approval</p>
+                    <h2 class="text-base font-bold text-slate-900">Moderated Papers Awaiting HOD Approval</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Papers vetted by departmental moderators requiring your official endorsement</p>
                 </div>
-                <a href="<?= url('dashboard/hod/pending_approvals.php') ?>" class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">View All &rarr;</a>
+                <a href="<?= url('dashboard/hod/pending_approvals.php') ?>" class="text-xs text-lasu-navy font-bold hover:underline shrink-0">View All &rarr;</a>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
+            <div tabindex="0" role="region" aria-label="Moderated papers awaiting HOD approval" class="table-scroll-region overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
                         <tr>
-                            <th class="py-3.5 px-4 font-semibold">Course Code & Title</th>
-                            <th class="py-3.5 px-4 font-semibold">Lecturer</th>
-                            <th class="py-3.5 px-4 font-semibold">Moderator</th>
-                            <th class="py-3.5 px-4 font-semibold">Version</th>
-                            <th class="py-3.5 px-4 font-semibold">EO Approval State</th>
-                            <th class="py-3.5 px-4 font-semibold text-right">Action</th>
+                            <th scope="col" class="py-3.5 px-5 font-semibold">Course Code &amp; Title</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">Lecturer</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">Moderator</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">Version &amp; Wait</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">EO Sign-Off</th>
+                            <th scope="col" class="py-3.5 px-5 font-semibold text-right">Action</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
                         <?php if (empty($pendingPapers)): ?>
                             <tr>
-                                <td colspan="6" class="py-10 text-center text-slate-400">
-                                    No moderated papers are currently pending your approval.
+                                <td colspan="6" class="py-12 px-5 text-center">
+                                    <div class="text-sm font-semibold text-slate-700">No moderated papers awaiting your approval</div>
+                                    <div class="text-xs text-slate-500 mt-1">All moderated departmental papers have been reviewed.</div>
                                 </td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($pendingPapers as $p): ?>
-                                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
-                                    <td class="py-4 px-4">
-                                        <div class="font-bold text-slate-900 dark:text-white font-mono text-sm"><?= htmlspecialchars($p['course_code']) ?></div>
-                                        <div class="text-[11px] text-slate-500 line-clamp-1"><?= htmlspecialchars($p['course_title']) ?> (<?= htmlspecialchars($p['level_name']) ?>)</div>
+                                <tr class="hover:bg-slate-50/80 transition">
+                                    <td class="py-4 px-5">
+                                        <div class="font-bold text-slate-900 font-mono text-sm"><?= htmlspecialchars($p['course_code'], ENT_QUOTES, 'UTF-8') ?></div>
+                                        <div class="text-xs text-slate-500 line-clamp-1"><?= htmlspecialchars($p['course_title'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($p['level_name'], ENT_QUOTES, 'UTF-8') ?>)</div>
                                     </td>
-                                    <td class="py-4 px-4">
-                                        <?= htmlspecialchars($p['lec_first'] . ' ' . $p['lec_last']) ?>
+                                    <td class="py-4 px-4 font-medium text-slate-800">
+                                        <?= htmlspecialchars($p['lec_first'] . ' ' . $p['lec_last'], ENT_QUOTES, 'UTF-8') ?>
                                     </td>
-                                    <td class="py-4 px-4">
-                                        <?= htmlspecialchars(($p['mod_first'] ?? '—') . ' ' . ($p['mod_last'] ?? '')) ?>
+                                    <td class="py-4 px-4 text-slate-700">
+                                        <?= htmlspecialchars(trim(($p['mod_first'] ?? '—') . ' ' . ($p['mod_last'] ?? '')), ENT_QUOTES, 'UTF-8') ?>
                                     </td>
-                                    <td class="py-4 px-4">
-                                        <div class="mb-1">
-                                            <span class="px-2.5 py-0.5 rounded bg-blue-100 text-blue-800 font-mono text-[11px] font-bold">
-                                                V<?= $p['version_number'] ?: 1 ?>
-                                            </span>
-                                        </div>
-                                        <div class="text-[10px] font-semibold text-amber-600 dark:text-amber-400">
-                                            Pending for <?= getPaperTimeInStage($p['updated_at']) ?>
+                                    <td class="py-4 px-4 whitespace-nowrap">
+                                        <span class="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-blue-800 font-mono text-xs font-bold tabular-nums">
+                                            V<?= (int)($p['version_number'] ?: 1) ?>
+                                        </span>
+                                        <div class="text-xs font-semibold text-amber-700 mt-1">
+                                            Pending <?= htmlspecialchars(getPaperTimeInStage($p['updated_at']), ENT_QUOTES, 'UTF-8') ?>
                                         </div>
                                     </td>
                                     <td class="py-4 px-4">
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?= $p['eo_status'] === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600' ?>">
-                                            EO: <?= ucfirst($p['eo_status']) ?>
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border <?= $p['eo_status'] === 'approved' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200' ?>">
+                                            EO: <?= ucfirst(htmlspecialchars($p['eo_status'], ENT_QUOTES, 'UTF-8')) ?>
                                         </span>
                                     </td>
-                                    <td class="py-4 px-4 text-right">
-                                        <a href="<?= url('dashboard/hod/review_paper.php?id=' . $p['id']) ?>" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow transition text-xs inline-flex items-center gap-1.5">
-                                            <span>Inspect & Sign-off</span>
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                    <td class="py-4 px-5 text-right whitespace-nowrap">
+                                        <a href="<?= url('dashboard/hod/review_paper.php?id=' . $p['id']) ?>" class="min-h-[36px] px-4 py-2 bg-lasu-navy hover:bg-lasu-navy-light text-white font-bold rounded-xl shadow-sm transition text-xs inline-flex items-center gap-1.5">
+                                            <span>Inspect &amp; Sign-Off</span>
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                                         </a>
                                     </td>
                                 </tr>
@@ -222,7 +213,7 @@ include __DIR__ . '/../../includes/navbar.php';
                     </tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
     </main>
 </div>

@@ -545,10 +545,11 @@
               background-color 0.25s ease,
               color 0.25s ease;
 }
+.dept-card-v2:hover span.dept-code-badge-v2,
 .dept-card-v2:hover > span {
-  transform: scale(1.08);
-  background-color: rgba(99,102,241,0.12) !important;
-  color: #6366f1 !important;
+  transform: scale(1.06);
+  background-color: rgba(0, 33, 71, 0.14) !important;
+  color: #002147 !important;
 }
 .dark .dept-card-v2:hover > span {
   background-color: rgba(99,102,241,0.20) !important;

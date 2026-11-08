@@ -38,90 +38,110 @@ $papers = $stmt->fetchAll();
 $pageTitle = 'My Examination Papers — LASU FCIT CMS';
 include __DIR__ . '/../../includes/header.php';
 include __DIR__ . '/../../includes/navbar.php';
+
+$filterOptions = [
+    ''          => 'All Papers',
+    'Draft'     => 'Drafts',
+    'Submitted' => 'Submitted',
+    'Returned'  => 'Returned',
+    'Moderated' => 'Moderated',
+    'Approved'  => 'Approved',
+    'Locked'    => 'Locked',
+    'Printed'   => 'Printed',
+];
 ?>
 
 <div class="flex-1 flex">
     <?php include __DIR__ . '/../../includes/sidebar.php'; ?>
 
-    <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+    <main id="main-content" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
         <?= renderAlerts() ?>
 
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">My Examination Papers</h1>
-                <p class="text-xs text-slate-500">Repository of all examination questions and version history created by you</p>
+                <h1 class="text-2xl font-bold text-slate-900">My Examination Papers</h1>
+                <p class="text-sm text-slate-600 mt-0.5">Repository of all examination questions and version history created by you</p>
             </div>
-            
-            <a href="<?= url('dashboard/lecturer/create_paper.php') ?>" class="px-4 py-2.5 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow transition flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>New Paper</span>
+
+            <a href="<?= url('dashboard/lecturer/create_paper.php') ?>" class="min-h-[40px] px-4 py-2.5 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-sm shadow-sm transition inline-flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>Upload New Paper</span>
             </a>
         </div>
 
         <!-- Filter Bar -->
-        <div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-200 dark:border-slate-800 mb-6 flex flex-wrap items-center gap-2 text-xs">
-            <span class="font-semibold text-slate-500 mr-2">Filter by Status:</span>
-            <a href="<?= url('dashboard/lecturer/papers.php') ?>" class="px-3 py-1 rounded-full border transition <?= empty($statusFilter) ? 'bg-lasu-navy text-white border-lasu-navy' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700' ?>">All Papers</a>
-            <a href="<?= url('dashboard/lecturer/papers.php?status=Draft') ?>" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Draft' ? 'bg-slate-800 text-white' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 border-slate-200 dark:border-slate-700' ?>">Drafts</a>
-            <a href="<?= url('dashboard/lecturer/papers.php?status=Submitted') ?>" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Submitted' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 border-blue-200' ?>">Submitted</a>
-            <a href="<?= url('dashboard/lecturer/papers.php?status=Returned') ?>" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Returned' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700 border-rose-200' ?>">Returned</a>
-            <a href="<?= url('dashboard/lecturer/papers.php?status=Moderated') ?>" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Moderated' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700 border-amber-200' ?>">Moderated</a>
-            <a href="<?= url('dashboard/lecturer/papers.php?status=Approved') ?>" class="px-3 py-1 rounded-full border transition <?= $statusFilter === 'Approved' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 border-emerald-200' ?>">Approved</a>
-        </div>
+        <nav aria-label="Filter papers by status" class="bg-white rounded-xl p-3.5 shadow-sm border border-slate-200 mb-6 flex flex-wrap items-center gap-2 text-xs">
+            <span class="font-semibold text-slate-600 mr-1">Status:</span>
+            <?php foreach ($filterOptions as $val => $label):
+                $isActive = ($statusFilter === $val);
+                $href = $val === '' ? url('dashboard/lecturer/papers.php') : url('dashboard/lecturer/papers.php?status=' . urlencode($val));
+            ?>
+                <a href="<?= $href ?>" <?= $isActive ? 'aria-current="page"' : '' ?> class="min-h-[32px] inline-flex items-center px-3 py-1.5 rounded-lg border font-semibold transition <?= $isActive ? 'bg-lasu-navy text-white border-lasu-navy shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200' ?>">
+                    <?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>
+                </a>
+            <?php endforeach; ?>
+        </nav>
 
         <!-- Papers Table -->
-        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div tabindex="0" role="region" aria-label="My examination papers" class="table-scroll-region overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
                         <tr>
-                            <th class="py-3.5 px-4 font-semibold">Course Code & Title</th>
-                            <th class="py-3.5 px-4 font-semibold">Paper ID / Code</th>
-                            <th class="py-3.5 px-4 font-semibold">Version</th>
-                            <th class="py-3.5 px-4 font-semibold">Assigned Moderator</th>
-                            <th class="py-3.5 px-4 font-semibold">Status</th>
-                            <th class="py-3.5 px-4 font-semibold">Last Updated</th>
-                            <th class="py-3.5 px-4 font-semibold text-right">Actions</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">Course Code &amp; Title</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">Paper Code</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">Version</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">Assigned Moderator</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">Status</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">Last Updated</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
                         <?php if (empty($papers)): ?>
                             <tr>
-                                <td colspan="7" class="py-12 text-center text-slate-400">
-                                    No examination papers found matching this criteria.
+                                <td colspan="7" class="py-12 px-4 text-center">
+                                    <div class="text-sm font-semibold text-slate-700">No examination papers found<?= !empty($statusFilter) ? ' for "' . htmlspecialchars($statusFilter, ENT_QUOTES, 'UTF-8') . '"' : '' ?></div>
+                                    <div class="text-xs text-slate-500 mt-1">
+                                        <?php if (!empty($statusFilter)): ?>
+                                            <a href="<?= url('dashboard/lecturer/papers.php') ?>" class="font-bold text-lasu-navy hover:underline">Clear status filter</a> or upload a new examination paper.
+                                        <?php else: ?>
+                                            <a href="<?= url('dashboard/lecturer/create_paper.php') ?>" class="font-bold text-lasu-navy hover:underline">Upload your first examination paper &rarr;</a>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($papers as $p): ?>
-                                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                                <tr class="hover:bg-slate-50/80 transition">
                                     <td class="py-4 px-4">
-                                        <div class="font-bold text-slate-900 dark:text-white font-mono text-sm"><?= htmlspecialchars($p['course_code']) ?></div>
-                                        <div class="text-[11px] text-slate-500 line-clamp-1"><?= htmlspecialchars($p['course_title']) ?> (<?= htmlspecialchars($p['level_name']) ?>)</div>
+                                        <div class="font-bold text-slate-900 font-mono text-sm"><?= htmlspecialchars($p['course_code'], ENT_QUOTES, 'UTF-8') ?></div>
+                                        <div class="text-xs text-slate-500 line-clamp-1"><?= htmlspecialchars($p['course_title'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($p['level_name'], ENT_QUOTES, 'UTF-8') ?>)</div>
                                     </td>
-                                    <td class="py-4 px-4 font-mono text-slate-600 dark:text-slate-400 text-[11px]">
-                                        <?= htmlspecialchars($p['paper_code']) ?>
+                                    <td class="py-4 px-4 font-mono text-slate-600 text-xs whitespace-nowrap">
+                                        <?= htmlspecialchars($p['paper_code'], ENT_QUOTES, 'UTF-8') ?>
                                     </td>
                                     <td class="py-4 px-4">
-                                        <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
-                                            V<?= $p['version_number'] ?: 1 ?>
+                                        <span class="px-2 py-0.5 rounded-md bg-slate-100 font-mono text-xs font-bold text-slate-700 tabular-nums">
+                                            V<?= (int)($p['version_number'] ?: 1) ?>
                                         </span>
                                     </td>
                                     <td class="py-4 px-4">
                                         <?php if (!empty($p['mod_first'])): ?>
-                                            <div class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars(($p['mod_title'] ? $p['mod_title'] . ' ' : '') . $p['mod_first'] . ' ' . $p['mod_last']) ?></div>
-                                            <div class="text-[10px] text-slate-400">Department Moderator</div>
+                                            <div class="font-medium text-slate-800 text-sm"><?= htmlspecialchars(($p['mod_title'] ? $p['mod_title'] . ' ' : '') . $p['mod_first'] . ' ' . $p['mod_last'], ENT_QUOTES, 'UTF-8') ?></div>
+                                            <div class="text-xs text-slate-500">Department Moderator</div>
                                         <?php else: ?>
-                                            <span class="text-slate-400 italic">Not Assigned</span>
+                                            <span class="text-xs text-slate-400 italic">Assigned at submission</span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="py-4 px-4">
                                         <?= renderStatusBadge($p['status']) ?>
                                     </td>
-                                    <td class="py-4 px-4 text-slate-500 text-[11px]">
+                                    <td class="py-4 px-4 text-slate-600 text-xs tabular-nums whitespace-nowrap">
                                         <?= formatDate($p['updated_at']) ?>
                                     </td>
-                                    <td class="py-4 px-4 text-right">
-                                        <a href="<?= url('dashboard/lecturer/view_paper.php?id=' . $p['id']) ?>" class="px-3 py-1.5 bg-lasu-navy hover:bg-lasu-navy-light text-white rounded-lg font-medium transition text-xs">
+                                    <td class="py-4 px-4 text-right whitespace-nowrap">
+                                        <a href="<?= url('dashboard/lecturer/view_paper.php?id=' . $p['id']) ?>" class="min-h-[34px] inline-flex items-center px-3.5 py-1.5 bg-lasu-navy hover:bg-lasu-navy-light text-white rounded-lg font-semibold transition text-xs">
                                             Inspect &rarr;
                                         </a>
                                     </td>

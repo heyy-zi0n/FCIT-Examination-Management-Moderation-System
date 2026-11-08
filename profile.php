@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-$pageTitle = 'Security & Profile — LASU FCIT CMS';
+$pageTitle = 'Security & Profile — LASU FCIT EMMS';
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/navbar.php';
 
@@ -73,94 +73,111 @@ $userLogs = $stmtAudit->fetchAll();
 <div class="flex-1 flex">
     <?php include __DIR__ . '/includes/sidebar.php'; ?>
 
-    <main class="flex-1 p-6 max-w-5xl mx-auto w-full">
+    <main id="main-content" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto w-full">
         <?= renderAlerts() ?>
 
         <div class="mb-6">
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Security & Staff Profile</h1>
-            <p class="text-xs text-slate-500">Manage account credentials and view your security activity trail</p>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Security &amp; Staff Profile</h1>
+            <p class="text-sm text-slate-600 mt-0.5">Manage account credentials, staff avatar, and view your security activity trail.</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
             <!-- Left Column: User Details Card -->
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                <div class="text-center pb-6 border-b border-slate-100 dark:border-slate-800">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 self-start">
+                <div class="text-center pb-6 border-b border-slate-100">
                     <div class="mb-4 relative inline-block group">
                         <?= renderUserAvatar($user, 'w-24 h-24', 'text-3xl') ?>
-                        <button type="button" onclick="document.getElementById('profile-pic-modal').classList.remove('hidden')" class="absolute inset-0 bg-slate-900/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                            <svg class="w-6 h-6 text-white mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span class="text-[10px] text-white font-semibold">Change</span>
+                        <button
+                            type="button"
+                            onclick="openModal('profile-pic-modal')"
+                            aria-label="Update staff profile picture"
+                            class="absolute inset-0 bg-slate-900/65 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
+                        >
+                            <svg class="w-6 h-6 text-white mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span class="text-[11px] text-white font-semibold">Change</span>
                         </button>
                     </div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white"><?= formatUserName($user) ?></h2>
-                    <div class="text-xs text-slate-500 font-mono mt-0.5"><?= htmlspecialchars($user['staff_id']) ?></div>
-                    <div class="mt-2"><?= renderRoleBadge($user['role']) ?></div>
+                    <h2 class="text-base font-bold text-slate-900"><?= formatUserName($user) ?></h2>
+                    <div class="text-xs text-slate-600 font-mono mt-0.5 tabular-nums"><?= htmlspecialchars($user['staff_id']) ?></div>
+                    <div class="mt-2.5"><?= renderRoleBadge($user['role']) ?></div>
                     
-                    <div class="mt-4 flex items-center justify-center gap-2">
-                        <button type="button" onclick="document.getElementById('profile-pic-modal').classList.remove('hidden')" class="px-3 py-1.5 text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition">Change Photo</button>
+                    <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+                        <button type="button" onclick="openModal('profile-pic-modal')" class="min-h-[34px] px-3.5 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg transition">
+                            Change Photo
+                        </button>
                         <?php if (!empty($user['profile_picture'])): ?>
-                            <form method="POST" action="<?= url('profile.php') ?>" class="inline" onsubmit="return confirm('Are you sure you want to remove your profile picture?');">
+                            <form method="POST" action="<?= url('profile.php') ?>" class="inline">
                                 <?= csrfField() ?>
                                 <input type="hidden" name="action" value="remove_profile_picture">
-                                <button type="submit" class="px-3 py-1.5 text-[10px] font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 rounded-lg transition">Remove</button>
+                                <button
+                                    type="submit"
+                                    data-confirm-title="Remove Profile Picture"
+                                    data-confirm-message="Are you sure you want to remove your staff profile picture?"
+                                    data-confirm-label="Remove Photo"
+                                    data-confirm-variant="danger"
+                                    data-loading-text="Removing..."
+                                    class="min-h-[34px] px-3.5 py-1.5 text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-lg transition"
+                                >
+                                    Remove
+                                </button>
                             </form>
                         <?php endif; ?>
                     </div>
                 </div>
 
-                <div class="mt-4 space-y-3 text-xs">
+                <dl class="mt-4 space-y-3.5 text-sm">
                     <div>
-                        <span class="text-slate-400 block uppercase tracking-wider text-[10px]">Email Address</span>
-                        <span class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars($user['email']) ?></span>
+                        <dt class="text-slate-500 uppercase tracking-wider text-[11px] font-semibold">Email Address</dt>
+                        <dd class="font-medium text-slate-900 mt-0.5 break-all"><?= htmlspecialchars($user['email']) ?></dd>
                     </div>
                     <?php if (!empty($user['department_name'])): ?>
                         <div>
-                            <span class="text-slate-400 block uppercase tracking-wider text-[10px]">Department</span>
-                            <span class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars($user['department_name']) ?></span>
+                            <dt class="text-slate-500 uppercase tracking-wider text-[11px] font-semibold">Department</dt>
+                            <dd class="font-medium text-slate-900 mt-0.5"><?= htmlspecialchars($user['department_name']) ?></dd>
                         </div>
                     <?php endif; ?>
                     <div>
-                        <span class="text-slate-400 block uppercase tracking-wider text-[10px]">Account Status</span>
-                        <span class="inline-flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Active & Verified
-                        </span>
+                        <dt class="text-slate-500 uppercase tracking-wider text-[11px] font-semibold">Account Status</dt>
+                        <dd class="inline-flex items-center gap-1.5 font-semibold text-emerald-800 text-xs mt-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-600" aria-hidden="true"></span>
+                            <span>Active &amp; Verified</span>
+                        </dd>
                     </div>
-                </div>
+                </dl>
             </div>
 
             <!-- Middle/Right Column: Change Password & Security Trail -->
             <div class="md:col-span-2 space-y-6">
-                
                 <!-- Change Password Form -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-lasu-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <h2 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-lasu-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         <span>Change Password</span>
-                    </h3>
+                    </h2>
 
                     <form method="POST" action="<?= url('profile.php') ?>" class="space-y-4">
                         <?= csrfField() ?>
                         <input type="hidden" name="action" value="change_password">
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Current Password</label>
-                            <input type="password" name="current_password" required class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-lasu-navy dark:focus:ring-lasu-gold focus:outline-none">
+                            <label for="current_password" class="block text-xs font-semibold text-slate-700 mb-1.5">Current Password <span class="text-rose-600">*</span></label>
+                            <input id="current_password" type="password" name="current_password" required autocomplete="current-password" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-lasu-navy focus:outline-none">
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">New Password</label>
-                                <input type="password" name="new_password" required minlength="8" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-lasu-navy dark:focus:ring-lasu-gold focus:outline-none">
+                                <label for="new_password" class="block text-xs font-semibold text-slate-700 mb-1.5">New Password <span class="text-rose-600">*</span></label>
+                                <input id="new_password" type="password" name="new_password" required minlength="8" autocomplete="new-password" aria-describedby="new-password-hint" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-lasu-navy focus:outline-none">
+                                <span id="new-password-hint" class="block text-xs text-slate-500 mt-1">Minimum 8 characters.</span>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Confirm New Password</label>
-                                <input type="password" name="confirm_password" required minlength="8" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs focus:ring-2 focus:ring-lasu-navy dark:focus:ring-lasu-gold focus:outline-none">
+                                <label for="confirm_password" class="block text-xs font-semibold text-slate-700 mb-1.5">Confirm New Password <span class="text-rose-600">*</span></label>
+                                <input id="confirm_password" type="password" name="confirm_password" required minlength="8" autocomplete="new-password" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-lasu-navy focus:outline-none">
                             </div>
                         </div>
 
                         <div class="pt-2">
-                            <button type="submit" class="px-5 py-2.5 bg-lasu-navy text-lasu-gold hover:bg-lasu-navy-light font-bold rounded-lg text-xs transition shadow">
+                            <button type="submit" data-loading-text="Updating Password..." class="min-h-[42px] px-5 py-2.5 bg-lasu-navy text-lasu-gold hover:bg-lasu-navy-light font-bold rounded-xl text-xs transition shadow-sm">
                                 Update Password
                             </button>
                         </div>
@@ -168,32 +185,32 @@ $userLogs = $stmtAudit->fetchAll();
                 </div>
 
                 <!-- Recent Activity Trail -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>Recent Security & Activity History</span>
-                    </h3>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <h2 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-lasu-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Recent Security &amp; Activity History</span>
+                    </h2>
 
-                    <div class="overflow-x-auto">
+                    <div class="table-scroll-region" tabindex="0" role="region" aria-label="Recent security activity history">
                         <table class="w-full text-left text-xs">
                             <thead>
-                                <tr class="text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                                    <th class="pb-2 font-semibold">Action</th>
-                                    <th class="pb-2 font-semibold">Entity</th>
-                                    <th class="pb-2 font-semibold">IP Address</th>
-                                    <th class="pb-2 font-semibold">Timestamp</th>
+                                <tr class="text-slate-600 border-b border-slate-200 uppercase tracking-wider text-[11px]">
+                                    <th scope="col" class="pb-2.5 pr-3 font-bold">Action</th>
+                                    <th scope="col" class="pb-2.5 px-3 font-bold">Entity</th>
+                                    <th scope="col" class="pb-2.5 px-3 font-bold">IP Address</th>
+                                    <th scope="col" class="pb-2.5 pl-3 font-bold">Timestamp</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                            <tbody class="divide-y divide-slate-100 text-slate-700">
                                 <?php if (empty($userLogs)): ?>
-                                    <tr><td colspan="4" class="py-4 text-center text-slate-400">No activity logs recorded yet.</td></tr>
+                                    <tr><td colspan="4" class="py-6 text-center text-sm text-slate-500">No activity logs recorded yet.</td></tr>
                                 <?php else: ?>
                                     <?php foreach ($userLogs as $l): ?>
-                                        <tr>
-                                            <td class="py-2.5 font-mono text-[11px] text-blue-600 dark:text-blue-400"><?= htmlspecialchars($l['action']) ?></td>
-                                            <td class="py-2.5 text-slate-500"><?= htmlspecialchars($l['entity_type']) ?> #<?= $l['entity_id'] ?: '—' ?></td>
-                                            <td class="py-2.5 font-mono text-[11px] text-slate-500"><?= htmlspecialchars($l['ip_address']) ?></td>
-                                            <td class="py-2.5 text-slate-400"><?= formatDate($l['created_at']) ?></td>
+                                        <tr class="hover:bg-slate-50/70 transition">
+                                            <td class="py-3 pr-3 font-mono text-xs font-semibold text-lasu-navy"><?= htmlspecialchars($l['action']) ?></td>
+                                            <td class="py-3 px-3 text-slate-600"><?= htmlspecialchars($l['entity_type']) ?> #<?= $l['entity_id'] ?: '—' ?></td>
+                                            <td class="py-3 px-3 font-mono text-xs text-slate-600 tabular-nums"><?= htmlspecialchars($l['ip_address']) ?></td>
+                                            <td class="py-3 pl-3 text-slate-500 tabular-nums whitespace-nowrap"><?= formatDate($l['created_at']) ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
@@ -201,76 +218,90 @@ $userLogs = $stmtAudit->fetchAll();
                         </table>
                     </div>
                 </div>
-
             </div>
-
         </div>
     </main>
 </div>
 
-<!-- Profile Picture Upload Modal -->
-<div id="profile-pic-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center px-4">
-    <div class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-sm w-full border border-slate-200 dark:border-slate-800 p-6">
-        <button type="button" onclick="document.getElementById('profile-pic-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Update Profile Picture</h3>
-        <p class="text-xs text-slate-500 mb-5">Select a square or wide image. It will automatically be cropped and optimized. (Max 5MB)</p>
-        
-        <form method="POST" action="<?= url('profile.php') ?>" enctype="multipart/form-data">
-            <?= csrfField() ?>
-            <input type="hidden" name="action" value="upload_profile_picture">
-            
-            <div class="mb-5 flex flex-col items-center">
-                <!-- Preview Canvas -->
-                <div id="image-preview-container" class="hidden mb-4">
-                    <img id="image-preview" src="#" alt="Preview" class="w-32 h-32 rounded-full object-cover border-4 border-lasu-gold shadow-lg">
-                </div>
-
-                <div class="w-full">
-                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-900/50 hover:bg-slate-100 dark:border-slate-700 transition">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                            <svg class="w-8 h-8 mb-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                            <p class="mb-1 text-sm text-slate-500"><span class="font-bold">Click to upload</span></p>
-                            <p class="text-[10px] text-slate-400">JPG, PNG, or WebP</p>
-                        </div>
-                        <input type="file" name="profile_picture" id="profile-upload-input" accept="image/jpeg, image/png, image/webp" class="hidden" required onchange="previewImage(this)">
-                    </label>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-3">
-                <button type="button" onclick="document.getElementById('profile-pic-modal').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition">Cancel</button>
-                <button type="submit" class="px-4 py-2 text-xs font-bold text-lasu-navy bg-lasu-gold hover:bg-lasu-gold-hover rounded-lg transition shadow-md">Save Picture</button>
-            </div>
-        </form>
+<!-- Native Dialog: Profile Picture Upload -->
+<dialog id="profile-pic-modal" closedby="any" aria-labelledby="profile-pic-modal-title" class="rounded-2xl shadow-2xl border border-slate-200 bg-white text-slate-800 w-[min(26rem,calc(100vw-2rem))] p-0 overflow-hidden">
+    <div class="px-6 py-4 bg-lasu-navy text-white flex items-center justify-between">
+        <h2 id="profile-pic-modal-title" class="text-sm font-bold">Update Profile Picture</h2>
+        <button type="button" onclick="closeModal('profile-pic-modal')" aria-label="Close profile photo modal" class="w-8 h-8 rounded-lg inline-flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition">&times;</button>
     </div>
-</div>
+
+    <form method="POST" action="<?= url('profile.php') ?>" enctype="multipart/form-data" class="p-6">
+        <?= csrfField() ?>
+        <input type="hidden" name="action" value="upload_profile_picture">
+
+        <p class="text-xs text-slate-600 mb-4 leading-relaxed">Select a square or wide image. It will automatically be cropped and optimized (JPG, PNG, or WebP, max 5 MB).</p>
+        
+        <div class="mb-5 flex flex-col items-center">
+            <!-- Preview Canvas -->
+            <div id="image-preview-container" class="hidden mb-4">
+                <img id="image-preview" src="about:blank" alt="Selected profile preview" class="w-28 h-28 rounded-full object-cover border-4 border-lasu-gold shadow-md">
+            </div>
+
+            <div class="w-full">
+                <input
+                    type="file"
+                    name="profile_picture"
+                    id="profile-upload-input"
+                    accept="image/jpeg,image/png,image/webp"
+                    class="sr-only peer"
+                    required
+                    aria-describedby="profile-upload-feedback"
+                    onchange="previewImage(this)"
+                >
+                <label for="profile-upload-input" class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 peer-focus-visible:ring-2 peer-focus-visible:ring-lasu-navy peer-focus-visible:border-lasu-navy transition">
+                    <div class="flex flex-col items-center justify-center py-4 px-3 text-center">
+                        <svg class="w-7 h-7 mb-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        <p class="mb-0.5 text-xs text-slate-700"><span class="font-bold">Click or press Space/Enter to choose image</span></p>
+                        <p class="text-[11px] text-slate-500">JPG, PNG, or WebP (max 5 MB)</p>
+                    </div>
+                </label>
+                <div id="profile-upload-feedback" class="hidden" aria-live="polite"></div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+            <button type="button" onclick="closeModal('profile-pic-modal')" class="min-h-[38px] px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Cancel</button>
+            <button type="submit" data-loading-text="Uploading..." class="min-h-[38px] px-5 py-2 text-xs font-bold text-lasu-navy bg-lasu-gold hover:bg-lasu-gold-hover rounded-xl transition shadow-sm">Save Picture</button>
+        </div>
+    </form>
+</dialog>
 
 <script>
 function previewImage(input) {
     const previewContainer = document.getElementById('image-preview-container');
-    const previewImage = document.getElementById('image-preview');
+    const previewImg = document.getElementById('image-preview');
+    const feedback = document.getElementById('profile-upload-feedback');
     
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        
-        // Basic frontend validation
-        if (file.size > 5 * 1024 * 1024) {
-            alert('File is too large. Maximum size is 5MB.');
+        const sizeMb = file.size / (1024 * 1024);
+
+        if (sizeMb > 5) {
             input.value = '';
             previewContainer.classList.add('hidden');
+            feedback.textContent = `Selected file (${sizeMb.toFixed(2)} MB) exceeds the 5 MB maximum limit.`;
+            feedback.className = 'mt-2.5 px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold block';
             return;
         }
-        
+
+        feedback.textContent = `Selected: ${file.name} (${sizeMb >= 1 ? sizeMb.toFixed(2) + ' MB' : Math.max(1, Math.round(file.size / 1024)) + ' KB'})`;
+        feedback.className = 'mt-2.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold block truncate';
+
         const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImage.src = e.target.result;
+        reader.onload = function (e) {
+            previewImg.src = e.target.result;
             previewContainer.classList.remove('hidden');
-        }
+        };
         reader.readAsDataURL(file);
     } else {
         previewContainer.classList.add('hidden');
+        feedback.textContent = '';
+        feedback.className = 'hidden';
     }
 }
 </script>

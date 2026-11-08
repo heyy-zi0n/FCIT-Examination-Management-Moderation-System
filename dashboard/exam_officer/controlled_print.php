@@ -45,13 +45,17 @@ $isReprint = ($paper['status'] === STATUS_PRINTED);
 
 $printExecutionResult = null;
 $decryptedPdfBase64 = null;
+$submittedCopies = (int)($paper['expected_students'] ?: 100);
+$submittedReprintReason = '';
 
 // Handle Print Confirmation Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_confirm_print'])) {
     requireCsrf();
 
     $copies = (int)($_POST['copies_to_print'] ?? $paper['expected_students']);
-    $reprintReason = sanitizeInput($_POST['reprint_reason'] ?? null);
+    $submittedCopies = $copies > 0 ? $copies : $submittedCopies;
+    $submittedReprintReason = $_POST['reprint_reason'] ?? '';
+    $reprintReason = sanitizeInput($submittedReprintReason ?: null);
 
     try {
         if ($copies <= 0) {
@@ -109,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_confirm_print'
     }
 }
 
-$pageTitle = "Controlled Printing: {$paper['course_code']} — LASU FCIT CMS";
+$pageTitle = "Controlled Printing: {$paper['course_code']} — LASU FCIT EMMS";
 include __DIR__ . '/../../includes/header.php';
 include __DIR__ . '/../../includes/navbar.php';
 ?>
@@ -117,51 +121,53 @@ include __DIR__ . '/../../includes/navbar.php';
 <div class="flex-1 flex">
     <?php include __DIR__ . '/../../includes/sidebar.php'; ?>
 
-    <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+    <main id="main-content" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
         <?= renderAlerts() ?>
 
         <div class="mb-6 no-print">
-            <a href="<?= url('dashboard/exam_officer/print_queue.php') ?>" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 mb-2">
-                &larr; Back to Controlled Print Queue
+            <a href="<?= url('dashboard/exam_officer/print_queue.php') ?>" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-lasu-navy mb-2 transition">
+                <span aria-hidden="true">&larr;</span>
+                <span>Back to Controlled Print Queue</span>
             </a>
-            <div class="flex items-center gap-3">
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><?= htmlspecialchars($paper['course_code']) ?>: Controlled Printing</h1>
+            <div class="flex flex-wrap items-center gap-3">
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight"><?= htmlspecialchars($paper['course_code']) ?>: Controlled Printing</h1>
                 <?= renderStatusBadge($paper['status']) ?>
             </div>
-            <p class="text-xs text-slate-500 mt-1">Department: <?= htmlspecialchars($paper['dept_name']) ?> • Examination Date: <?= formatDate($paper['exam_date'], 'l, d F Y') ?></p>
+            <p class="text-xs text-slate-600 mt-1 tabular-nums">Department: <?= htmlspecialchars($paper['dept_name']) ?> &bull; Examination Date: <?= formatDate($paper['exam_date'], 'l, d F Y') ?></p>
         </div>
 
         <?php if ($printExecutionResult && $decryptedPdfBase64): ?>
             <!-- PRINT SUCCESSFUL & SECURE EPHEMERAL PRINT RENDERER -->
-            <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-6 mb-8 text-center no-print">
-                <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 mb-8 text-center no-print" role="status">
+                <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 </div>
-                <h2 class="text-lg font-bold text-emerald-900 dark:text-emerald-300">Controlled Printing Authorization Generated</h2>
-                <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
-                    Print Verification Serial: <span class="font-mono font-bold bg-white dark:bg-slate-900 px-3 py-1 rounded-lg border border-emerald-300"><?= htmlspecialchars($printExecutionResult['verification_code']) ?></span>
+                <h2 class="text-lg font-bold text-emerald-950">Controlled Printing Authorization Generated</h2>
+                <p class="text-xs text-emerald-800 mt-1.5">
+                    Print Verification Serial:
+                    <span class="font-mono font-bold bg-white px-3 py-1 rounded-lg border border-emerald-300 tabular-nums ml-1"><?= htmlspecialchars($printExecutionResult['verification_code']) ?></span>
                 </p>
-                <div class="mt-4 flex items-center justify-center gap-3">
-                    <button type="button" onclick="triggerControlledPrint()" class="px-6 py-2.5 bg-lasu-navy text-lasu-gold hover:bg-lasu-navy-light font-bold rounded-xl text-xs shadow-lg transition flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+                    <button type="button" onclick="triggerControlledPrint()" class="min-h-[42px] px-6 py-2.5 bg-lasu-navy text-lasu-gold hover:bg-lasu-navy-light font-bold rounded-xl text-xs shadow-sm transition inline-flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                         <span>Send to Physical Printer</span>
                     </button>
-                    <a href="<?= url('dashboard/exam_officer/print_queue.php') ?>" class="px-4 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition">
+                    <a href="<?= url('dashboard/exam_officer/print_queue.php') ?>" class="min-h-[42px] px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 rounded-xl text-xs font-semibold transition inline-flex items-center">
                         Return to Queue
                     </a>
                 </div>
             </div>
 
             <!-- Official Controlled Examination Document Output -->
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
+            <div class="bg-white p-5 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
                 <!-- Security Header Banner -->
                 <div class="border-b-2 border-slate-900 pb-4 mb-6 text-center">
                     <div class="text-xs font-bold uppercase tracking-widest text-slate-600">Lagos State University, Ojo</div>
-                    <div class="text-sm font-extrabold uppercase text-slate-900 dark:text-white">Faculty of Computing & Information Technology</div>
-                    <div class="text-xs font-semibold text-slate-700 dark:text-slate-300"><?= htmlspecialchars($paper['dept_name']) ?></div>
-                    <div class="mt-2 text-base font-black uppercase text-slate-900 dark:text-white"><?= htmlspecialchars($paper['course_code']) ?> — <?= htmlspecialchars($paper['course_title']) ?></div>
+                    <div class="text-sm font-extrabold uppercase text-slate-900">Faculty of Computing &amp; Information Technology</div>
+                    <div class="text-xs font-semibold text-slate-700"><?= htmlspecialchars($paper['dept_name']) ?></div>
+                    <div class="mt-2 text-base font-black uppercase text-slate-900"><?= htmlspecialchars($paper['course_code']) ?> &mdash; <?= htmlspecialchars($paper['course_title']) ?></div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs font-mono mt-3 pt-3 border-t border-slate-200 text-slate-700 dark:text-slate-300">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs font-mono mt-3 pt-3 border-t border-slate-200 text-slate-700 tabular-nums">
                         <div>Time Allowed: <?= (int)$paper['duration_minutes'] ?> Mins</div>
                         <div>Exam Date: <?= formatDate($paper['exam_date'], 'd/m/Y') ?></div>
                         <div>Units: <?= (int)$paper['credit_units'] ?></div>
@@ -169,12 +175,12 @@ include __DIR__ . '/../../includes/navbar.php';
                 </div>
 
                 <!-- Ephemeral In-Memory Decrypted Document Stream -->
-                <div class="h-[750px] w-full border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden mb-6">
+                <div class="h-[460px] sm:h-[640px] lg:h-[750px] w-full border border-slate-300 rounded-xl overflow-hidden mb-6">
                     <iframe id="controlled-print-frame" class="w-full h-full border-0" title="Authorized Printable Question Document"></iframe>
                 </div>
 
                 <!-- Security Verification Footer Stamp -->
-                <div class="border-t-2 border-slate-900 pt-4 flex items-center justify-between text-[10px] font-mono text-slate-600 dark:text-slate-400">
+                <div class="border-t-2 border-slate-900 pt-4 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-slate-600 tabular-nums">
                     <div>
                         <span>SERIAL: <?= htmlspecialchars($printExecutionResult['verification_code']) ?></span> |
                         <span>OFFICER: <?= formatUserName($user) ?></span>
@@ -215,12 +221,11 @@ include __DIR__ . '/../../includes/navbar.php';
         <?php else: ?>
 
             <!-- Print Authorization Form & Gate Check -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                 <!-- Print Parameters Card -->
-                <div class="lg:col-span-1 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <div class="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-lasu-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                         <span>Controlled Print Authorization</span>
                     </h2>
 
@@ -229,31 +234,56 @@ include __DIR__ . '/../../includes/navbar.php';
                         <input type="hidden" name="action_confirm_print" value="1">
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Copies to Print *</label>
-                            <input type="number" name="copies_to_print" required min="1" max="1000" value="<?= (int)($paper['expected_students'] ?: 100) ?>" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold font-mono">
-                            <span class="text-[10px] text-slate-400">Default based on scheduled expected student cohort</span>
+                            <label for="copies_to_print" class="block text-xs font-semibold text-slate-700 mb-1.5">Copies to Print <span class="text-rose-600">*</span></label>
+                            <input
+                                id="copies_to_print"
+                                type="number"
+                                name="copies_to_print"
+                                required
+                                min="1"
+                                max="1000"
+                                value="<?= (int)$submittedCopies ?>"
+                                aria-describedby="copies-hint"
+                                class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold font-mono text-slate-900 tabular-nums focus:ring-2 focus:ring-lasu-navy focus:outline-none"
+                            >
+                            <span id="copies-hint" class="block text-xs text-slate-500 mt-1">Default based on scheduled expected student cohort</span>
                         </div>
 
                         <?php if ($isReprint): ?>
                             <div>
-                                <label class="block text-xs font-semibold text-rose-700 dark:text-rose-400 mb-1">Reprint Justification Reason *</label>
-                                <textarea name="reprint_reason" rows="3" required placeholder="Explain why a reprint is required (e.g. printer paper jam, ink smear)..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-rose-300 dark:border-rose-800 rounded-xl text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none"></textarea>
+                                <label for="reprint_reason" class="block text-xs font-semibold text-rose-800 mb-1.5">Reprint Justification Reason <span class="text-rose-600">*</span></label>
+                                <textarea
+                                    id="reprint_reason"
+                                    name="reprint_reason"
+                                    rows="3"
+                                    required
+                                    placeholder="Explain why a reprint is required (e.g. printer paper jam, ink smear)..."
+                                    class="w-full px-3.5 py-2.5 bg-white border border-rose-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-rose-600 focus:outline-none"
+                                ><?= htmlspecialchars($submittedReprintReason) ?></textarea>
                             </div>
                         <?php endif; ?>
 
-                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
-                            <div class="flex justify-between"><span class="text-slate-400">Scheduled Exam Date:</span> <span class="font-bold text-slate-800 dark:text-slate-200"><?= formatDate($paper['exam_date'], 'd M Y') ?></span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Permitted Printing Day:</span> <span class="font-bold text-cyan-600"><?= formatDate($eligibility['allowed_date'], 'd M Y') ?></span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Venue / Location:</span> <span class="font-medium text-slate-800 dark:text-slate-200"><?= htmlspecialchars($paper['venue']) ?></span></div>
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2 tabular-nums">
+                            <div class="flex justify-between gap-2"><span class="text-slate-500">Scheduled Exam Date:</span> <span class="font-bold text-slate-900"><?= formatDate($paper['exam_date'], 'd M Y') ?></span></div>
+                            <div class="flex justify-between gap-2"><span class="text-slate-500">Permitted Printing Day:</span> <span class="font-bold text-cyan-800"><?= formatDate($eligibility['allowed_date'], 'd M Y') ?></span></div>
+                            <div class="flex justify-between gap-2"><span class="text-slate-500">Venue / Location:</span> <span class="font-medium text-slate-800 text-right"><?= htmlspecialchars($paper['venue']) ?></span></div>
                         </div>
 
                         <?php if ($eligibility['eligible'] || $isReprint): ?>
-                            <button type="submit" onclick="return confirm('Authorize physical examination printing? This decrypts the sealed payload and creates an immutable audit record.')" class="w-full py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                            <button
+                                type="submit"
+                                data-confirm-title="Authorize Controlled Printing"
+                                data-confirm-message="Authorize physical examination printing for <?= htmlspecialchars($paper['course_code'], ENT_QUOTES, 'UTF-8') ?>? This decrypts the sealed payload in memory and records an immutable audit serial."
+                                data-confirm-label="Authorize & Decrypt"
+                                data-confirm-variant="gold"
+                                data-loading-text="Decrypting & Rendering..."
+                                class="min-h-[44px] w-full py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl text-xs shadow-sm transition inline-flex items-center justify-center gap-2"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                 <span>Authorize &amp; Decrypt for Printing</span>
                             </button>
                         <?php else: ?>
-                            <div class="p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-xs">
+                            <div class="p-3.5 bg-rose-50 text-rose-900 border border-rose-200 rounded-xl text-xs leading-relaxed" role="alert">
                                 <?= htmlspecialchars($eligibility['message']) ?>
                             </div>
                         <?php endif; ?>
@@ -261,39 +291,38 @@ include __DIR__ . '/../../includes/navbar.php';
                 </div>
 
                 <!-- Cryptographic Lockdown Status Card (No Pre-Authorization Document Preview) -->
-                <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
                     <div>
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-4">
                             Cryptographic Lockdown &amp; Integrity Verification
                         </h2>
 
-                        <div class="p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/50 mb-6">
-                            <div class="flex items-center gap-2 text-purple-900 dark:text-purple-300 font-bold mb-2 text-xs">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        <div class="p-4 rounded-xl bg-purple-50/70 border border-purple-200 mb-6">
+                            <div class="flex items-center gap-2 text-purple-900 font-bold mb-2 text-xs">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                                 <span>AES-256-GCM Blind Lockdown Payload Active</span>
                             </div>
-                            <div class="font-mono text-[11px] text-slate-600 dark:text-slate-400 break-all">
+                            <div class="font-mono text-xs text-slate-700 break-all">
                                 Checksum (SHA-256): <?= htmlspecialchars($paper['checksum_sha256']) ?>
                             </div>
-                            <div class="text-[10px] text-slate-400 mt-1">
+                            <div class="text-xs text-slate-500 mt-1 tabular-nums">
                                 Sealed on: <?= formatDate($paper['locked_at']) ?>
                             </div>
                         </div>
                     </div>
 
-                    <div class="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center bg-slate-50/50 dark:bg-slate-950/40 my-auto">
-                        <div class="w-16 h-16 rounded-2xl bg-slate-900 text-lasu-gold flex items-center justify-center mx-auto mb-4 shadow-md">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 sm:p-12 text-center bg-slate-50/70 my-auto">
+                        <div class="w-14 h-14 rounded-2xl bg-lasu-navy text-lasu-gold flex items-center justify-center mx-auto mb-4 shadow-sm">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         </div>
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-1">
+                        <h3 class="text-base font-bold text-slate-900 mb-1.5">
                             Examination Content Sealed Under Blind Lockdown
                         </h3>
-                        <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-                            Plaintext files and previews have been purged from storage. The encrypted `.enc` payload can only be decrypted in memory and streamed to the print interface after submitting the authorization form on the left.
+                        <p class="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+                            Plaintext files and previews have been purged from storage. The encrypted <code>.enc</code> payload can only be decrypted in memory and streamed to the print interface after submitting formal print authorization.
                         </p>
                     </div>
                 </div>
-
             </div>
 
         <?php endif; ?>

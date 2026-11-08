@@ -52,99 +52,99 @@ include __DIR__ . '/../../includes/navbar.php';
 <div class="flex-1 flex">
     <?php include __DIR__ . '/../../includes/sidebar.php'; ?>
 
-    <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+    <main id="main-content" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
         <?= renderAlerts() ?>
 
         <div class="mb-6">
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Master Faculty Security Audit Trail</h1>
-            <p class="text-xs text-slate-500">Immutable forensic audit trail capturing all examination submissions, reviews, dual approvals, emergency unlocks, and print operations</p>
+            <h1 class="text-2xl font-bold text-slate-900">Master Faculty Security Audit Trail</h1>
+            <p class="text-sm text-slate-600 mt-0.5">Immutable forensic audit trail capturing submissions, reviews, dual approvals, emergency unlocks, and print operations</p>
         </div>
 
         <!-- Filter Bar -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 mb-6">
-            <form method="GET" action="<?= url('dashboard/admin/audit_logs.php') ?>" class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end text-xs">
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 mb-6">
+            <form method="GET" action="<?= url('dashboard/admin/audit_logs.php') ?>" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 <div>
-                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Filter by Action Event</label>
-                    <select name="action_name" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl">
+                    <label for="audit_action_filter" class="block text-xs font-semibold text-slate-700 mb-1.5">Action Event</label>
+                    <select id="audit_action_filter" name="action_name" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-lasu-navy">
                         <option value="">All Action Events</option>
                         <?php foreach ($actionsList as $act): ?>
-                            <option value="<?= htmlspecialchars($act) ?>" <?= $actionFilter === $act ? 'selected' : '' ?>><?= htmlspecialchars($act) ?></option>
+                            <option value="<?= htmlspecialchars($act, ENT_QUOTES, 'UTF-8') ?>" <?= $actionFilter === $act ? 'selected' : '' ?>><?= htmlspecialchars($act, ENT_QUOTES, 'UTF-8') ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Filter by User</label>
-                    <select name="user_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl">
+                    <label for="audit_user_filter" class="block text-xs font-semibold text-slate-700 mb-1.5">System User</label>
+                    <select id="audit_user_filter" name="user_id" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-lasu-navy">
                         <option value="0">All System Users</option>
                         <?php foreach ($usersList as $u): ?>
-                            <option value="<?= $u['id'] ?>" <?= $userFilter === (int)$u['id'] ? 'selected' : '' ?>><?= htmlspecialchars($u['first_name'] . ' ' . $u['last_name']) ?> (<?= htmlspecialchars($u['email']) ?>)</option>
+                            <option value="<?= (int)$u['id'] ?>" <?= $userFilter === (int)$u['id'] ? 'selected' : '' ?>><?= htmlspecialchars($u['first_name'] . ' ' . $u['last_name'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($u['email'], ENT_QUOTES, 'UTF-8') ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Filter by Entity Type</label>
-                    <input type="text" name="entity_type" value="<?= htmlspecialchars($entityFilter) ?>" placeholder="e.g. examination_paper, user..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl">
+                    <label for="audit_entity_filter" class="block text-xs font-semibold text-slate-700 mb-1.5">Entity Type</label>
+                    <input id="audit_entity_filter" type="text" name="entity_type" value="<?= htmlspecialchars($entityFilter, ENT_QUOTES, 'UTF-8') ?>" placeholder="e.g. examination_paper, user..." class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-lasu-navy">
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <button type="submit" class="w-full py-2 bg-lasu-navy text-lasu-gold font-bold rounded-xl shadow transition">Apply Filter</button>
-                    <a href="<?= url('dashboard/admin/audit_logs.php') ?>" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-xl border border-slate-300 dark:border-slate-700 text-center">Reset</a>
+                    <button type="submit" class="min-h-[42px] flex-1 py-2.5 px-4 bg-lasu-navy hover:bg-lasu-navy-light text-lasu-gold font-bold rounded-xl text-xs shadow-sm transition">Apply Filter</button>
+                    <a href="<?= url('dashboard/admin/audit_logs.php') ?>" class="min-h-[42px] inline-flex items-center justify-center px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl border border-slate-200 text-xs transition">Reset</a>
                 </div>
             </form>
         </div>
 
         <!-- Logs Table -->
-        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div tabindex="0" role="region" aria-label="Master faculty security audit trail" class="table-scroll-region overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
                         <tr>
-                            <th class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300">WHEN (Timestamp)</th>
-                            <th class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300">WHO (Actor)</th>
-                            <th class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300">WHAT (Action)</th>
-                            <th class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300">WHICH (Target Entity)</th>
-                            <th class="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300">RESULT (Context / IP)</th>
+                            <th scope="col" class="py-3.5 px-5 font-semibold">When (Timestamp)</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">Who (Actor)</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">What (Action)</th>
+                            <th scope="col" class="py-3.5 px-4 font-semibold">Which (Target Entity)</th>
+                            <th scope="col" class="py-3.5 px-5 font-semibold">Result (Context / IP)</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
                         <?php if (empty($logs)): ?>
                             <tr>
-                                <td colspan="5" class="py-12 text-center text-slate-400">
-                                    No audit logs matching this filter criteria.
+                                <td colspan="5" class="py-12 px-5 text-center text-sm text-slate-500">
+                                    No audit logs match the selected filter criteria.
                                 </td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($logs as $l): ?>
-                                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
-                                    <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400 font-mono text-[11px] whitespace-nowrap">
+                                <tr class="hover:bg-slate-50/80 transition">
+                                    <td class="py-3.5 px-5 text-slate-600 font-mono text-xs tabular-nums whitespace-nowrap">
                                         <?= formatDate($l['created_at'], 'd M Y H:i:s') ?>
                                     </td>
-                                    <td class="py-3.5 px-4 font-medium">
+                                    <td class="py-3.5 px-4">
                                         <?php if (!empty($l['first_name'])): ?>
-                                            <div class="text-slate-900 dark:text-white"><?= htmlspecialchars(($l['title'] ? $l['title'] . ' ' : '') . $l['first_name'] . ' ' . $l['last_name']) ?></div>
-                                            <div class="text-[10px] text-slate-500 font-bold tracking-wide uppercase"><?= htmlspecialchars($l['role']) ?></div>
+                                            <div class="font-medium text-slate-900 text-sm"><?= htmlspecialchars(($l['title'] ? $l['title'] . ' ' : '') . $l['first_name'] . ' ' . $l['last_name'], ENT_QUOTES, 'UTF-8') ?></div>
+                                            <div class="text-[11px] text-slate-500 font-bold tracking-wide uppercase"><?= htmlspecialchars(str_replace('_', ' ', (string)$l['role']), ENT_QUOTES, 'UTF-8') ?></div>
                                         <?php else: ?>
-                                            <span class="text-slate-500 italic">System Auto-Process</span>
+                                            <span class="text-xs text-slate-500 italic">System Auto-Process</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="py-3.5 px-4">
-                                        <span class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-bold font-mono text-[10px] border border-blue-100 dark:border-blue-800">
-                                            <?= htmlspecialchars($l['action']) ?>
+                                    <td class="py-3.5 px-4 whitespace-nowrap">
+                                        <span class="px-2.5 py-1 rounded-md bg-slate-100 text-lasu-navy font-bold font-mono text-xs">
+                                            <?= htmlspecialchars($l['action'], ENT_QUOTES, 'UTF-8') ?>
                                         </span>
                                     </td>
-                                    <td class="py-3.5 px-4">
-                                        <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider"><?= htmlspecialchars(str_replace('_', ' ', $l['entity_type'])) ?></div>
-                                        <div class="text-[10px] text-slate-500 font-mono mt-0.5">ID: <?= $l['entity_id'] ?: 'System-Wide' ?></div>
+                                    <td class="py-3.5 px-4 whitespace-nowrap">
+                                        <div class="text-xs font-bold text-slate-800 uppercase tracking-wider"><?= htmlspecialchars(str_replace('_', ' ', (string)$l['entity_type']), ENT_QUOTES, 'UTF-8') ?></div>
+                                        <div class="text-xs text-slate-500 font-mono mt-0.5 tabular-nums">ID: <?= $l['entity_id'] ?: 'System-Wide' ?></div>
                                     </td>
-                                    <td class="py-3.5 px-4">
-                                        <div class="text-slate-700 dark:text-slate-300 text-[11px] max-w-sm truncate" title="<?= htmlspecialchars($l['details'] ?? '') ?>">
-                                            <?= htmlspecialchars($l['details'] ?: 'Routine operation completed.') ?>
+                                    <td class="py-3.5 px-5">
+                                        <div class="text-slate-700 text-xs max-w-sm truncate font-mono" title="<?= htmlspecialchars((string)($l['details'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                                            <?= htmlspecialchars($l['details'] ?: 'Routine operation completed.', ENT_QUOTES, 'UTF-8') ?>
                                         </div>
-                                        <div class="text-[10px] text-slate-400 font-mono mt-1 flex items-center gap-1">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-                                            <?= htmlspecialchars($l['ip_address']) ?>
+                                        <div class="text-xs text-slate-500 font-mono tabular-nums mt-1 flex items-center gap-1">
+                                            <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                                            <span><?= htmlspecialchars($l['ip_address'], ENT_QUOTES, 'UTF-8') ?></span>
                                         </div>
                                     </td>
                                 </tr>

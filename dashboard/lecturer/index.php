@@ -83,156 +83,155 @@ include __DIR__ . '/../../includes/navbar.php';
 <div class="flex-1 flex">
     <?php include __DIR__ . '/../../includes/sidebar.php'; ?>
 
-    <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+    <main id="main-content" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
         <?= renderAlerts() ?>
 
         <!-- Welcome Banner -->
-        <div class="bg-gradient-to-r from-lasu-navy via-slate-900 to-blue-950 rounded-2xl p-6 text-white shadow-lg mb-8 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="bg-gradient-to-r from-lasu-navy via-slate-900 to-lasu-navy-light rounded-2xl p-6 text-white shadow-md mb-8 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
                 <div class="text-xs font-semibold text-lasu-gold uppercase tracking-wider mb-1">Academic Staff Portal</div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold">Welcome, <?= formatUserName($user) ?></h1>
-                <p class="text-xs text-slate-300 mt-1">Manage examination lifecycle, view moderation comments, and track paper progress.</p>
+                <p class="text-sm text-slate-300 mt-1">Manage your examination question submissions, review moderation feedback, and track lifecycle progress.</p>
             </div>
-            <a href="<?= url('dashboard/lecturer/create_paper.php') ?>" class="px-5 py-3 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl shadow-lg transition text-xs flex items-center gap-2 flex-shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <a href="<?= url('dashboard/lecturer/create_paper.php') ?>" class="min-h-[42px] px-5 py-2.5 bg-lasu-gold hover:bg-lasu-gold-hover text-lasu-navy font-bold rounded-xl shadow-md transition text-sm inline-flex items-center gap-2 flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>Upload New Exam Paper</span>
             </a>
         </div>
 
         <!-- Metrics Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="text-xs font-semibold text-slate-500 uppercase">Drafts</div>
-                <div class="text-2xl font-black text-slate-700 dark:text-slate-300 mt-1"><?= $draftCount ?></div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Drafts</div>
+                <div class="text-2xl font-black text-slate-900 mt-1.5 tabular-nums"><?= $draftCount ?></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-blue-200 dark:border-blue-900/50 shadow-sm bg-blue-50/20">
-                <div class="text-xs font-semibold text-blue-600 uppercase">Awaiting Moderation</div>
-                <div class="text-2xl font-black text-blue-600 mt-1"><?= $awaitingModerationCount ?></div>
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Awaiting Mod.</div>
+                <div class="text-2xl font-black text-slate-900 mt-1.5 tabular-nums"><?= $awaitingModerationCount ?></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-rose-200 dark:border-rose-900/50 shadow-sm bg-rose-50/20">
-                <div class="text-xs font-semibold text-rose-600 uppercase">Returned for Correction</div>
-                <div class="text-2xl font-black text-rose-600 mt-1"><?= $returnedCount ?></div>
+            <div class="rounded-xl p-4 border shadow-sm <?= $returnedCount > 0 ? 'bg-rose-50/70 border-rose-300' : 'bg-white border-slate-200' ?>">
+                <div class="text-xs font-semibold uppercase tracking-wide <?= $returnedCount > 0 ? 'text-rose-800' : 'text-slate-500' ?>">Returned</div>
+                <div class="text-2xl font-black mt-1.5 tabular-nums <?= $returnedCount > 0 ? 'text-rose-700' : 'text-slate-900' ?>"><?= $returnedCount ?></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-amber-200 dark:border-amber-900/50 shadow-sm bg-amber-50/20">
-                <div class="text-xs font-semibold text-amber-600 uppercase">Approved for Lockdown</div>
-                <div class="text-2xl font-black text-amber-600 mt-1"><?= $approvedLockdownCount ?></div>
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">In Sign-Off</div>
+                <div class="text-2xl font-black text-slate-900 mt-1.5 tabular-nums"><?= $approvedLockdownCount ?></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-emerald-200 dark:border-emerald-900/50 shadow-sm bg-emerald-50/20">
-                <div class="text-xs font-semibold text-emerald-600 uppercase">Locked Papers</div>
-                <div class="text-2xl font-black text-emerald-600 mt-1"><?= $lockedCount ?></div>
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Blind Locked</div>
+                <div class="text-2xl font-black text-slate-900 mt-1.5 tabular-nums"><?= $lockedCount ?></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-indigo-200 dark:border-indigo-900/50 shadow-sm bg-indigo-50/20">
-                <div class="text-xs font-semibold text-indigo-600 uppercase">Printed Papers</div>
-                <div class="text-2xl font-black text-indigo-600 mt-1"><?= $printedCount ?></div>
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Printed</div>
+                <div class="text-2xl font-black text-emerald-700 mt-1.5 tabular-nums"><?= $printedCount ?></div>
             </div>
         </div>
 
         <?php if (!empty($actionPapers)): ?>
         <!-- Action Required Section -->
-        <div class="mb-8 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-900/50 rounded-xl p-5 shadow-sm">
-            <h2 class="text-sm font-bold text-rose-900 dark:text-rose-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                Action Required: Papers Returned for Correction
+        <section aria-label="Papers returned for correction" class="mb-8 bg-rose-50/80 border border-rose-200 rounded-2xl p-5 shadow-sm">
+            <h2 class="text-sm font-bold text-rose-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>Action Required: Papers Returned for Correction</span>
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <?php foreach ($actionPapers as $p): ?>
-                    <div class="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 rounded-lg p-4 shadow-sm flex flex-col justify-between">
+                    <div class="bg-white border border-rose-200 rounded-xl p-4 shadow-sm flex flex-col justify-between">
                         <div>
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="font-bold text-rose-900 dark:text-rose-400 font-mono text-sm"><?= htmlspecialchars($p['course_code']) ?></span>
-                                <span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-900/50 font-mono text-[10px] text-rose-700 dark:text-slate-300 font-bold">V<?= $p['version_number'] ?: 1 ?></span>
+                            <div class="flex justify-between items-start mb-1.5">
+                                <span class="font-bold text-rose-950 font-mono text-sm"><?= htmlspecialchars($p['course_code'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <span class="px-2 py-0.5 rounded-md bg-rose-100 font-mono text-xs text-rose-800 font-bold tabular-nums">V<?= (int)($p['version_number'] ?: 1) ?></span>
                             </div>
-                            <div class="text-xs font-medium text-slate-800 dark:text-slate-200 mb-3 line-clamp-1"><?= htmlspecialchars($p['course_title']) ?></div>
-                            <div class="flex items-center gap-1.5 text-[10px] text-rose-600 dark:text-rose-400 mb-4 font-semibold uppercase tracking-wider">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                Returned <?= getPaperTimeInStage($p['updated_at']) ?> ago
+                            <div class="text-sm font-medium text-slate-800 mb-3 line-clamp-1"><?= htmlspecialchars($p['course_title'], ENT_QUOTES, 'UTF-8') ?></div>
+                            <div class="flex items-center gap-1.5 text-xs text-rose-700 mb-4 font-semibold">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Returned <?= htmlspecialchars(getPaperTimeInStage($p['updated_at']), ENT_QUOTES, 'UTF-8') ?> ago</span>
                             </div>
                         </div>
-                        <a href="<?= url('dashboard/lecturer/view_paper.php?id=' . $p['id']) ?>" class="block w-full text-center px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition text-xs">
-                            View Comments & Revise
+                        <a href="<?= url('dashboard/lecturer/view_paper.php?id=' . $p['id']) ?>" class="min-h-[38px] inline-flex items-center justify-center w-full px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold transition text-xs">
+                            View Comments &amp; Revise
                         </a>
                     </div>
                 <?php endforeach; ?>
             </div>
-        </div>
+        </section>
         <?php endif; ?>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             <!-- Left: Assigned Courses -->
-            <div class="lg:col-span-1 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5">
-                <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center justify-between">
+            <section class="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center justify-between">
                     <span>Allocated Courses</span>
-                    <span class="text-xs text-slate-400 font-normal"><?= count($assignedCourses) ?> Courses</span>
+                    <span class="text-xs text-slate-500 font-semibold tabular-nums"><?= count($assignedCourses) ?> <?= count($assignedCourses) === 1 ? 'Course' : 'Courses' ?></span>
                 </h2>
 
                 <div class="space-y-3">
                     <?php if (empty($assignedCourses)): ?>
-                        <div class="text-xs text-slate-500 text-center py-6">No courses currently allocated.</div>
+                        <div class="text-sm text-slate-500 text-center py-8">No courses are currently allocated to your profile.</div>
                     <?php else: ?>
                         <?php foreach ($assignedCourses as $course): ?>
-                            <div class="p-3.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
+                            <div class="p-3.5 rounded-xl border border-slate-200/80 bg-slate-50/60">
                                 <div class="flex items-center justify-between mb-1">
-                                    <span class="font-bold text-xs text-blue-900 dark:text-blue-400 font-mono"><?= htmlspecialchars($course['course_code']) ?></span>
-                                    <span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded"><?= htmlspecialchars($course['level_name']) ?></span>
+                                    <span class="font-bold text-sm text-lasu-navy font-mono"><?= htmlspecialchars($course['course_code'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <span class="text-xs bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded-md font-medium"><?= htmlspecialchars($course['level_name'], ENT_QUOTES, 'UTF-8') ?></span>
                                 </div>
-                                <div class="text-xs font-medium text-slate-800 dark:text-slate-200 line-clamp-1 mb-2"><?= htmlspecialchars($course['course_title']) ?></div>
-                                <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
-                                    <span><?= $course['credit_units'] ?> Units • <?= htmlspecialchars($course['dept_code']) ?></span>
-                                    <a href="<?= url('dashboard/lecturer/create_paper.php?course_id=' . $course['id']) ?>" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Submit Paper &rarr;</a>
+                                <div class="text-sm font-medium text-slate-800 line-clamp-1 mb-2.5"><?= htmlspecialchars($course['course_title'], ENT_QUOTES, 'UTF-8') ?></div>
+                                <div class="flex items-center justify-between text-xs text-slate-600 pt-2.5 border-t border-slate-200/70">
+                                    <span><?= (int)$course['credit_units'] ?> Units &bull; <?= htmlspecialchars($course['dept_code'], ENT_QUOTES, 'UTF-8') ?></span>
+                                    <a href="<?= url('dashboard/lecturer/create_paper.php?course_id=' . $course['id']) ?>" class="text-lasu-navy font-bold hover:underline">Submit Paper &rarr;</a>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
-            </div>
+            </section>
 
             <!-- Right: Recent Submissions -->
-            <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+            <section class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">
                         Recent Paper Lifecycle Activity
                     </h2>
-                    <a href="<?= url('dashboard/lecturer/papers.php') ?>" class="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">View All Papers</a>
+                    <a href="<?= url('dashboard/lecturer/papers.php') ?>" class="text-xs text-lasu-navy font-bold hover:underline">View All Papers &rarr;</a>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                                <th class="pb-3 font-semibold">Course / Code</th>
-                                <th class="pb-3 font-semibold">Version</th>
-                                <th class="pb-3 font-semibold">Status</th>
-                                <th class="pb-3 font-semibold">Updated</th>
-                                <th class="pb-3 font-semibold text-right">Actions</th>
+                <div tabindex="0" role="region" aria-label="Recent paper lifecycle activity" class="table-scroll-region overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                            <tr>
+                                <th scope="col" class="py-3.5 px-5 font-semibold">Course / Code</th>
+                                <th scope="col" class="py-3.5 px-4 font-semibold">Version</th>
+                                <th scope="col" class="py-3.5 px-4 font-semibold">Status</th>
+                                <th scope="col" class="py-3.5 px-4 font-semibold">Updated</th>
+                                <th scope="col" class="py-3.5 px-5 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                        <tbody class="divide-y divide-slate-100 text-slate-700">
                             <?php if (empty($recentPapers)): ?>
                                 <tr>
-                                    <td colspan="5" class="py-8 text-center text-slate-400">
-                                        You have not created any examination papers yet. Click "Upload New Exam Paper" to begin.
+                                    <td colspan="5" class="py-10 px-5 text-center text-sm text-slate-500">
+                                        You have not created any examination papers yet. Select <a href="<?= url('dashboard/lecturer/create_paper.php') ?>" class="font-bold text-lasu-navy hover:underline">Upload New Exam Paper</a> to begin.
                                     </td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($recentPapers as $p): ?>
-                                    <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
-                                        <td class="py-3">
-                                            <div class="font-bold text-slate-900 dark:text-white font-mono"><?= htmlspecialchars($p['course_code']) ?></div>
-                                            <div class="text-[11px] text-slate-500"><?= htmlspecialchars($p['paper_code']) ?></div>
+                                    <tr class="hover:bg-slate-50/80 transition">
+                                        <td class="py-3.5 px-5">
+                                            <div class="font-bold text-slate-900 font-mono text-sm"><?= htmlspecialchars($p['course_code'], ENT_QUOTES, 'UTF-8') ?></div>
+                                            <div class="text-xs text-slate-500 font-mono"><?= htmlspecialchars($p['paper_code'], ENT_QUOTES, 'UTF-8') ?></div>
                                         </td>
-                                        <td class="py-3">
-                                            <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[11px] font-bold">V<?= $p['version_number'] ?: 1 ?></span>
+                                        <td class="py-3.5 px-4">
+                                            <span class="px-2 py-0.5 rounded-md bg-slate-100 font-mono text-xs font-bold text-slate-700 tabular-nums">V<?= (int)($p['version_number'] ?: 1) ?></span>
                                         </td>
-                                        <td class="py-3">
+                                        <td class="py-3.5 px-4">
                                             <?= renderStatusBadge($p['status']) ?>
                                         </td>
-                                        <td class="py-3 text-slate-500 text-[11px]">
+                                        <td class="py-3.5 px-4 text-slate-600 text-xs tabular-nums whitespace-nowrap">
                                             <?= formatDate($p['updated_at'], 'd M Y') ?>
                                         </td>
-                                        <td class="py-3 text-right">
-                                            <a href="<?= url('dashboard/lecturer/view_paper.php?id=' . $p['id']) ?>" class="px-3 py-1.5 bg-lasu-navy text-white hover:bg-lasu-navy-light rounded-lg font-medium transition text-[11px]">
-                                                View & Timeline
+                                        <td class="py-3.5 px-5 text-right whitespace-nowrap">
+                                            <a href="<?= url('dashboard/lecturer/view_paper.php?id=' . $p['id']) ?>" class="min-h-[34px] inline-flex items-center px-3 py-1.5 bg-lasu-navy text-white hover:bg-lasu-navy-light rounded-lg font-semibold transition text-xs">
+                                                View &amp; Timeline
                                             </a>
                                         </td>
                                     </tr>
@@ -241,8 +240,7 @@ include __DIR__ . '/../../includes/navbar.php';
                         </tbody>
                     </table>
                 </div>
-            </div>
-
+            </section>
         </div>
 
     </main>

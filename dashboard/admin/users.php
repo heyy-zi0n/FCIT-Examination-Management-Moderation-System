@@ -138,7 +138,7 @@ $usersList = $pdo->query("
 
 $departments = $pdo->query("SELECT * FROM departments ORDER BY name ASC")->fetchAll();
 
-$pageTitle = 'User Accounts & Roles — LASU FCIT CMS';
+$pageTitle = 'User Accounts & Roles — LASU FCIT EMMS';
 include __DIR__ . '/../../includes/header.php';
 include __DIR__ . '/../../includes/navbar.php';
 ?>
@@ -146,36 +146,36 @@ include __DIR__ . '/../../includes/navbar.php';
 <div class="flex-1 flex">
     <?php include __DIR__ . '/../../includes/sidebar.php'; ?>
 
-    <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+    <main id="main-content" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
         <?= renderAlerts() ?>
 
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">User Accounts & Role Administration</h1>
-                <p class="text-xs text-slate-500">Manage credentials, departmental allocations, and RBAC permissions</p>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">User Accounts &amp; Role Administration</h1>
+                <p class="text-sm text-slate-600 mt-0.5">Manage staff credentials, departmental allocations, and RBAC permissions.</p>
             </div>
             
-            <button type="button" onclick="openCreateUserModal()" class="px-4 py-2.5 bg-lasu-navy text-lasu-gold hover:bg-lasu-navy-light font-bold rounded-xl text-xs shadow transition flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            <button type="button" onclick="openCreateUserModal()" class="min-h-[42px] px-4 py-2.5 bg-lasu-navy text-lasu-gold hover:bg-lasu-navy-light font-bold rounded-xl text-xs shadow-sm transition inline-flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
                 <span>Create User</span>
             </button>
         </div>
 
         <!-- Users Table -->
-        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div class="overflow-x-auto">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="table-scroll-region" tabindex="0" role="region" aria-label="Staff accounts table">
                 <table class="w-full text-left text-xs">
-                    <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-500 border-b border-slate-200 dark:border-slate-800">
+                    <thead class="bg-slate-50 text-slate-600 border-b border-slate-200 uppercase tracking-wider text-[11px]">
                         <tr>
-                            <th class="py-3.5 px-4 font-semibold">User Details</th>
-                            <th class="py-3.5 px-4 font-semibold">Staff ID</th>
-                            <th class="py-3.5 px-4 font-semibold">Role</th>
-                            <th class="py-3.5 px-4 font-semibold">Department</th>
-                            <th class="py-3.5 px-4 font-semibold">Account Status</th>
-                            <th class="py-3.5 px-4 font-semibold text-right">Actions</th>
+                            <th scope="col" class="py-3.5 px-4 font-bold">User Details</th>
+                            <th scope="col" class="py-3.5 px-4 font-bold">Staff ID</th>
+                            <th scope="col" class="py-3.5 px-4 font-bold">Role</th>
+                            <th scope="col" class="py-3.5 px-4 font-bold">Department</th>
+                            <th scope="col" class="py-3.5 px-4 font-bold">Account Status</th>
+                            <th scope="col" class="py-3.5 px-4 font-bold text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
                         <?php foreach ($usersList as $u):
                             $safeUserPayload = [
                                 'id' => (int)$u['id'],
@@ -187,47 +187,58 @@ include __DIR__ . '/../../includes/navbar.php';
                                 'role' => $u['role'],
                                 'department_id' => $u['department_id']
                             ];
+                            $displayName = trim(($u['title'] ? $u['title'] . ' ' : '') . $u['first_name'] . ' ' . $u['last_name']);
+                            $isActive = ($u['status'] === 'active');
                         ?>
-                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                            <tr class="hover:bg-slate-50/80 transition">
                                 <td class="py-4 px-4">
                                     <div class="flex items-center gap-3">
-                                        <?= renderUserAvatar($u, 'w-10 h-10', 'text-xs') ?>
-                                        <div>
-                                            <div class="font-bold text-slate-900 dark:text-white"><?= htmlspecialchars(($u['title'] ? $u['title'] . ' ' : '') . $u['first_name'] . ' ' . $u['last_name']) ?></div>
-                                            <div class="text-[11px] text-slate-500 font-mono"><?= htmlspecialchars($u['email']) ?></div>
+                                        <?= renderUserAvatar($u, 'w-10 h-10 shrink-0', 'text-xs') ?>
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-bold text-slate-900"><?= htmlspecialchars($displayName) ?></div>
+                                            <div class="text-xs text-slate-500 font-mono truncate"><?= htmlspecialchars($u['email']) ?></div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="py-4 px-4 font-mono text-slate-600 dark:text-slate-400">
+                                <td class="py-4 px-4 font-mono text-xs text-slate-700 tabular-nums whitespace-nowrap">
                                     <?= htmlspecialchars($u['staff_id']) ?>
                                 </td>
-                                <td class="py-4 px-4">
+                                <td class="py-4 px-4 whitespace-nowrap">
                                     <?= renderRoleBadge($u['role']) ?>
                                 </td>
-                                <td class="py-4 px-4">
+                                <td class="py-4 px-4 text-sm text-slate-700">
                                     <?= htmlspecialchars($u['dept_name'] ?? 'Faculty Level / General') ?>
                                 </td>
-                                <td class="py-4 px-4">
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold <?= $u['status'] === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' ?>">
-                                        <?= ucfirst($u['status']) ?>
+                                <td class="py-4 px-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border <?= $isActive ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200' ?>">
+                                        <span class="w-1.5 h-1.5 rounded-full <?= $isActive ? 'bg-emerald-600' : 'bg-rose-600' ?>" aria-hidden="true"></span>
+                                        <span><?= htmlspecialchars(ucfirst($u['status'])) ?></span>
                                     </span>
                                 </td>
-                                <td class="py-4 px-4 text-right">
-                                    <div class="flex flex-wrap items-center justify-end gap-2">
+                                <td class="py-4 px-4 text-right whitespace-nowrap">
+                                    <div class="inline-flex flex-wrap items-center justify-end gap-2">
                                         <button type="button"
                                             data-user="<?= htmlspecialchars(json_encode($safeUserPayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8') ?>"
                                             onclick="openEditUserModal(this)"
-                                            class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-300 dark:border-slate-700">
+                                            class="min-h-[34px] px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 rounded-lg text-xs font-semibold transition border border-slate-300">
                                             Edit
                                         </button>
                                         <?php if ((int)$u['id'] !== (int)$user['id']): ?>
                                             <form method="POST" action="<?= url('dashboard/admin/users.php') ?>" class="inline">
                                                 <?= csrfField() ?>
                                                 <input type="hidden" name="action_toggle_status" value="1">
-                                                <input type="hidden" name="target_user_id" value="<?= $u['id'] ?>">
-                                                <input type="hidden" name="new_status" value="<?= $u['status'] === 'active' ? 'inactive' : 'active' ?>">
-                                                <button type="submit" onclick="return confirm('Change status for this user?')" class="px-3 py-1.5 <?= $u['status'] === 'active' ? 'bg-rose-50 text-rose-700 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' ?> rounded-lg text-xs font-semibold transition">
-                                                    <?= $u['status'] === 'active' ? 'Deactivate' : 'Activate' ?>
+                                                <input type="hidden" name="target_user_id" value="<?= (int)$u['id'] ?>">
+                                                <input type="hidden" name="new_status" value="<?= $isActive ? 'inactive' : 'active' ?>">
+                                                <button
+                                                    type="submit"
+                                                    data-confirm-title="<?= $isActive ? 'Deactivate Staff Account' : 'Activate Staff Account' ?>"
+                                                    data-confirm-message="<?= $isActive ? 'Deactivate portal access for ' . htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8') . '?' : 'Restore active portal access for ' . htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8') . '?' ?>"
+                                                    data-confirm-label="<?= $isActive ? 'Deactivate' : 'Activate' ?>"
+                                                    data-confirm-variant="<?= $isActive ? 'danger' : 'success' ?>"
+                                                    data-loading-text="Updating..."
+                                                    class="min-h-[34px] px-3 py-1.5 <?= $isActive ? 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100' ?> rounded-lg text-xs font-semibold transition"
+                                                >
+                                                    <?= $isActive ? 'Deactivate' : 'Activate' ?>
                                                 </button>
                                             </form>
                                         <?php endif; ?>
@@ -239,83 +250,80 @@ include __DIR__ . '/../../includes/navbar.php';
                 </table>
             </div>
         </div>
-
     </main>
 </div>
 
-<!-- Modal: User Form -->
-<div id="user-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
-        <div class="px-6 py-4 bg-lasu-navy text-white flex items-center justify-between">
-            <h3 class="text-sm font-bold" id="user-modal-title">Create User Account</h3>
-            <button type="button" onclick="closeModal('user-modal')" class="text-slate-300 hover:text-white">&times;</button>
-        </div>
-        <form method="POST" action="<?= url('dashboard/admin/users.php') ?>" class="p-6 space-y-4 overflow-y-auto flex-1">
-            <?= csrfField() ?>
-            <input type="hidden" name="action_save_user" value="1">
-            <input type="hidden" name="user_id" id="form-user-id" value="0">
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Title</label>
-                    <input type="text" name="title" id="form-title" placeholder="Dr. / Prof." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">First Name *</label>
-                    <input type="text" name="first_name" id="form-first-name" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Last Name *</label>
-                    <input type="text" name="last_name" id="form-last-name" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Staff ID *</label>
-                    <input type="text" name="staff_id" id="form-staff-id" required placeholder="LASU/FCIT/..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-mono">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Address *</label>
-                    <input type="email" name="email" id="form-email" required placeholder="staff@lasu.edu.ng" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">System Role *</label>
-                    <select name="role" id="form-role" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-semibold">
-                        <option value="lecturer">Lecturer</option>
-                        <option value="moderator">Moderator</option>
-                        <option value="hod">Head of Department (HOD)</option>
-                        <option value="exam_officer">Faculty Examination Officer</option>
-                        <option value="admin">System Administrator</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Department</label>
-                    <select name="department_id" id="form-dept" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
-                        <option value="">None / Faculty General</option>
-                        <?php foreach ($departments as $d): ?>
-                            <option value="<?= $d['id'] ?>"><?= htmlspecialchars($d['name']) ?> (<?= htmlspecialchars($d['code']) ?>)</option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1" id="form-password-label">Password *</label>
-                <input type="password" name="password" id="form-password" minlength="<?= PASSWORD_MIN_LENGTH ?>" placeholder="Min <?= PASSWORD_MIN_LENGTH ?> characters" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs">
-                <span class="text-[10px] text-slate-400" id="form-password-help">Leave blank when editing to keep current password.</span>
-            </div>
-
-            <div class="pt-4 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
-                <button type="button" onclick="closeModal('user-modal')" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium">Cancel</button>
-                <button type="submit" class="px-5 py-2 bg-lasu-navy text-lasu-gold font-bold rounded-lg text-xs shadow">Save Account</button>
-            </div>
-        </form>
+<!-- Native Dialog: User Form -->
+<dialog id="user-modal" closedby="any" aria-labelledby="user-modal-title" class="rounded-2xl shadow-2xl border border-slate-200 bg-white text-slate-800 w-[min(36rem,calc(100vw-2rem))] p-0 overflow-hidden">
+    <div class="px-6 py-4 bg-lasu-navy text-white flex items-center justify-between">
+        <h2 class="text-sm font-bold" id="user-modal-title">Create User Account</h2>
+        <button type="button" onclick="closeModal('user-modal')" aria-label="Close user modal" class="w-8 h-8 rounded-lg inline-flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition">&times;</button>
     </div>
-</div>
+    <form method="POST" action="<?= url('dashboard/admin/users.php') ?>" class="p-6 space-y-4 overflow-y-auto max-h-[calc(100dvh-6rem)]">
+        <?= csrfField() ?>
+        <input type="hidden" name="action_save_user" value="1">
+        <input type="hidden" name="user_id" id="form-user-id" value="0">
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div>
+                <label for="form-title" class="block text-xs font-semibold text-slate-700 mb-1">Title</label>
+                <input type="text" name="title" id="form-title" placeholder="Dr. / Prof." autocomplete="honorific-prefix" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-lasu-navy focus:outline-none">
+            </div>
+            <div>
+                <label for="form-first-name" class="block text-xs font-semibold text-slate-700 mb-1">First Name <span class="text-rose-600">*</span></label>
+                <input type="text" name="first_name" id="form-first-name" required autocomplete="given-name" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-lasu-navy focus:outline-none">
+            </div>
+            <div>
+                <label for="form-last-name" class="block text-xs font-semibold text-slate-700 mb-1">Last Name <span class="text-rose-600">*</span></label>
+                <input type="text" name="last_name" id="form-last-name" required autocomplete="family-name" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-lasu-navy focus:outline-none">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+                <label for="form-staff-id" class="block text-xs font-semibold text-slate-700 mb-1">Staff ID <span class="text-rose-600">*</span></label>
+                <input type="text" name="staff_id" id="form-staff-id" required placeholder="LASU/FCIT/..." autocorrect="off" autocapitalize="characters" spellcheck="false" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-mono text-slate-900 focus:ring-2 focus:ring-lasu-navy focus:outline-none">
+            </div>
+            <div>
+                <label for="form-email" class="block text-xs font-semibold text-slate-700 mb-1">Email Address <span class="text-rose-600">*</span></label>
+                <input type="email" name="email" id="form-email" required placeholder="staff@lasu.edu.ng" autocomplete="email" autocorrect="off" autocapitalize="off" spellcheck="false" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-lasu-navy focus:outline-none">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+                <label for="form-role" class="block text-xs font-semibold text-slate-700 mb-1">System Role <span class="text-rose-600">*</span></label>
+                <select name="role" id="form-role" required class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-lasu-navy focus:outline-none">
+                    <option value="lecturer">Lecturer</option>
+                    <option value="moderator">Moderator</option>
+                    <option value="hod">Head of Department (HOD)</option>
+                    <option value="exam_officer">Faculty Examination Officer</option>
+                    <option value="admin">System Administrator</option>
+                </select>
+            </div>
+            <div>
+                <label for="form-dept" class="block text-xs font-semibold text-slate-700 mb-1">Department</label>
+                <select name="department_id" id="form-dept" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-lasu-navy focus:outline-none">
+                    <option value="">None / Faculty General</option>
+                    <?php foreach ($departments as $d): ?>
+                        <option value="<?= (int)$d['id'] ?>"><?= htmlspecialchars($d['name']) ?> (<?= htmlspecialchars($d['code']) ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label for="form-password" class="block text-xs font-semibold text-slate-700 mb-1" id="form-password-label">Password <span class="text-rose-600">*</span></label>
+            <input type="password" name="password" id="form-password" minlength="<?= (int)PASSWORD_MIN_LENGTH ?>" autocomplete="new-password" aria-describedby="form-password-help" placeholder="Minimum <?= (int)PASSWORD_MIN_LENGTH ?> characters" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-lasu-navy focus:outline-none">
+            <span class="block text-xs text-slate-500 mt-1" id="form-password-help">Leave blank when editing to preserve the existing password.</span>
+        </div>
+
+        <div class="pt-4 flex items-center justify-end gap-2.5 border-t border-slate-100">
+            <button type="button" onclick="closeModal('user-modal')" class="min-h-[38px] px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">Cancel</button>
+            <button type="submit" data-loading-text="Saving Account..." class="min-h-[38px] px-5 py-2 bg-lasu-navy hover:bg-lasu-navy-light text-lasu-gold font-bold rounded-xl text-xs shadow-sm transition">Save Account</button>
+        </div>
+    </form>
+</dialog>
 
 <script>
 function openCreateUserModal() {
@@ -330,7 +338,7 @@ function openCreateUserModal() {
     document.getElementById('form-dept').value = '';
     document.getElementById('form-password').value = '';
     document.getElementById('form-password').required = true;
-    document.getElementById('form-password-label').textContent = 'Initial Password *';
+    document.getElementById('form-password-label').innerHTML = 'Initial Password <span class="text-rose-600">*</span>';
     openModal('user-modal');
 }
 
