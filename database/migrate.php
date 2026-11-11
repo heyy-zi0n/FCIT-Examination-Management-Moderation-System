@@ -90,13 +90,12 @@ try {
     $firstSemesterId = $semMap['first'];
     echo "  -> Seeded semesters.\n";
 
-    // Academic Levels
+    // Academic Levels (Faculty of Computing departments: 100 to 400 Level)
     $levels = [
         ['level_name' => '100 Level', 'level_code' => 100],
         ['level_name' => '200 Level', 'level_code' => 200],
         ['level_name' => '300 Level', 'level_code' => 300],
-        ['level_name' => '400 Level', 'level_code' => 400],
-        ['level_name' => '500 Level', 'level_code' => 500]
+        ['level_name' => '400 Level', 'level_code' => 400]
     ];
     $stmtLvl = $pdo->prepare("INSERT INTO `academic_levels` (`level_name`, `level_code`) VALUES (:level_name, :level_code)");
     $lvlMap = [];

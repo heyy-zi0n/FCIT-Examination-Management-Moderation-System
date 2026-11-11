@@ -121,10 +121,9 @@ ALTER TABLE `courses`
             WHEN TRIM(`level`) IN ('200', '200 Level') THEN 2
             WHEN TRIM(`level`) IN ('300', '300 Level') THEN 3
             WHEN TRIM(`level`) IN ('400', '400 Level') THEN 4
-            WHEN TRIM(`level`) IN ('500', '500 Level') THEN 5
-            WHEN TRIM(`level`) IN ('Year 1', 'Diploma Yr 1', 'Diploma Year 1') THEN 6
-            WHEN TRIM(`level`) IN ('Year 2', 'Diploma Yr 2', 'Diploma Year 2') THEN 7
-            ELSE 8
+            WHEN TRIM(`level`) IN ('Year 1', 'Diploma Yr 1', 'Diploma Year 1') THEN 5
+            WHEN TRIM(`level`) IN ('Year 2', 'Diploma Yr 2', 'Diploma Year 2') THEN 6
+            ELSE 7
         END
     ) VIRTUAL,
     ADD COLUMN IF NOT EXISTS `semester_id` INT(11) GENERATED ALWAYS AS (IF(`semester` IN (1, 2), `semester`, 1)) VIRTUAL,
